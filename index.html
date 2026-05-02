@@ -167,9 +167,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   window._fbReady = true;
   window._fsModules = { collection, doc, setDoc, getDocs, onSnapshot, deleteDoc, writeBatch };
 
-  // Real-time listeners — update local arrays and re-render active page
+  // Real-time listeners — Firestore is the SINGLE SOURCE OF TRUTH
+  // On first snapshot, replaces local data entirely. On subsequent updates, re-renders.
+  const _loadedCols = {};
   function startListeners() {
     const cols = ['leads','clients','bookings','boats','tasks'];
+    let resolvedCount = 0;
     cols.forEach(function(col) {
       onSnapshot(collection(db, col), function(snap) {
         const data = snap.docs.map(function(d) {
@@ -177,12 +180,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           obj.id = typeof obj.id === 'number' ? obj.id : parseInt(d.id) || obj.id;
           return obj;
         });
-        if (col === 'leads')    { window.leads    = data; }
-        if (col === 'clients')  { window.clients  = data; }
-        if (col === 'bookings') { window.bookings = data; }
-        if (col === 'boats')    { window.boats    = data; }
-        if (col === 'tasks')    { window.tasks    = data; }
-        // Re-render the currently visible page
+        // Always override local data with Firestore data (source of truth)
+        if (col === 'leads')    { window.leads    = data.length > 0 ? data : window.leads; }
+        if (col === 'clients')  { window.clients  = data.length > 0 ? data : window.clients; }
+        if (col === 'bookings') { window.bookings = data.length > 0 ? data : window.bookings; }
+        if (col === 'boats')    { window.boats    = data.length > 0 ? data : window.boats; }
+        if (col === 'tasks')    { window.tasks    = data.length > 0 ? data : window.tasks; }
+
+        // Track which collections have loaded
+        if (!_loadedCols[col]) {
+          _loadedCols[col] = true;
+          resolvedCount++;
+          // When ALL 5 collections loaded, do full init render
+          if (resolvedCount === cols.length) {
+            window._fbDataLoaded = true;
+            // Recalc next IDs from Firestore data
+            if(window.leads.length)    window.nextLeadId    = Math.max(...window.leads.map(x=>x.id),0)+1;
+            if(window.clients.length)  window.nextClientId  = Math.max(...window.clients.map(x=>x.id),0)+1;
+            if(window.bookings.length) window.nextBookingId = Math.max(...window.bookings.map(x=>x.id),0)+1;
+            if(window.boats.length)    window.nextBoatId    = Math.max(...window.boats.map(x=>x.id),0)+1;
+            if(window.tasks.length)    window.nextTaskId    = Math.max(...window.tasks.map(x=>x.id),0)+1;
+            // Sync boat calendars from Firestore bookings
+            if(window.syncBoatCalendar) window.bookings.forEach(function(bk){window.syncBoatCalendar(bk,true);});
+            // Full render
+            try { window.renderCRM(); } catch(e){}
+            try { window.renderDailyBar(); } catch(e){}
+            // Update dot to green
+            if(window.updateFbStatus) window.updateFbStatus(true);
+          }
+          return; // Don't re-render on first load (handled above when all 5 ready)
+        }
+
+        // Subsequent real-time updates — re-render active page
         const pages = { crm: 'renderCRM', bookings: 'renderBookings', fleet: 'renderFleet', clients: 'renderClients', stats: 'renderStats', tasks: 'renderTasks' };
         const active = document.querySelector('.page.active');
         if (active) {
@@ -1753,15 +1782,27 @@ setInterval(function() {
 }, 1000);
 
 // ==================== INIT ====================
-// Sync all boat calendars from existing bookings on load
-bookings.forEach(function(bk){syncBoatCalendar(bk,true);});
-// Run automations
+// Show loading state while waiting for Firestore
+// If Firestore loads within 3s, it will re-render. Otherwise fall back to localStorage.
+const _dailyBar = document.getElementById('daily-bar');
+if(_dailyBar) _dailyBar.innerHTML = '<span style="font-size:11px;color:rgba(255,255,255,.4);padding:2px 10px">Connessione a Firebase...</span>';
+// Fallback: if Firestore doesn't respond in 4s, render from localStorage
+setTimeout(function(){
+  if(!window._fbDataLoaded){
+    // Sync boat calendars from localStorage data
+    bookings.forEach(function(bk){syncBoatCalendar(bk,true);});
+    checkBoatDocs();
+    checkLeadFollowups();
+    checkPaymentAlerts();
+    renderCRM();
+    renderDailyBar();
+  }
+}, 4000);
+// Run automations when Firestore data arrives (handled in listener)
+// But run checks immediately too for localStorage fallback
 checkBoatDocs();
 checkLeadFollowups();
 checkPaymentAlerts();
-// Render
-renderCRM();
-renderDailyBar();
 // Year selector
 const allYears=[...new Set([...bookings.map(b=>b.data?.slice(0,4)).filter(Boolean),String(new Date().getFullYear())])].sort();
 const yearSel=document.getElementById('stats-year');
