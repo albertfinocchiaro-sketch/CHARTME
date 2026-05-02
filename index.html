@@ -195,13 +195,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           if (resolvedCount === cols.length) {
             window._fbDataLoaded = true;
             // Recalc next IDs from Firestore data
-            if(window.leads.length)    window.nextLeadId    = Math.max(...window.leads.map(x=>x.id),0)+1;
-            if(window.clients.length)  window.nextClientId  = Math.max(...window.clients.map(x=>x.id),0)+1;
-            if(window.bookings.length) window.nextBookingId = Math.max(...window.bookings.map(x=>x.id),0)+1;
-            if(window.boats.length)    window.nextBoatId    = Math.max(...window.boats.map(x=>x.id),0)+1;
-            if(window.tasks.length)    window.nextTaskId    = Math.max(...window.tasks.map(x=>x.id),0)+1;
+            try { if(window.leads&&window.leads.length)    window.nextLeadId    = Math.max.apply(null, window.leads.map(function(x){return x.id||0;}).concat([0]))+1; } catch(e){}
+            try { if(window.clients&&window.clients.length)  window.nextClientId  = Math.max.apply(null, window.clients.map(function(x){return x.id||0;}).concat([0]))+1; } catch(e){}
+            try { if(window.bookings&&window.bookings.length) window.nextBookingId = Math.max.apply(null, window.bookings.map(function(x){return x.id||0;}).concat([0]))+1; } catch(e){}
+            try { if(window.boats&&window.boats.length)    window.nextBoatId    = Math.max.apply(null, window.boats.map(function(x){return x.id||0;}).concat([0]))+1; } catch(e){}
+            try { if(window.tasks&&window.tasks.length)    window.nextTaskId    = Math.max.apply(null, window.tasks.map(function(x){return x.id||0;}).concat([0]))+1; } catch(e){}
             // Sync boat calendars from Firestore bookings
-            if(window.syncBoatCalendar) window.bookings.forEach(function(bk){window.syncBoatCalendar(bk,true);});
+            if(window.syncBoatCalendar && window.bookings && window.bookings.length) window.bookings.forEach(function(bk){try{window.syncBoatCalendar(bk,true);}catch(e){}});
             // Full render
             try { window.renderCRM(); } catch(e){}
             try { window.renderDailyBar(); } catch(e){}
@@ -1790,7 +1790,7 @@ if(_dailyBar) _dailyBar.innerHTML = '<span style="font-size:11px;color:rgba(255,
 setTimeout(function(){
   if(!window._fbDataLoaded){
     // Sync boat calendars from localStorage data
-    bookings.forEach(function(bk){syncBoatCalendar(bk,true);});
+    if(typeof syncBoatCalendar === 'function' && bookings && bookings.length) bookings.forEach(function(bk){try{syncBoatCalendar(bk,true);}catch(e){}});
     checkBoatDocs();
     checkLeadFollowups();
     checkPaymentAlerts();
