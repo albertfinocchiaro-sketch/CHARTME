@@ -245,10 +245,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     const db = window._db;
     const BATCH_SIZE = 400;
     async function batchWrite(colName, arr) {
-      for (let i = 0; i < arr.length; i += BATCH_SIZE) {
+      if (!arr || !arr.length) return;
+      const safeArr = arr.map(function(item) {
+        const clean = {};
+        Object.keys(item).forEach(function(k) {
+          if (k !== 'photo' && k !== 'docData' && item[k] !== undefined) clean[k] = item[k];
+        });
+        return clean;
+      });
+      for (let i = 0; i < safeArr.length; i += BATCH_SIZE) {
         const batch = writeBatch(db);
-        arr.slice(i, i + BATCH_SIZE).forEach(function(item) {
-          batch.set(doc(db, colName, String(item.id)), JSON.parse(JSON.stringify(item)));
+        safeArr.slice(i, i + BATCH_SIZE).forEach(function(item) {
+          try { batch.set(doc(db, colName, String(item.id)), JSON.parse(JSON.stringify(item))); } catch(e) {}
         });
         await batch.commit();
       }
