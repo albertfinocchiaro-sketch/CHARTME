@@ -147,135 +147,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* TOGGLE STATUS */
 .status-select{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238A8880'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;padding-right:18px}
 </style>
-<!-- Firebase SDK -->
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot, deleteDoc, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyA3OrjiUzICrkAMNA3MTLeBaV-UFZEoGdA",
-    authDomain: "chartme-d70e6.firebaseapp.com",
-    databaseURL: "https://chartme-d70e6-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "chartme-d70e6",
-    storageBucket: "chartme-d70e6.firebasestorage.app",
-    messagingSenderId: "918112516109",
-    appId: "1:918112516109:web:1b052815fce0e2f72cbd44"
-};
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  window._db = db;
-  window._fbReady = true;
-  window._fsModules = { collection, doc, setDoc, getDocs, onSnapshot, deleteDoc, writeBatch };
-
-  // Real-time listeners — Firestore is the SINGLE SOURCE OF TRUTH
-  // On first snapshot, replaces local data entirely. On subsequent updates, re-renders.
-  const _loadedCols = {};
-  function startListeners() {
-    const cols = ['leads','clients','bookings','boats','tasks'];
-    let resolvedCount = 0;
-    cols.forEach(function(col) {
-      onSnapshot(collection(db, col), function(snap) {
-        const data = snap.docs.map(function(d) {
-          const obj = d.data();
-          obj.id = typeof obj.id === 'number' ? obj.id : parseInt(d.id) || obj.id;
-          return obj;
-        });
-        // Always override local data with Firestore data (source of truth)
-        if (col === 'leads')    { window.leads    = data.length > 0 ? data : window.leads; }
-        if (col === 'clients')  { window.clients  = data.length > 0 ? data : window.clients; }
-        if (col === 'bookings') { window.bookings = data.length > 0 ? data : window.bookings; }
-        if (col === 'boats')    { window.boats    = data.length > 0 ? data : window.boats; }
-        if (col === 'tasks')    { window.tasks    = data.length > 0 ? data : window.tasks; }
-
-        // Track which collections have loaded
-        if (!_loadedCols[col]) {
-          _loadedCols[col] = true;
-          resolvedCount++;
-          // When ALL 5 collections loaded, do full init render
-          if (resolvedCount === cols.length) {
-            window._fbDataLoaded = true;
-            // Recalc next IDs from Firestore data
-            try { if(window.leads&&window.leads.length)    window.nextLeadId    = Math.max.apply(null, window.leads.map(function(x){return x.id||0;}).concat([0]))+1; } catch(e){}
-            try { if(window.clients&&window.clients.length)  window.nextClientId  = Math.max.apply(null, window.clients.map(function(x){return x.id||0;}).concat([0]))+1; } catch(e){}
-            try { if(window.bookings&&window.bookings.length) window.nextBookingId = Math.max.apply(null, window.bookings.map(function(x){return x.id||0;}).concat([0]))+1; } catch(e){}
-            try { if(window.boats&&window.boats.length)    window.nextBoatId    = Math.max.apply(null, window.boats.map(function(x){return x.id||0;}).concat([0]))+1; } catch(e){}
-            try { if(window.tasks&&window.tasks.length)    window.nextTaskId    = Math.max.apply(null, window.tasks.map(function(x){return x.id||0;}).concat([0]))+1; } catch(e){}
-            // Sync boat calendars from Firestore bookings
-            if(window.syncBoatCalendar && window.bookings && window.bookings.length) window.bookings.forEach(function(bk){try{window.syncBoatCalendar(bk,true);}catch(e){}});
-            // Full render
-            try { window.renderCRM(); } catch(e){}
-            try { window.renderDailyBar(); } catch(e){}
-            // Update dot to green
-            if(window.updateFbStatus) window.updateFbStatus(true);
-          }
-          return; // Don't re-render on first load (handled above when all 5 ready)
-        }
-
-        // Subsequent real-time updates — re-render active page
-        const pages = { crm: 'renderCRM', bookings: 'renderBookings', fleet: 'renderFleet', clients: 'renderClients', stats: 'renderStats', tasks: 'renderTasks' };
-        const active = document.querySelector('.page.active');
-        if (active) {
-          const pid = active.id.replace('page-', '');
-          const fn = pages[pid];
-          if (fn && window[fn]) { try { window[fn](); } catch(e){} }
-        }
-        if (window.renderDailyBar) window.renderDailyBar();
-      });
-    });
-  }
-
-  window._startFbListeners = startListeners;
-
-  // Save to Firestore (called by saveData override)
-  window._fbSave = async function(col, obj) {
-    const { doc, setDoc } = window._fsModules;
-    const db = window._db;
-    try {
-      await setDoc(doc(db, col, String(obj.id)), JSON.parse(JSON.stringify(obj)));
-    } catch(e) { console.error('FB save error', col, e); }
-  };
-
-  window._fbDelete = async function(col, id) {
-    const { doc, deleteDoc } = window._fsModules;
-    try { await deleteDoc(doc(window._db, col, String(id))); } catch(e) {}
-  };
-
-  window._fbInitAll = async function() {
-    const { collection, doc, setDoc, writeBatch } = window._fsModules;
-    const db = window._db;
-    const BATCH_SIZE = 400;
-    async function batchWrite(colName, arr) {
-      if (!arr || !arr.length) return;
-      const safeArr = arr.map(function(item) {
-        const clean = {};
-        Object.keys(item).forEach(function(k) {
-          if (k !== 'photo' && k !== 'docData' && item[k] !== undefined) clean[k] = item[k];
-        });
-        return clean;
-      });
-      for (let i = 0; i < safeArr.length; i += BATCH_SIZE) {
-        const batch = writeBatch(db);
-        safeArr.slice(i, i + BATCH_SIZE).forEach(function(item) {
-          try { batch.set(doc(db, colName, String(item.id)), JSON.parse(JSON.stringify(item))); } catch(e) {}
-        });
-        await batch.commit();
-      }
-    }
-    await batchWrite('leads',    window.leads);
-    await batchWrite('clients',  window.clients);
-    await batchWrite('bookings', window.bookings);
-    await batchWrite('boats',    window.boats);
-    await batchWrite('tasks',    window.tasks);
-    alert('✅ Dati inizializzati su Firebase! (' + (window.leads.length + window.clients.length + window.bookings.length + window.boats.length + window.tasks.length) + ' documenti)');
-  };
-
-  // Start listeners after DOM ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startListeners);
-  } else {
-    startListeners();
-  }
-</script>
 </head>
 <body>
 
@@ -305,13 +176,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <button class="nav-tab" onclick="showPage('tasks')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8l2 2 4-4"/></svg>Task
     </button>
-  </div>
-  <div style="margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 12px">
-    <div id="fb-status" style="font-size:11px;display:flex;align-items:center;gap:4px;color:rgba(255,255,255,.4)">
-      <span id="fb-dot" style="width:7px;height:7px;border-radius:50%;background:#888;display:inline-block"></span>
-      <span id="fb-label">Offline</span>
-    </div>
-    <button onclick="fbInitAll()" style="padding:4px 10px;background:var(--gold);border:none;border-radius:6px;color:var(--navy-dark);font-size:11px;font-weight:700;cursor:pointer" title="Carica tutti i dati locali su Firebase per la prima volta">↑ Inizializza Firebase</button>
+  </div>  <div style="margin-left:auto;padding:0 12px;display:flex;align-items:center;gap:8px">
+    <button onclick="rtdbInitAll()" style="padding:4px 12px;background:var(--gold);border:none;border-radius:6px;color:var(--navy-dark);font-size:11px;font-weight:700;cursor:pointer">↑ Carica su Firebase</button>
   </div>
 </div>
 
@@ -466,21 +332,96 @@ function initials(s){return(s||'').split(' ').map(w=>w[0]||'').join('').toUpperC
 function badgeLead(s){return{Nuovo:'badge-new',Contattato:'badge-contact',Preventivo:'badge-quote',Confermato:'badge-confirmed',Perso:'badge-lost'}[s]||''}
 function fmtEur(n){return'€'+Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:0})}
 function today(){return new Date().toISOString().slice(0,10)}
-function saveData(){
-  try{localStorage.setItem('chartme_v2',JSON.stringify({leads,clients,bookings,boats,tasks}));}catch(e){}
-  // Sync to Firestore if ready (non-blocking)
-  if(window._fbReady && window._fbSave) {
-    // We don't know which changed so we rely on the caller passing context
-    // Full sync is handled by individual save calls below
-  }
+// ==================== REALTIME DB ====================
+const RTDB_URL = 'https://chartme-d70e6-default-rtdb.europe-west1.firebasedatabase.app';
+
+function saveData() {
+  try { localStorage.setItem('chartme_v2', JSON.stringify({leads,clients,bookings,boats,tasks})); } catch(e) {}
 }
-function fbSaveItem(col, obj) {
-  if(window._fbReady && window._fbSave) window._fbSave(col, obj);
+
+function rtdbWrite(path, data) {
+  var clean = JSON.parse(JSON.stringify(data, function(k,v) {
+    if(k==='photo'||k==='docData'||k==='docName'||k==='docType') return undefined;
+    return v;
+  }));
+  fetch(RTDB_URL + '/' + path + '.json', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(clean)
+  }).catch(function(e) { console.warn('rtdb write error', e); });
 }
-function fbDeleteItem(col, id) {
-  if(window._fbReady && window._fbDelete) window._fbDelete(col, id);
+
+function rtdbDelete(path) {
+  fetch(RTDB_URL + '/' + path + '.json', {method: 'DELETE'})
+    .catch(function(e) { console.warn('rtdb delete error', e); });
 }
-function loadData(){try{const d=localStorage.getItem('chartme_v2');if(d){const p=JSON.parse(d);leads=p.leads||leads;clients=p.clients||clients;bookings=p.bookings||bookings;boats=p.boats||boats;tasks=p.tasks||tasks;nextLeadId=Math.max(...leads.map(x=>x.id),0)+1;nextClientId=Math.max(...clients.map(x=>x.id),0)+1;nextBookingId=Math.max(...bookings.map(x=>x.id),0)+1;nextBoatId=Math.max(...boats.map(x=>x.id),0)+1;nextTaskId=Math.max(...tasks.map(x=>x.id),0)+1;}}catch(e){}}
+
+function rtdbPushAll() {
+  var payload = {
+    leads: {},
+    clients: {},
+    bookings: {},
+    boats: {},
+    tasks: {}
+  };
+  leads.forEach(function(x) { payload.leads[x.id] = JSON.parse(JSON.stringify(x, function(k,v){ if(k==='photo'||k==='docData'||k==='docName'||k==='docType') return undefined; return v; })); });
+  clients.forEach(function(x) { payload.clients[x.id] = JSON.parse(JSON.stringify(x, function(k,v){ if(k==='photo'||k==='docData'||k==='docName'||k==='docType') return undefined; return v; })); });
+  bookings.forEach(function(x) { payload.bookings[x.id] = x; });
+  boats.forEach(function(x) { payload.boats[x.id] = JSON.parse(JSON.stringify(x, function(k,v){ if(k==='photo') return undefined; return v; })); });
+  tasks.forEach(function(x) { payload.tasks[x.id] = x; });
+  return fetch(RTDB_URL + '/.json', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  }).then(function(r) { return r.json(); });
+}
+
+function rtdbRead() {
+  return fetch(RTDB_URL + '/.json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if(!data) return;
+      function objToArr(obj) { return obj ? Object.values(obj) : []; }
+      if(data.leads)    leads    = objToArr(data.leads);
+      if(data.clients)  clients  = objToArr(data.clients);
+      if(data.bookings) bookings = objToArr(data.bookings);
+      if(data.boats)    boats    = objToArr(data.boats);
+      if(data.tasks)    tasks    = objToArr(data.tasks);
+      if(leads.length)    nextLeadId    = Math.max.apply(null, leads.map(function(x){return x.id||0;}))+1;
+      if(clients.length)  nextClientId  = Math.max.apply(null, clients.map(function(x){return x.id||0;}))+1;
+      if(bookings.length) nextBookingId = Math.max.apply(null, bookings.map(function(x){return x.id||0;}))+1;
+      if(boats.length)    nextBoatId    = Math.max.apply(null, boats.map(function(x){return x.id||0;}))+1;
+      if(tasks.length)    nextTaskId    = Math.max.apply(null, tasks.map(function(x){return x.id||0;}))+1;
+      saveData();
+      // Re-render active page
+      var pages = {crm:'renderCRM',bookings:'renderBookings',fleet:'renderFleet',clients:'renderClients',stats:'renderStats',tasks:'renderTasks'};
+      var active = document.querySelector('.page.active');
+      if(active) { var fn = pages[active.id.replace('page-','')]; if(fn && window[fn]) try{window[fn]();}catch(e){} }
+      if(window.renderDailyBar) renderDailyBar();
+    }).catch(function(e) { console.warn('rtdb read error', e); });
+}
+
+// Polling every 20 seconds
+setInterval(rtdbRead, 20000);
+
+function loadData() {
+  try {
+    var d = localStorage.getItem('chartme_v2');
+    if(d) {
+      var p = JSON.parse(d);
+      leads    = p.leads    || leads;
+      clients  = p.clients  || clients;
+      bookings = p.bookings || bookings;
+      boats    = p.boats    || boats;
+      tasks    = p.tasks    || tasks;
+      nextLeadId    = Math.max.apply(null, leads.map(function(x){return x.id||0;}).concat([0]))+1;
+      nextClientId  = Math.max.apply(null, clients.map(function(x){return x.id||0;}).concat([0]))+1;
+      nextBookingId = Math.max.apply(null, bookings.map(function(x){return x.id||0;}).concat([0]))+1;
+      nextBoatId    = Math.max.apply(null, boats.map(function(x){return x.id||0;}).concat([0]))+1;
+      nextTaskId    = Math.max.apply(null, tasks.map(function(x){return x.id||0;}).concat([0]))+1;
+    }
+  } catch(e) {}
+}
 loadData();
 
 function showPage(p){
@@ -607,7 +548,7 @@ function saveLead(id){
     if(d.stato==='Confermato') isNewConfirm=true;
   }
   saveData();
-  fbSaveItem("leads", leadRef);
+  rtdbWrite("leads/"+leadRef.id, leadRef);
   closeModal();renderCRM();
   if(isNewConfirm) setTimeout(()=>triggerConfirmFlow(leadRef.id),150);
 }
@@ -649,7 +590,7 @@ function openBookingFormFromLead(leadId){
   setTimeout(()=>banner.remove(),4000);
   openBookingForm(null,leadId);
 }
-function deleteLead(id){if(!confirm('Eliminare questo lead?'))return;fbDeleteItem('leads',id);leads=leads.filter(x=>x.id!==id);saveData();closeModal();renderCRM();}
+function deleteLead(id){if(!confirm('Eliminare questo lead?'))return;rtdbDelete('leads/'+id);leads=leads.filter(x=>x.id!==id);saveData();closeModal();renderCRM();}
 function v(id){const el=document.getElementById(id);return el?el.value.trim():''}
 
 // ==================== BOOKINGS ====================
@@ -1043,10 +984,9 @@ function saveBooking(id,leadId){
   // Check payment alerts (C)
   checkPaymentAlerts();
   saveData();
-  fbSaveItem("bookings", bookings.find(x=>x.id===bid));
-  if(leadId){const _l=leads.find(x=>x.id===leadId);if(_l)fbSaveItem("leads",_l);}
-  clients.forEach(function(c){fbSaveItem("clients",c);});
-  tasks.forEach(function(t){fbSaveItem("tasks",t);});
+  if(leadId){const _l=leads.find(x=>x.id===leadId);if(_l)rtdbWrite("leads/"+_l.id,_l);}
+  clients.forEach(function(c){rtdbWrite("clients/"+c.id,c);});
+  tasks.forEach(function(t){rtdbWrite("tasks/"+t.id,t);});
   closeModal();
   renderDailyBar();
   showPostBookingSummary(bid,leadId);
@@ -1163,8 +1103,7 @@ function deleteBooking(id){
     if(bk.clienteId){const c=clients.find(x=>x.id===bk.clienteId);if(c)c.prenotazioni=c.prenotazioni.filter(p=>p!==id);}
     // Close related tasks
     tasks.forEach(function(t){if(t.bookingId===id)t.stato='Completato';});
-  }
-  fbDeleteItem('bookings',id);bookings=bookings.filter(x=>x.id!==id);
+  }bookings=bookings.filter(x=>x.id!==id);
   saveData();closeModal();renderBookings();renderDailyBar();
 }
 
@@ -1281,12 +1220,11 @@ function openAddBoatModal(){
     </div>`);
 }
 function saveNewBoat(){
-  const _nb={id:nextBoatId++,name:v('nb-nome')||'Nuova barca',type:v('nb-tipo'),length:'',passengers:'',engine:'',homeport:v('nb-porto')||'Messina',photo:null,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}};boats.push(_nb);fbSaveItem('boats',_nb);
+  const _nb={id:nextBoatId++,name:v('nb-nome')||'Nuova barca',type:v('nb-tipo'),length:'',passengers:'',engine:'',homeport:v('nb-porto')||'Messina',photo:null,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}};boats.push(_nb);rtdbWrite('boats/'+_nb.id,_nb);
   activeBoat=boats.length-1;saveData();closeModal();renderFleet();
 }
 function removeBoat(i){
-  if(!confirm(`Eliminare "${boats[i].name}" dalla flotta? Questa azione non è reversibile.`))return;
-  fbDeleteItem('boats',boats[i].id);boats.splice(i,1);
+  if(!confirm(`Eliminare "${boats[i].name}" dalla flotta? Questa azione non è reversibile.`))return;boats.splice(i,1);
   activeBoat=Math.min(activeBoat,boats.length-1);
   saveData();renderFleet();
 }
@@ -1394,7 +1332,8 @@ function uploadDoc(id,input){
 function removeDoc(id){const c=clients.find(x=>x.id===id);c.docData=null;c.docName=null;c.docType=null;saveData();openClientDetail(id);renderClients();}
 function addTag(id,val){const t=val.trim();if(!t)return;const c=clients.find(x=>x.id===id);if(!(c.tags||[]).includes(t)){c.tags=c.tags||[];c.tags.push(t);}saveData();openClientDetail(id);renderClients();}
 function deleteClient(id){if(!confirm('Eliminare questo cliente?'))return;clients=clients.filter(x=>x.id!==id);saveData();
-  if(id){fbSaveItem('clients',clients.find(x=>x.id===id));}else{fbSaveItem('clients',clients[clients.length-1]);}
+  var _cli=id?clients.find(x=>x.id===id):clients[clients.length-1];
+  if(_cli) rtdbWrite('clients/'+_cli.id,_cli);
   closeModal();renderClients();}
 
 function openClientFormFromLead(leadId){
@@ -1453,7 +1392,8 @@ function saveClientForm(id,leadId){
     if(leadId){const l=leads.find(x=>x.id===leadId);if(l){l.clienteId=nc.id;}}
   }
   saveData();
-  if(id){fbSaveItem('clients',clients.find(x=>x.id===id));}else{fbSaveItem('clients',clients[clients.length-1]);}
+  var _cli=id?clients.find(x=>x.id===id):clients[clients.length-1];
+  if(_cli) rtdbWrite('clients/'+_cli.id,_cli);
   closeModal();renderClients();
 }
 
@@ -1695,11 +1635,11 @@ function saveTask(id){
   const leadVal=document.getElementById('tk-lead').value;
   const d={titolo:v('tk-titolo'),categoria:v('tk-cat'),priorita:v('tk-pri'),stato:v('tk-stato'),scadenza:v('tk-scad'),barca:v('tk-barca'),note:v('tk-note'),assegnatario:v('tk-assegnatario')||'',leadId:leadVal?parseInt(leadVal):null};
   if(!d.titolo)return;
-  if(id){Object.assign(tasks.find(x=>x.id===id),d);fbSaveItem('tasks',tasks.find(x=>x.id===id));}
-  else{const _nt={id:nextTaskId++,...d,clienteId:null,creatoIl:today()};tasks.push(_nt);fbSaveItem('tasks',_nt);}
+  if(id){Object.assign(tasks.find(x=>x.id===id),d);rtdbWrite('tasks/'+id,tasks.find(x=>x.id===id));}
+  else{const _nt={id:nextTaskId++,...d,clienteId:null,creatoIl:today()};tasks.push(_nt);rtdbWrite('tasks/'+_nt.id,_nt);}
   saveData();closeModal();renderTasks();
 }
-function deleteTask(id){if(!confirm('Eliminare questo task?'))return;fbDeleteItem('tasks',id);tasks=tasks.filter(x=>x.id!==id);saveData();closeModal();renderTasks();}
+function deleteTask(id){if(!confirm('Eliminare questo task?'))return;rtdbDelete('tasks/'+id);tasks=tasks.filter(x=>x.id!==id);saveData();closeModal();renderTasks();}
 
 
 // ==================== DAILY BAR (G) ====================
@@ -1762,32 +1702,19 @@ function renderDailyBar(){
   });
 }
 
-// ==================== FIREBASE HELPERS ====================
-function fbInitAll() {
-  if(!window._fbReady) { alert('Firebase non ancora pronto, riprova tra un secondo.'); return; }
-  if(!confirm('Questo caricherà TUTTI i dati locali (leads, clienti, prenotazioni, barche, task) su Firebase Firestore.\nContinuare?')) return;
-  window._fbInitAll();
+// ==================== RTDB INIT ====================
+function rtdbInitAll() {
+  if(!confirm('Carica TUTTI i dati locali su Firebase Realtime Database?\nFallo solo la prima volta.')) return;
+  var btn = document.querySelector('[onclick="rtdbInitAll()"]');
+  if(btn) { btn.textContent = 'Caricamento...'; btn.disabled = true; }
+  rtdbPushAll().then(function() {
+    alert('✅ Dati caricati su Firebase! (' + (leads.length+clients.length+bookings.length+boats.length+tasks.length) + ' record)');
+    if(btn) { btn.textContent = '✓ Caricato'; }
+  }).catch(function(e) {
+    alert('Errore: ' + e.message);
+    if(btn) { btn.textContent = '↑ Carica su Firebase'; btn.disabled = false; }
+  });
 }
-
-function updateFbStatus(online) {
-  const dot = document.getElementById('fb-dot');
-  const label = document.getElementById('fb-label');
-  if(!dot||!label) return;
-  if(online) {
-    dot.style.background = '#4CAF50';
-    label.textContent = 'Firebase online';
-    label.style.color = 'rgba(255,255,255,.7)';
-  } else {
-    dot.style.background = '#F44336';
-    label.textContent = 'Offline';
-    label.style.color = 'rgba(255,255,255,.4)';
-  }
-}
-
-// Poll Firebase status
-setInterval(function() {
-  updateFbStatus(!!window._fbReady);
-}, 1000);
 
 // ==================== INIT ====================
 // Show loading state while waiting for Firestore
