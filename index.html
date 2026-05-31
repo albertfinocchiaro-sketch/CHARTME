@@ -326,8 +326,24 @@ function normalizeBoat(b){
   b.engine = b.engine || '';
   b.homeport = b.homeport || '';
   b.bands = safeArr(b.bands).length ? safeArr(b.bands).map(function(x){ x.months=Array.isArray(x.months)?x.months:[]; x.price=Number(x.price)||0; return x; }) : DEFAULT_BANDS.map(function(x){ return JSON.parse(JSON.stringify(x)); });
-  b.overrides = (b.overrides && typeof b.overrides==='object') ? b.overrides : {};
-  b.bookings = (b.bookings && typeof b.bookings==='object') ? b.bookings : {};
+  function normalizeDateKey(k){
+    var raw=String(k||'');
+    var m=raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if(!m) return raw;
+    var yy=Number(m[1]), mm=Number(m[2]), dd=Number(m[3]);
+    // New keys are ISO yyyy-mm-dd. Old keys were yyyy-M-D with month 0-11.
+    // Treat as old only when the month was clearly not zero-padded or was 0.
+    if(m[2].length===1 || mm===0) mm=mm+1;
+    return yy+'-'+String(mm).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
+  }
+  function normalizeMapKeys(obj){
+    var out={};
+    if(!obj || typeof obj!=='object') return out;
+    Object.keys(obj).forEach(function(k){ out[normalizeDateKey(k)] = obj[k]; });
+    return out;
+  }
+  b.overrides = normalizeMapKeys(b.overrides);
+  b.bookings = normalizeMapKeys(b.bookings);
   return b;
 }
 function normalizeBooking(b){
@@ -372,13 +388,7 @@ function normalizeAllData(){
 }
 
 
-let leads=[
-  {id:1,nome:'Marco Russo',email:'marco.russo@email.it',tel:'+39 347 1234567',origine:'Instagram',campagna:'Estate 2024',stato:'Confermato',note:'Uscita Eolie 3 giorni',followups:[{date:'2024-03-10',text:'Inviato preventivo €1.200'}],clienteId:1,data:'2024-03-08',prenotazioneId:1},
-  {id:2,nome:'Sara Ferretti',email:'s.ferretti@gmail.com',tel:'+39 333 9876543',origine:'Sito web',campagna:'',stato:'Preventivo',note:'Catamarano luglio',followups:[],clienteId:null,data:'2024-04-12',prenotazioneId:null},
-  {id:3,nome:'Luca Bianchi',email:'lbianchi@work.it',tel:'+39 320 5556677',origine:'Passaparola',campagna:'',stato:'Contattato',note:'Gruppo aziendale 10p',followups:[{date:'2024-04-15',text:'Richiesta disponibilità luglio'}],clienteId:null,data:'2024-04-20',prenotazioneId:null},
-  {id:4,nome:'Giulia Marino',email:'giulia.marino@libero.it',tel:'+39 348 2223344',origine:'WhatsApp',campagna:'',stato:'Nuovo',note:'',followups:[],clienteId:null,data:'2024-05-01',prenotazioneId:null},
-  {id:5,nome:'Antonio Greco',email:'a.greco@email.it',tel:'+39 339 7778899',origine:'OTA',campagna:'Booking Summer',stato:'Perso',note:'Prezzo troppo alto',followups:[],clienteId:null,data:'2024-04-05',prenotazioneId:null},
-];
+let leads=[];
 let clients=[{"id": 1, "nome": "Gregorio", "cognome": "Augusto", "email": "gregorio.augusto@lacascina.it", "tel": "+39 3492506606", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 2, "nome": "Michele", "cognome": "Palmieri", "email": "m.palmieri@itheredia.it", "tel": "+39 3939789425", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "1 noleggi", "prenotazioni": []}, {"id": 3, "nome": "Salvatore", "cognome": "Cammaroto", "email": "scpicks23@gmail.com", "tel": "+39 3319215794", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 4, "nome": "Elisa", "cognome": "Poli", "email": "elisa02.p@gmail.com", "tel": "+39 3314638589", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 5, "nome": "Francesco", "cognome": "Arcovito", "email": "", "tel": "+39 335403201", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 6, "nome": "Alessandro", "cognome": "Catalfamo", "email": "alessandrocatalfamo26@gmail.com", "tel": "+39 3207048126", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 7, "nome": "Maurizio", "cognome": "Traina", "email": "", "tel": "+39 3922600141", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 8, "nome": "Mariadele", "cognome": "Venuti", "email": "benevenutiamessina@gmail.com", "tel": "+39 3288867195", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 9, "nome": "Francesco", "cognome": "Alleruzzo", "email": "francesco.alleruzzo26@gmail.com", "tel": "+39 3425806030", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": ["Ritorno"], "note": "3 noleggi", "prenotazioni": []}, {"id": 10, "nome": "Gaetano", "cognome": "Montineri", "email": "gmonti@me.com", "tel": "+39 3358440407", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": ["Ritorno"], "note": "3 noleggi", "prenotazioni": []}, {"id": 11, "nome": "Giuseppe", "cognome": "Buceti", "email": "bucetig@gmail.com", "tel": "+39 3925754925", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 12, "nome": "Marco", "cognome": "Russo", "email": "marcorusso1304@gmail.com", "tel": "+39 3423565382", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 13, "nome": "Luigi", "cognome": "Russo", "email": "giggirusso1980@gmail.com", "tel": "+39 3400565662", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 14, "nome": "Gianfranco", "cognome": "Verboso", "email": "gianfrancoverboso@gmail.com", "tel": "+39 3881862606", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 15, "nome": "Paolo", "cognome": "Ferraù", "email": "paoloferru04@icloud.com", "tel": "+39 3332476590", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 16, "nome": "Mirko", "cognome": "Fusco", "email": "mirko.fusco06@gmail.com", "tel": "+39 3273912052", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 17, "nome": "Samuele", "cognome": "Arnò", "email": "milansamu33@gmail.com", "tel": "+39 3802614567", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 18, "nome": "Giuseppe", "cognome": "Privitera", "email": "felterhome@gmail.com", "tel": "+39 337426313", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 19, "nome": "Giorgia", "cognome": "Germanà", "email": "giorgiagermana@gmail.com", "tel": "+39 3407599748", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 20, "nome": "Maurizo", "cognome": "Grioli", "email": "mauriziogrioli@hotmail.it", "tel": "+39 3409681159", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 21, "nome": "Massimiliano", "cognome": "Passeri", "email": "massimialianopasseri73@gmail.com", "tel": "+39 3494913651", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 22, "nome": "Andrea", "cognome": "Speciale", "email": "", "tel": "+39 3487861499", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": ["Ritorno"], "note": "2 noleggi", "prenotazioni": []}, {"id": 23, "nome": "Luigi", "cognome": "Villari", "email": "luigivillari9@gmail.com", "tel": "+39 3669760208", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": ["Ritorno"], "note": "2 noleggi", "prenotazioni": []}, {"id": 24, "nome": "Fabio", "cognome": "Noli Maio", "email": "", "tel": "+39 3491121695", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 25, "nome": "Luigi", "cognome": "Asmundo", "email": "luigi.asm@gmail.com", "tel": "+39 3466211244", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 26, "nome": "Sofia", "cognome": "Russo", "email": "", "tel": "+39 3479639069", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 27, "nome": "Renata", "cognome": "Consoli", "email": "claudio@arigas.it", "tel": "+39 3393146371", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 28, "nome": "Giorgio", "cognome": "Marchese", "email": "", "tel": "+39 3357765083", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": ["Ritorno"], "note": "2 noleggi", "prenotazioni": []}, {"id": 29, "nome": "Giuseppe", "cognome": "Andò", "email": "peppeando@virgilio.it", "tel": "+39 3463769264", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 30, "nome": "Manuel", "cognome": "Nazzaro", "email": "nazzaromanuel@gmail.com", "tel": "+39 3884829080", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": ["Ritorno"], "note": "2 noleggi", "prenotazioni": []}, {"id": 31, "nome": "Andrea", "cognome": "Zuccarello", "email": "notaio@notaiozuccarello.it", "tel": "+39 3403790099", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 32, "nome": "Emilio", "cognome": "Palleschi", "email": "palleschi.emilio@gmail.com", "tel": "+39 3383685050", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 33, "nome": "Luigi", "cognome": "Crescenti", "email": "luigi.crescenti@libero.it", "tel": "+39 3488623659", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 34, "nome": "Christian", "cognome": "Calandra", "email": "", "tel": "+39 3286250237", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 35, "nome": "Salvatore", "cognome": "Micari", "email": "", "tel": "+39 3489822537", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 36, "nome": "Pietro", "cognome": "Mancuso", "email": "", "tel": "+39 3421938467", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 37, "nome": "Alessandro", "cognome": "de domenico", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 38, "nome": "Francesco", "cognome": "Picciolo", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 39, "nome": "alberto", "cognome": "vitale", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 40, "nome": "giuseppe", "cognome": "guerrera", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 41, "nome": "ivan", "cognome": "gugliandolo", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 42, "nome": "Emilio", "cognome": "Palleschi", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 43, "nome": "Salvatore", "cognome": "Mangraviti", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 44, "nome": "sethu", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 45, "nome": "giovanni", "cognome": "centorrino", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 46, "nome": "nino", "cognome": "Quinci", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 47, "nome": "Emilio", "cognome": "Palleschi", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 48, "nome": "emanuele", "cognome": "cardile", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 49, "nome": "giorgio", "cognome": "belvedere", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 50, "nome": "antonio", "cognome": "mancuso", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 51, "nome": "ale srl (anselmo)", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 52, "nome": "alessio", "cognome": "cimmino", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 53, "nome": "Alessandro", "cognome": "Siracusano", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 54, "nome": "giovanni", "cognome": "maimone", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 55, "nome": "Carmelo", "cognome": "Polimeni", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 56, "nome": "giuseppe", "cognome": "amante", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 57, "nome": "federica", "cognome": "zuccarello", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 58, "nome": "fabrizio", "cognome": "villari", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 59, "nome": "alessandra", "cognome": "barbera", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 60, "nome": "marco", "cognome": "gugliandolo", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 61, "nome": "giuseppe", "cognome": "ferrante", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 62, "nome": "antonio", "cognome": "barbera", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 63, "nome": "julian", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 64, "nome": "massimo", "cognome": "fulci", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 65, "nome": "CD FOSSO", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 66, "nome": "realealis", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 67, "nome": "patrizia", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 68, "nome": "Giorgio", "cognome": "Marchese", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 69, "nome": "Matteo", "cognome": "Mileto", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 70, "nome": "Liana", "cognome": "Cannata", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 71, "nome": "Andrea", "cognome": "Fiore", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 72, "nome": "Marco", "cognome": "Agrillo", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 73, "nome": "Saro", "cognome": "De Natale", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 74, "nome": "Julien", "cognome": "Tranchida", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 75, "nome": "Santino", "cognome": "Freni", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 76, "nome": "oliva", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 77, "nome": "federico", "cognome": "fotia", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 78, "nome": "alessandro", "cognome": "majolino", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 79, "nome": "Giuseppe", "cognome": "Currò", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 80, "nome": "Federica", "cognome": "Finocchiaro", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 81, "nome": "Nicola", "cognome": "Sottile", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 82, "nome": "saglimbeni", "cognome": "roberto", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 83, "nome": "nino", "cognome": "de domenico", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 84, "nome": "Simona", "cognome": "Sagone", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 85, "nome": "Antonio", "cognome": "Ruggeri", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 86, "nome": "Marco", "cognome": "romeo", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 87, "nome": "mefis srl", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 88, "nome": "Giovanni", "cognome": "Celi", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 89, "nome": "alessandro", "cognome": "oliva", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 90, "nome": "giannino", "cognome": "federico", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 91, "nome": "alex", "cognome": "ganci", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 92, "nome": "michele", "cognome": "palmieri", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 93, "nome": "alessandro", "cognome": "giacobbe", "email": "", "tel": "+39 3479467514", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 94, "nome": "giulia", "cognome": "crupi", "email": "", "tel": "+39 3247864798", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 95, "nome": "luigi", "cognome": "deodato", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 96, "nome": "piero", "cognome": "tagliavia", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 97, "nome": "barreca", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}];
 let bookings=[
   {id:1,clienteId:1,clienteNome:'Marco Russo',barca:'Poseidon I',data:'2024-07-15',giorni:3,destinazione:'Isole Eolie',passeggeri:8,importo:1800,acconto:600,statoPagamento:'Parziale',statoFattura:'Non fatturato',note:'Skipper: Giovanni',leadId:1},
@@ -388,7 +398,7 @@ let boats=[
   {id:2,name:'Artemide',type:'Barca a vela',length:'11m',passengers:'8',engine:'Volvo 30cv',homeport:'Messina',photo:null,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
   {id:3,name:'Helios',type:'Motobarca',length:'9m',passengers:'10',engine:'Mercury 150cv',homeport:'Milazzo',photo:null,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}}
 ];
-let nextLeadId=6,nextClientId=98,nextBookingId=2,nextBoatId=4;
+let nextLeadId=1,nextClientId=98,nextBookingId=2,nextBoatId=4;
 let activeBoat=0,calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
 let crmFilter='Tutti',bkPayFilter='',bkInvFilter='';
 
@@ -455,7 +465,8 @@ function persistAllLocalAndRemote() {
 }
 
 function persistBooking(id) { var b=bookings.find(function(x){return x && idEq(x.id,id);}); if(b) rtdbWrite('bookings/'+String(id),b); }
-function persistBoatByName(name) { var b=boats.find(function(x){return x.name===name;}); if(b) rtdbWrite('boats/'+b.id,b); }
+function persistBoat(id) { var b=boats.find(function(x){return x && idEq(x.id,id);}); if(b) rtdbWrite('boats/'+String(b.id),b); }
+function persistBoatByName(name) { var b=boats.find(function(x){return x && x.name===name;}); if(b) rtdbWrite('boats/'+b.id,b); }
 function persistClient(id) { var c=clients.find(function(x){return x.id===id;}); if(c) rtdbWrite('clients/'+id,c); }
 function persistTask(id) { var t=tasks.find(function(x){return x.id===id;}); if(t) rtdbWrite('tasks/'+id,t); }
 function persistLead(id) { var l=leads.find(function(x){return x.id===id;}); if(l) rtdbWrite('leads/'+id,l); }
@@ -485,7 +496,7 @@ function rtdbRead() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       window._fbDataLoaded=true;
-      if(!data) return;
+      if(!data) data={};
       // IMPORTANT: assign even when a Firebase node is missing/empty.
       // Otherwise deleted data would be replaced by old localStorage/default data.
       leads    = safeArr(data.leads);
@@ -495,11 +506,11 @@ function rtdbRead() {
       tasks    = safeArr(data.tasks).map(normalizeTask);
       normalizeAllData();
       sortClientsAZ();
-      if(leads.length)    nextLeadId    = Math.max.apply(null, leads.map(function(x){return x.id||0;}))+1;
-      if(clients.length)  nextClientId  = Math.max.apply(null, clients.map(function(x){return x.id||0;}))+1;
-      if(bookings.length) nextBookingId = Math.max.apply(null, bookings.map(function(x){return x.id||0;}))+1;
-      if(boats.length)    nextBoatId    = Math.max.apply(null, boats.map(function(x){return x.id||0;}))+1;
-      if(tasks.length)    nextTaskId    = Math.max.apply(null, tasks.map(function(x){return x.id||0;}))+1;
+      nextLeadId    = leads.length    ? Math.max.apply(null, leads.map(function(x){return x.id||0;}))+1 : 1;
+      nextClientId  = clients.length  ? Math.max.apply(null, clients.map(function(x){return x.id||0;}))+1 : 1;
+      nextBookingId = bookings.length ? Math.max.apply(null, bookings.map(function(x){return x.id||0;}))+1 : 1;
+      nextBoatId    = boats.length    ? Math.max.apply(null, boats.map(function(x){return x.id||0;}))+1 : 1;
+      nextTaskId    = tasks.length    ? Math.max.apply(null, tasks.map(function(x){return x.id||0;}))+1 : 1;
       saveData();
       // Re-render active page
       var pages = {crm:'renderCRM',bookings:'renderBookings',fleet:'renderFleet',clients:'renderClients',stats:'renderStats',tasks:'renderTasks'};
@@ -573,7 +584,9 @@ function sortClientsAlpha(){
 // ==================== CRM ====================
 function renderCRM(){
   const q=((document.getElementById('crm-search')||{}).value||'').trim().toLowerCase();
-  const cleanLeads = safeArr(leads).filter(function(l){ return l && l.id != null; });
+  leads = safeArr(leads).filter(function(l){ return l && l.id != null; });
+  const cleanLeads = leads;
+  if(crmFilter!=='Tutti' && !STATI_LEAD.includes(crmFilter)) crmFilter='Tutti';
   const counts={};STATI_LEAD.forEach(s=>counts[s]=cleanLeads.filter(l=>l.stato===s).length);
   document.getElementById('crm-stats').innerHTML=[
     {l:'Lead totali',v:cleanLeads.length,s:''},
@@ -1026,7 +1039,7 @@ function openBookingForm(id,leadId){
 }
 
 function priceKeyFromDate(dt){
-  return dt.getFullYear()+'-'+dt.getMonth()+'-'+dt.getDate();
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
 }
 
 function getPriceForDate(boat,dateObj){
@@ -1171,7 +1184,7 @@ function syncBoatCalendar(bk,add){
   const giorni=parseInt(bk.giorni)||1;
   for(let g=0;g<giorni;g++){
     const d=new Date(start);d.setDate(d.getDate()+g);
-    const key=d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     if(add){boat.bookings[key]={bookingId:bk.id,clienteNome:bk.clienteNome};}
     else{delete boat.bookings[key];}
   }
@@ -1306,9 +1319,10 @@ function deleteBooking(id){
 function getBandPrice(boat,m){boat=normalizeBoat(boat);for(const b of boat.bands)if((b.months||[]).includes(m))return b.price;return 0;}
 function getDayInfo(boat,key){
   boat=normalizeBoat(boat);
-  const[y,m,d]=key.split('-').map(Number);
-  if(boat.overrides[key]!==undefined)return{price:boat.overrides[key],over:true};
-  return{price:getBandPrice(boat,m),over:false};
+  var parts=String(key).split('-').map(Number);
+  var monthIndex = (parts[1]||1)-1;
+  if(boat.overrides && boat.overrides[key]!==undefined)return{price:Number(boat.overrides[key])||0,over:true};
+  return{price:getBandPrice(boat,monthIndex),over:false};
 }
 
 function renderFleet(){
@@ -1325,7 +1339,7 @@ function renderFleet(){
   let cells='';
   for(let i=0;i<offset;i++)cells+=`<div></div>`;
   for(let d=1;d<=dim;d++){
-    const key=`${calYear}-${calMonth}-${d}`;
+    const key=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     const{price,over}=getDayInfo(boat,key);
     const booked=boat.bookings[key];
     const cls='cal-day'+(booked?' booked':over?' override':'');
@@ -1374,13 +1388,16 @@ function renderFleet(){
 function loadBoatPhoto(e,i){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{boats[i].photo=ev.target.result;saveData();renderFleet()};r.readAsDataURL(f);}
 
 function openFleetDay(key){
-  const boat=boats[activeBoat];
-  const[y,m,d]=key.split('-').map(Number);
-  const band=getBandPrice(boat,m);
-  const over=boat.overrides[key];
-  const booked=boat.bookings[key];
+  const boat=normalizeBoat(boats[activeBoat]);
+  boats[activeBoat]=boat;
+  const parts=String(key).split('-').map(Number);
+  const y=parts[0], monthIndex=(parts[1]||1)-1, d=parts[2];
+  const band=getBandPrice(boat,monthIndex);
+  const over=boat.overrides ? boat.overrides[key] : undefined;
+  const booked=boat.bookings ? boat.bookings[key] : false;
   modal(`
-    <div class="modal-title">${d} ${MONTHS[m]} ${y} — ${boat.name}<button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-title">${d} ${MONTHS[monthIndex]} ${y} — ${boat.name}<button class="modal-close" onclick="closeModal()">×</button></div>
+    <div style="padding:8px 10px;background:var(--info-bg);color:var(--info);border-radius:var(--r);font-size:12px;margin-bottom:10px">Puoi lasciare il prezzo vuoto per usare la fascia stagionale, oppure inserire un prezzo diverso valido solo per questo giorno.</div>
     <div class="field"><label>Prezzo fascia stagionale</label><input value="€${band}" readonly style="background:var(--bg2);color:var(--text3)"></div>
     <div class="field"><label>Prezzo personalizzato per questo giorno</label><input type="number" id="day-ov" value="${over!==undefined?over:''}" placeholder="Es. 900"></div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
@@ -1395,10 +1412,11 @@ function openFleetDay(key){
 }
 
 function saveFleetDay(key){
-  const boat=boats[activeBoat];
+  const boat=normalizeBoat(boats[activeBoat]);
+  boats[activeBoat]=boat;
   const ov=document.getElementById('day-ov').value;
   const booked=document.getElementById('day-booked').checked;
-  if(ov!=='')boat.overrides[key]=parseInt(ov);else delete boat.overrides[key];
+  if(ov!=='' && !isNaN(Number(ov))) boat.overrides[key]=Number(ov); else delete boat.overrides[key];
   const was=boat.bookings[key];
   if(booked)boat.bookings[key]=true;else delete boat.bookings[key];
   saveData();persistBoat(boat.id);closeModal();
@@ -1406,7 +1424,7 @@ function saveFleetDay(key){
     showPage('bookings');setTimeout(()=>openBookingForm(null),50);
   }else{renderFleet();}
 }
-function removeOverride(key){delete boats[activeBoat].overrides[key];saveData();persistBoat(boats[activeBoat].id);closeModal();renderFleet();}
+function removeOverride(key){boats[activeBoat]=normalizeBoat(boats[activeBoat]);delete boats[activeBoat].overrides[key];saveData();persistBoat(boats[activeBoat].id);closeModal();renderFleet();}
 function openAddBoatModal(){
   modal(`
     <div class="modal-title">Nuova imbarcazione<button class="modal-close" onclick="closeModal()">×</button></div>
