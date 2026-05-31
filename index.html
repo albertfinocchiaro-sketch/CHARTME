@@ -408,6 +408,7 @@ function initials(s){return(s||'').split(' ').map(w=>w[0]||'').join('').toUpperC
 function badgeLead(s){return{Nuovo:'badge-new',Contattato:'badge-contact',Preventivo:'badge-quote',Confermato:'badge-confirmed',Perso:'badge-lost'}[s]||''}
 function fmtEur(n){return'€'+Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:0})}
 function today(){return new Date().toISOString().slice(0,10)}
+function idEq(a,b){return String(a)==String(b)}
 function normSortText(s){return String(s||'').trim().toLocaleLowerCase('it-IT')}
 function clientSortKey(c){return normSortText((c.cognome||'')+' '+(c.nome||''))}
 function sortClientsAZ(){
@@ -453,7 +454,7 @@ function persistAllLocalAndRemote() {
   return rtdbPushAll().catch(function(e){ console.warn('rtdb full sync error', e); });
 }
 
-function persistBooking(id) { var b=bookings.find(function(x){return x.id===id;}); if(b) rtdbWrite('bookings/'+id,b); }
+function persistBooking(id) { var b=bookings.find(function(x){return x && idEq(x.id,id);}); if(b) rtdbWrite('bookings/'+String(id),b); }
 function persistBoatByName(name) { var b=boats.find(function(x){return x.name===name;}); if(b) rtdbWrite('boats/'+b.id,b); }
 function persistClient(id) { var c=clients.find(function(x){return x.id===id;}); if(c) rtdbWrite('clients/'+id,c); }
 function persistTask(id) { var t=tasks.find(function(x){return x.id===id;}); if(t) rtdbWrite('tasks/'+id,t); }
@@ -485,11 +486,13 @@ function rtdbRead() {
     .then(function(data) {
       window._fbDataLoaded=true;
       if(!data) return;
-      if(data.leads)    leads    = safeArr(data.leads);
-      if(data.clients)  clients  = safeArr(data.clients);
-      if(data.bookings) bookings = safeArr(data.bookings).map(normalizeBooking);
-      if(data.boats)    boats    = safeArr(data.boats).map(normalizeBoat);
-      if(data.tasks)    tasks    = safeArr(data.tasks).map(normalizeTask);
+      // IMPORTANT: assign even when a Firebase node is missing/empty.
+      // Otherwise deleted data would be replaced by old localStorage/default data.
+      leads    = safeArr(data.leads);
+      clients  = safeArr(data.clients);
+      bookings = safeArr(data.bookings).map(normalizeBooking);
+      boats    = safeArr(data.boats).map(normalizeBoat);
+      tasks    = safeArr(data.tasks).map(normalizeTask);
       normalizeAllData();
       sortClientsAZ();
       if(leads.length)    nextLeadId    = Math.max.apply(null, leads.map(function(x){return x.id||0;}))+1;
@@ -569,10 +572,11 @@ function sortClientsAlpha(){
 
 // ==================== CRM ====================
 function renderCRM(){
-  const q=(document.getElementById('crm-search')||{}).value||'';
-  const counts={};STATI_LEAD.forEach(s=>counts[s]=leads.filter(l=>l.stato===s).length);
+  const q=((document.getElementById('crm-search')||{}).value||'').trim().toLowerCase();
+  const cleanLeads = safeArr(leads).filter(function(l){ return l && l.id != null; });
+  const counts={};STATI_LEAD.forEach(s=>counts[s]=cleanLeads.filter(l=>l.stato===s).length);
   document.getElementById('crm-stats').innerHTML=[
-    {l:'Lead totali',v:leads.length,s:''},
+    {l:'Lead totali',v:cleanLeads.length,s:''},
     {l:'Da seguire',v:(counts['Nuovo']||0)+(counts['Contattato']||0),s:''},
     {l:'Preventivi aperti',v:counts['Preventivo']||0,s:''},
     {l:'Confermati',v:counts['Confermato']||0,s:''},
@@ -580,7 +584,7 @@ function renderCRM(){
 
   document.getElementById('crm-pills').innerHTML=['Tutti',...STATI_LEAD].map(s=>`<span class="pill${crmFilter===s?' active':''}" onclick="crmFilter='${s}';renderCRM()">${s}${s!=='Tutti'?' ('+( counts[s]||0)+')':''}</span>`).join('');
 
-  const filtered=leads.filter(l=>(crmFilter==='Tutti'||l.stato===crmFilter)&&(l.nome+l.email+l.tel).toLowerCase().includes(q.toLowerCase()));
+  const filtered=cleanLeads.filter(l=>(crmFilter==='Tutti'||l.stato===crmFilter)&&(((l.nome||'')+' '+(l.email||'')+' '+(l.tel||'')).toLowerCase().includes(q)));
   document.getElementById('crm-table').innerHTML=filtered.length===0?`<div class="empty">Nessun lead trovato</div>`:`
   <table class="tbl">
     <thead><tr><th>Lead</th><th>Contatto</th><th>Origine</th><th>Stato</th><th>Data</th><th>Follow-up</th><th></th></tr></thead>
@@ -902,12 +906,12 @@ function invStyle(s){
   return'background:#F7F6F2;color:#8A8880;border-color:#ccc';
 }
 function updateBkField(id,field,val){
-  const b=bookings.find(x=>x.id===id);if(!b)return;
+  const b=bookings.find(function(x){return x && idEq(x.id,id);});if(!b)return;
   const oldPay=b.statoPagamento;
   b[field]=val;
   if(field==='statoPagamento'&&val==='Saldato'){
     tasks.forEach(function(t){
-      if(t.bookingId===id&&(t.titolo||'').toLowerCase().includes('saldo')){t.stato='Completato';persistTask(t.id);}
+      if(t && idEq(t.bookingId,id)&&(t.titolo||'').toLowerCase().includes('saldo')){t.stato='Completato';persistTask(t.id);}
     });
   }
   if(field==='statoPagamento'&&oldPay==='Saldato'&&val!=='Saldato') checkPaymentAlerts();
@@ -915,7 +919,7 @@ function updateBkField(id,field,val){
 }
 
 function openBookingDetail(id){
-  const b=bookings.find(x=>x.id===id);if(!b)return;
+  const b=bookings.find(function(x){return x && idEq(x.id,id);});if(!b)return;
   const saldo=Number(b.importo)-Number(b.acconto);
   modal(`
     <div class="modal-title">Prenotazione #${b.id}<button class="modal-close" onclick="closeModal()">×</button></div>
@@ -957,13 +961,13 @@ function openBookingDetail(id){
 }
 
 function saveBookingStatus(id){
-  const b=bookings.find(x=>x.id===id);if(!b)return;
+  const b=bookings.find(function(x){return x && idEq(x.id,id);});if(!b)return;
   const oldPay=b.statoPagamento;
   b.statoPagamento=document.getElementById('det-pay').value;
   b.statoFattura=document.getElementById('det-inv').value;
   if(oldPay!=='Saldato'&&b.statoPagamento==='Saldato'){
     tasks.forEach(function(t){
-      if(t.bookingId===id&&(t.titolo||'').toLowerCase().includes('saldo')){t.stato='Completato';persistTask(t.id);}
+      if(t && idEq(t.bookingId,id)&&(t.titolo||'').toLowerCase().includes('saldo')){t.stato='Completato';persistTask(t.id);}
     });
   }
   if(oldPay==='Saldato'&&b.statoPagamento!=='Saldato') checkPaymentAlerts();
@@ -971,11 +975,11 @@ function saveBookingStatus(id){
 }
 
 function openBookingForm(id,leadId){
-  const b=id?bookings.find(x=>x.id===id):{id:null,clienteNome:'',clienteId:null,barca:boats[0]?.name||'',data:today(),giorni:1,destinazione:'',passeggeri:2,importo:0,acconto:0,statoPagamento:'Non pagato',statoFattura:'Non fatturato',note:'',leadId:leadId||null,checkin:'',checkout:''};
+  const b=id?bookings.find(function(x){return x && idEq(x.id,id);}):{id:null,clienteNome:'',clienteId:null,barca:boats[0]?.name||'',data:today(),giorni:1,destinazione:'',passeggeri:2,importo:0,acconto:0,statoPagamento:'Non pagato',statoFattura:'Non fatturato',note:'',leadId:leadId||null,checkin:'',checkout:''};
   const preNome=leadId?leads.find(x=>x.id===leadId)?.nome||'':'';
   const preLeadCliente=leadId?leads.find(x=>x.id===leadId):null;
   const existingClient=b.clienteId?clients.find(x=>x.id===b.clienteId):null;
-  const allClientBks=existingClient?bookings.filter(bk=>bk.clienteId===existingClient.id&&bk.id!==id):[];
+  const allClientBks=existingClient?bookings.filter(function(bk){return bk && idEq(bk.clienteId,existingClient.id) && !idEq(bk.id,id);}):[];
   const isRecurring=allClientBks.length>0;
   const recurringTotal=allClientBks.reduce((s,bk)=>s+Number(bk.importo||0),0);
   const initPrice=b.importo||calcTariffPrice(b.barca,b.data,b.giorni||1);
@@ -1021,15 +1025,55 @@ function openBookingForm(id,leadId){
   if(!window._bkPriceManual) setTimeout(recalcPrice,50);
 }
 
+function priceKeyFromDate(dt){
+  return dt.getFullYear()+'-'+dt.getMonth()+'-'+dt.getDate();
+}
+
+function getPriceForDate(boat,dateObj){
+  boat=normalizeBoat(boat);
+  var key=priceKeyFromDate(dateObj);
+  var m=dateObj.getMonth();
+  if(boat.overrides && boat.overrides[key]!==undefined && boat.overrides[key]!==null && boat.overrides[key]!==''){
+    return {price:Number(boat.overrides[key])||0, custom:true, key:key};
+  }
+  return {price:getBandPrice(boat,m), custom:false, key:key};
+}
+
 function calcTariffPrice(barcaName,dataStr,giorni){
   var boat=boats.find(function(b){return b.name===barcaName;});
   if(!boat||!dataStr)return 0;
-  var m=new Date(dataStr).getMonth();
   boat=normalizeBoat(boat);
-  for(var i=0;i<boat.bands.length;i++){
-    if(boat.bands[i].months.indexOf(m)>=0) return boat.bands[i].price*(parseInt(giorni)||1);
+  var n=parseInt(giorni)||1;
+  var start=new Date(dataStr+'T12:00:00');
+  var total=0;
+  for(var i=0;i<n;i++){
+    var dt=new Date(start);
+    dt.setDate(start.getDate()+i);
+    total+=getPriceForDate(boat,dt).price;
   }
-  return 0;
+  return total;
+}
+
+function tariffDescription(barcaName,dataStr,giorni){
+  var boat=boats.find(function(b){return b.name===barcaName;});
+  if(!boat||!dataStr)return '';
+  boat=normalizeBoat(boat);
+  var n=parseInt(giorni)||1;
+  var start=new Date(dataStr+'T12:00:00');
+  var custom=0, parts=[];
+  for(var i=0;i<n;i++){
+    var dt=new Date(start); dt.setDate(start.getDate()+i);
+    var info=getPriceForDate(boat,dt);
+    if(info.custom) custom++;
+    parts.push('€'+info.price);
+  }
+  if(n===1){
+    var info=getPriceForDate(boat,start);
+    if(info.custom) return '(prezzo personalizzato · €'+info.price+'/g)';
+    var band=boat.bands.find(function(b){return (b.months||[]).indexOf(start.getMonth())>=0;});
+    return band?'('+band.label+' · €'+band.price+'/g)':'';
+  }
+  return custom>0?'('+n+' giorni · '+custom+' prezzo/i personalizzato/i · totale giorno per giorno)':'('+n+' giorni · fascia stagionale)';
 }
 
 function recalcPrice(){
@@ -1045,10 +1089,7 @@ function recalcPrice(){
   var srcEl=document.getElementById('bk-price-src');
   if(impEl) impEl.value=price;
   if(srcEl&&price>0){
-    var boat=boats.find(function(b){return b.name===barca;});
-    var m=new Date(data).getMonth();
-    var band=boat?boat.bands.find(function(b){return b.months.indexOf(m)>=0;}):null;
-    srcEl.textContent=band?'('+band.label+' · €'+band.price+'/g)':'';
+    srcEl.textContent=tariffDescription(barca,data,giorni);
   }
 }
 
@@ -1242,15 +1283,23 @@ function showPostBookingSummary(bookingId,leadId){
 }
 function deleteBooking(id){
   if(!confirm('Eliminare questa prenotazione?'))return;
-  const bk=bookings.find(x=>x.id===id);
+  id = String(id);
+  const bk=bookings.find(function(x){return x && idEq(x.id,id);});
   var oldBoatName=bk?bk.barca:null;
   if(bk){
     syncBoatCalendar(bk,false);
-    if(bk.clienteId){const c=clients.find(x=>x.id===bk.clienteId);if(c){c.prenotazioni=c.prenotazioni.filter(p=>p!==id);persistClient(c.id);}}
-    tasks.forEach(function(t){if(t.bookingId===id){t.stato='Completato';persistTask(t.id);}});
+    if(bk.clienteId){
+      const c=clients.find(function(x){return x && idEq(x.id,bk.clienteId);});
+      if(c){c.prenotazioni=safeArr(c.prenotazioni).filter(function(p){return !idEq(p,id);});persistClient(c.id);}
+    }
+    tasks.forEach(function(t){if(t && idEq(t.bookingId,id)){t.stato='Completato';persistTask(t.id);}});
   }
-  bookings=bookings.filter(x=>x.id!==id);
-  saveData();rtdbDelete('bookings/'+id);if(oldBoatName)persistBoatByName(oldBoatName);closeModal();renderBookings();renderDailyBar();renderStats();
+  bookings=bookings.filter(function(x){return x && !idEq(x.id,id);});
+  saveData();
+  rtdbDelete('bookings/'+id);
+  if(oldBoatName)persistBoatByName(oldBoatName);
+  closeModal();renderBookings();renderDailyBar();renderStats();
+  setTimeout(rtdbRead,300);
 }
 
 // ==================== FLEET ====================
@@ -1316,7 +1365,7 @@ function renderFleet(){
     </div>
     <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--white);border:0.5px solid var(--border);display:inline-block"></span>Fascia</span>
-      <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#E8F5E8;border:0.5px solid #1B7A3E;display:inline-block"></span>Override</span>
+      <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#E8F5E8;border:0.5px solid #1B7A3E;display:inline-block"></span>Prezzo custom</span>
       <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--danger-bg);border:0.5px solid var(--danger);display:inline-block"></span>Prenotato</span>
     </div>
   </div>`;
@@ -1333,13 +1382,13 @@ function openFleetDay(key){
   modal(`
     <div class="modal-title">${d} ${MONTHS[m]} ${y} — ${boat.name}<button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="field"><label>Prezzo fascia stagionale</label><input value="€${band}" readonly style="background:var(--bg2);color:var(--text3)"></div>
-    <div class="field"><label>Prezzo personalizzato (lascia vuoto per fascia)</label><input type="number" id="day-ov" value="${over!==undefined?over:''}" placeholder="Inserisci prezzo custom..."></div>
+    <div class="field"><label>Prezzo personalizzato per questo giorno</label><input type="number" id="day-ov" value="${over!==undefined?over:''}" placeholder="Es. 900"></div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
       <input type="checkbox" id="day-booked" ${booked?'checked':''} style="width:16px;height:16px;accent-color:var(--navy)">
       <label for="day-booked" style="font-size:13px;cursor:pointer">Giorno prenotato</label>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
-      ${over!==undefined?`<button class="btn btn-sm btn-danger" onclick="removeOverride('${key}')">Rimuovi custom</button>`:''}
+      ${over!==undefined?`<button class="btn btn-sm btn-danger" onclick="removeOverride('${key}')">Rimuovi prezzo custom</button>`:''}
       <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
       <button class="btn btn-sm btn-navy" onclick="saveFleetDay('${key}')">Salva</button>
     </div>`);
