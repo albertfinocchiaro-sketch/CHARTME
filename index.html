@@ -177,6 +177,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8l2 2 4-4"/></svg>Task
     </button>
   </div>  <div style="margin-left:auto;padding:0 12px;display:flex;align-items:center;gap:8px">
+    <button onclick="downloadBackup()" style="padding:4px 10px;background:transparent;border:1px solid rgba(201,184,138,.45);border-radius:6px;color:var(--gold);font-size:11px;font-weight:700;cursor:pointer">↓ Backup JSON</button>
+    <label style="padding:4px 10px;background:transparent;border:1px solid rgba(201,184,138,.45);border-radius:6px;color:var(--gold);font-size:11px;font-weight:700;cursor:pointer">↑ Ripristina<input type="file" accept="application/json,.json" style="display:none" onchange="restoreBackup(event)"></label>
     <button onclick="rtdbInitAll()" style="padding:4px 12px;background:var(--gold);border:none;border-radius:6px;color:var(--navy-dark);font-size:11px;font-weight:700;cursor:pointer">↑ Carica su Firebase</button>
   </div>
 </div>
@@ -327,6 +329,17 @@ let nextLeadId=6,nextClientId=98,nextBookingId=2,nextBoatId=4;
 let activeBoat=0,calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
 let crmFilter='Tutti',bkPayFilter='',bkInvFilter='';
 
+let tasks=[
+  {id:1,titolo:'Rinnovare assicurazione Poseidon I',categoria:'Burocrazia',priorita:'Alta',stato:'Aperto',scadenza:'2024-12-31',barca:'Poseidon I',note:'Contattare agenzia entro fine mese',leadId:null,clienteId:null,creatoIl:'2024-11-01'},
+  {id:2,titolo:'Manutenzione motore Helios',categoria:'Manutenzione',priorita:'Media',stato:'In corso',scadenza:'2024-12-15',barca:'Helios',note:'',leadId:null,clienteId:null,creatoIl:'2024-11-05'},
+  {id:3,titolo:'Follow-up preventivo Sara Ferretti',categoria:'Commerciale',priorita:'Alta',stato:'Aperto',scadenza:'2024-12-10',barca:'',note:'Richiamare per confermare data luglio',leadId:2,clienteId:null,creatoIl:'2024-11-08'},
+];
+let nextTaskId=4;
+const TASK_CAT=['Commerciale','Manutenzione','Burocrazia','Marketing','Operativo','Altro'];
+const TASK_PRI=['Alta','Media','Bassa'];
+const TASK_STATI=['Aperto','In corso','Completato'];
+let taskFilter='Tutti';
+
 // ==================== UTILS ====================
 function initials(s){return(s||'').split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2)||'?'}
 function badgeLead(s){return{Nuovo:'badge-new',Contattato:'badge-contact',Preventivo:'badge-quote',Confermato:'badge-confirmed',Perso:'badge-lost'}[s]||''}
@@ -356,6 +369,24 @@ function rtdbDelete(path) {
     .catch(function(e) { console.warn('rtdb delete error', e); });
 }
 
+function cleanForRemote(data) {
+  return JSON.parse(JSON.stringify(data, function(k,v) {
+    if(k==='photo'||k==='docData'||k==='docName'||k==='docType') return undefined;
+    return v;
+  }));
+}
+
+function persistAllLocalAndRemote() {
+  saveData();
+  return rtdbPushAll().catch(function(e){ console.warn('rtdb full sync error', e); });
+}
+
+function persistBooking(id) { var b=bookings.find(function(x){return x.id===id;}); if(b) rtdbWrite('bookings/'+id,b); }
+function persistBoatByName(name) { var b=boats.find(function(x){return x.name===name;}); if(b) rtdbWrite('boats/'+b.id,b); }
+function persistClient(id) { var c=clients.find(function(x){return x.id===id;}); if(c) rtdbWrite('clients/'+id,c); }
+function persistTask(id) { var t=tasks.find(function(x){return x.id===id;}); if(t) rtdbWrite('tasks/'+id,t); }
+function persistLead(id) { var l=leads.find(function(x){return x.id===id;}); if(l) rtdbWrite('leads/'+id,l); }
+
 function rtdbPushAll() {
   var payload = {
     leads: {},
@@ -380,6 +411,7 @@ function rtdbRead() {
   return fetch(RTDB_URL + '/.json')
     .then(function(r) { return r.json(); })
     .then(function(data) {
+      window._fbDataLoaded=true;
       if(!data) return;
       function objToArr(obj) { return obj ? Object.values(obj) : []; }
       if(data.leads)    leads    = objToArr(data.leads);
@@ -507,7 +539,7 @@ function addFollowUp(id){
   const t=document.getElementById('fu-text').value.trim();
   if(!t)return;
   l.followups.push({date:d,text:t});
-  saveData();openLeadDetail(id);
+  saveData();persistLead(id);openLeadDetail(id);
 }
 
 function openLeadForm(id){
@@ -573,7 +605,7 @@ function triggerConfirmFlow(leadId){
     };
     clients.push(nc);
     l.clienteId=nc.id;
-    saveData();
+    saveData();persistClient(nc.id);persistLead(l.id);
   }
   // Open booking form pre-filled with lead data
   showPage('bookings');
@@ -590,7 +622,7 @@ function openBookingFormFromLead(leadId){
   setTimeout(()=>banner.remove(),4000);
   openBookingForm(null,leadId);
 }
-function deleteLead(id){if(!confirm('Eliminare questo lead?'))return;rtdbDelete('leads/'+id);leads=leads.filter(x=>x.id!==id);saveData();closeModal();renderCRM();}
+function deleteLead(id){if(!confirm('Eliminare questo lead?'))return;tasks.forEach(function(t){if(t.leadId===id){t.leadId=null;persistTask(t.id);}});bookings.forEach(function(b){if(b.leadId===id){b.leadId=null;persistBooking(b.id);}});rtdbDelete('leads/'+id);leads=leads.filter(x=>x.id!==id);saveData();closeModal();renderCRM();renderDailyBar();}
 function v(id){const el=document.getElementById(id);return el?el.value.trim():''}
 
 // ==================== BOOKINGS ====================
@@ -780,12 +812,15 @@ function invStyle(s){
 }
 function updateBkField(id,field,val){
   const b=bookings.find(x=>x.id===id);if(!b)return;
+  const oldPay=b.statoPagamento;
   b[field]=val;
-  // If saldato, close any pending saldo tasks
   if(field==='statoPagamento'&&val==='Saldato'){
-    tasks.forEach(function(t){if(t.bookingId===id&&t.titolo.includes('saldo'))t.stato='Completato';});
+    tasks.forEach(function(t){
+      if(t.bookingId===id&&t.titolo.toLowerCase().includes('saldo')){t.stato='Completato';persistTask(t.id);}
+    });
   }
-  saveData();renderBookings();renderDailyBar();renderStats();
+  if(field==='statoPagamento'&&oldPay==='Saldato'&&val!=='Saldato') checkPaymentAlerts();
+  saveData();persistBooking(id);renderBookings();renderDailyBar();renderStats();
 }
 
 function openBookingDetail(id){
@@ -831,15 +866,17 @@ function openBookingDetail(id){
 }
 
 function saveBookingStatus(id){
-  const b=bookings.find(x=>x.id===id);
+  const b=bookings.find(x=>x.id===id);if(!b)return;
   const oldPay=b.statoPagamento;
   b.statoPagamento=document.getElementById('det-pay').value;
   b.statoFattura=document.getElementById('det-inv').value;
-  // If just saldato, close saldo tasks
   if(oldPay!=='Saldato'&&b.statoPagamento==='Saldato'){
-    tasks.forEach(function(t){if(t.bookingId===id&&t.titolo.includes('saldo'))t.stato='Completato';});
+    tasks.forEach(function(t){
+      if(t.bookingId===id&&t.titolo.toLowerCase().includes('saldo')){t.stato='Completato';persistTask(t.id);}
+    });
   }
-  saveData();closeModal();renderBookings();renderStats();renderDailyBar();
+  if(oldPay==='Saldato'&&b.statoPagamento!=='Saldato') checkPaymentAlerts();
+  saveData();persistBooking(id);closeModal();renderBookings();renderStats();renderDailyBar();
 }
 
 function openBookingForm(id,leadId){
@@ -959,34 +996,36 @@ function selectBkClient(id){
 
 function saveBooking(id,leadId){
   const clienteIdVal=document.getElementById('bk-cliente-id')?parseInt(document.getElementById('bk-cliente-id').value)||null:null;
-  const d={clienteNome:v('bk-cnome'),clienteId:clienteIdVal,barca:v('bk-barca'),data:v('bk-data'),giorni:parseInt(v('bk-giorni'))||1,destinazione:v('bk-dest'),passeggeri:parseInt(v('bk-pass'))||0,importo:parseFloat(v('bk-imp'))||0,acconto:parseFloat(v('bk-acc'))||0,statoPagamento:v('bk-pay'),statoFattura:v('bk-inv'),note:v('bk-note'),checkin:v('bk-checkin')||'',checkout:v('bk-checkout')||''};
+  const d={clienteNome:v('bk-cnome'),clienteId:clienteIdVal,barca:v('bk-barca'),data:v('bk-data'),giorni:parseInt(v('bk-giorni'))||1,destinazione:v('bk-dest'),passeggeri:parseInt(v('bk-pass'))||0,importo:parseFloat(v('bk-imp'))||0,acconto:parseFloat(v('bk-acc'))||0,statoPagamento:v('bk-pay'),statoFattura:v('bk-inv'),note:v('bk-note'),checkin:v('bk-checkin')||'',checkout:v('bk-checkout')||'',checkinPerson:v('bk-checkin-person')||'',checkoutPerson:v('bk-checkout-person')||''};
   if(!d.clienteNome)return;
   let bid;
   const oldBk=id?bookings.find(x=>x.id===id):null;
-  // Remove old boat calendar marks if editing
+  const oldBoatName=oldBk?oldBk.barca:null;
   if(oldBk) syncBoatCalendar(oldBk,false);
   if(id){Object.assign(oldBk,d);bid=id;}
   else{bid=nextBookingId++;bookings.push({id:bid,...d,leadId:leadId});}
-  // Sync boat calendar (mark days)
-  syncBoatCalendar(bookings.find(x=>x.id===bid),true);
-  // Link lead
+  const savedBk=bookings.find(x=>x.id===bid);
+  syncBoatCalendar(savedBk,true);
   if(leadId){
     const l=leads.find(x=>x.id===leadId);
-    if(l){l.prenotazioneId=bid;if(l.clienteId){const c=clients.find(x=>x.id===l.clienteId);if(c&&!c.prenotazioni.includes(bid))c.prenotazioni.push(bid);}}
+    if(l){
+      l.prenotazioneId=bid;
+      if(l.clienteId){const c=clients.find(x=>x.id===l.clienteId);if(c&&!c.prenotazioni.includes(bid))c.prenotazioni.push(bid);}
+      persistLead(l.id);
+    }
   }
-  // Link client from autocomplete
   if(d.clienteId){
     const c=clients.find(x=>x.id===d.clienteId);
     if(c&&!c.prenotazioni.includes(bid))c.prenotazioni.push(bid);
+    persistClient(d.clienteId);
   }
-  // Auto-create tasks (B)
   if(!id) autoCreateBookingTasks(bid,d);
-  // Check payment alerts (C)
   checkPaymentAlerts();
   saveData();
-  if(leadId){const _l=leads.find(x=>x.id===leadId);if(_l)rtdbWrite("leads/"+_l.id,_l);}
-  clients.forEach(function(c){rtdbWrite("clients/"+c.id,c);});
-  tasks.forEach(function(t){rtdbWrite("tasks/"+t.id,t);});
+  persistBooking(bid);
+  persistBoatByName(d.barca);
+  if(oldBoatName&&oldBoatName!==d.barca) persistBoatByName(oldBoatName);
+  tasks.filter(function(t){return t.bookingId===bid;}).forEach(function(t){persistTask(t.id);});
   closeModal();
   renderDailyBar();
   showPostBookingSummary(bid,leadId);
@@ -1006,9 +1045,21 @@ function syncBoatCalendar(bk,add){
 }
 
 function autoCreateBookingTasks(bookingId,d){
-  const templates=['Preparare imbarcazione per '+d.clienteNome,'Confermare skipper — '+d.barca+' il '+d.data,'Inviare dettagli uscita a '+d.clienteNome];
-  templates.forEach(function(titolo){
-    tasks.push({id:nextTaskId++,titolo:titolo,categoria:'Operativo',priorita:'Media',stato:'Aperto',scadenza:d.data,barca:d.barca,note:'Creato automaticamente',leadId:null,clienteId:d.clienteId||null,creatoIl:today(),bookingId:bookingId});
+  const uscitaDate=new Date(d.data);
+  const prepDate=new Date(uscitaDate);prepDate.setDate(prepDate.getDate()-1);
+  const detailDate=new Date(uscitaDate);detailDate.setDate(detailDate.getDate()-2);
+  function iso(dt){return dt.toISOString().slice(0,10);}
+  const templates=[
+    {titolo:'Preparare imbarcazione per '+d.clienteNome,categoria:'Operativo',priorita:'Alta',scadenza:iso(prepDate),note:'Check carburante, dotazioni sicurezza, pulizia e cambusa base'},
+    {titolo:'Confermare skipper — '+d.barca+' il '+d.data,categoria:'Operativo',priorita:'Media',scadenza:iso(detailDate),note:'Confermare nome, orario check-in e punto di imbarco'},
+    {titolo:'Inviare dettagli uscita a '+d.clienteNome,categoria:'Commerciale',priorita:'Media',scadenza:iso(detailDate),note:'Inviare orario, posizione porto, documenti richiesti, saldo e previsioni meteo'}
+  ];
+  templates.forEach(function(item){
+    var exists=tasks.some(function(t){return t.bookingId===bookingId&&t.titolo===item.titolo;});
+    if(!exists){
+      var nt={id:nextTaskId++,titolo:item.titolo,categoria:item.categoria,priorita:item.priorita,stato:'Aperto',scadenza:item.scadenza,barca:d.barca,note:item.note,leadId:null,clienteId:d.clienteId||null,creatoIl:today(),bookingId:bookingId};
+      tasks.push(nt);persistTask(nt.id);
+    }
   });
 }
 
@@ -1018,15 +1069,18 @@ function checkPaymentAlerts(){
   bookings.forEach(function(bk){
     if(bk.statoPagamento==='Saldato')return;
     if(!bk.data)return;
+    const saldo=Number(bk.importo||0)-Number(bk.acconto||0);
+    if(saldo<=0)return;
     const bkDate=new Date(bk.data);
     if(bkDate<=soon&&bkDate>=new Date(todayStr)){
-      // Check if task already exists
-      const exists=tasks.some(function(t){return t.bookingId===bk.id&&t.titolo.includes('saldo');});
+      const exists=tasks.some(function(t){return t.bookingId===bk.id&&t.titolo.toLowerCase().includes('saldo')&&t.stato!=='Completato';});
       if(!exists){
-        tasks.push({id:nextTaskId++,titolo:'Richiedere saldo a '+bk.clienteNome,categoria:'Commerciale',priorita:'Alta',stato:'Aperto',scadenza:bk.data,barca:bk.barca,note:'Prenotazione del '+bk.data+' — '+fmtEur(bk.importo-bk.acconto)+' ancora da incassare',leadId:null,clienteId:bk.clienteId||null,creatoIl:today(),bookingId:bk.id});
+        var nt={id:nextTaskId++,titolo:'Richiedere saldo a '+bk.clienteNome,categoria:'Commerciale',priorita:'Alta',stato:'Aperto',scadenza:bk.data,barca:bk.barca,note:'Prenotazione del '+bk.data+' — '+fmtEur(saldo)+' ancora da incassare',leadId:null,clienteId:bk.clienteId||null,creatoIl:today(),bookingId:bk.id};
+        tasks.push(nt);persistTask(nt.id);
       }
     }
   });
+  saveData();
 }
 
 function checkBoatDocs(){
@@ -1042,7 +1096,7 @@ function checkBoatDocs(){
       if(scad<=warn){
         const exists=tasks.some(function(t){return t.barca===boat.name&&t.titolo.includes(doc.label);});
         if(!exists){
-          tasks.push({id:nextTaskId++,titolo:'Scadenza '+doc.label+' — '+boat.name,categoria:'Burocrazia',priorita:'Alta',stato:'Aperto',scadenza:boat[doc.field],barca:boat.name,note:'Scadenza entro 30 giorni',leadId:null,clienteId:null,creatoIl:today()});
+          var nt={id:nextTaskId++,titolo:'Scadenza '+doc.label+' — '+boat.name,categoria:'Burocrazia',priorita:'Alta',stato:'Aperto',scadenza:boat[doc.field],barca:boat.name,note:'Scadenza entro 30 giorni',leadId:null,clienteId:null,creatoIl:today()}; tasks.push(nt); persistTask(nt.id);
         }
       }
     });
@@ -1059,7 +1113,7 @@ function checkLeadFollowups(){
     if(daysSince>=threshold){
       const exists=tasks.some(function(t){return t.leadId===l.id&&t.titolo.includes('Ricontattare');});
       if(!exists){
-        tasks.push({id:nextTaskId++,titolo:'Ricontattare '+l.nome+' ('+daysSince+'gg senza risposta)',categoria:'Commerciale',priorita:'Media',stato:'Aperto',scadenza:'',barca:'',note:'Lead in stato "'+l.stato+'" da '+daysSince+' giorni',leadId:l.id,clienteId:null,creatoIl:today()});
+        var nt={id:nextTaskId++,titolo:'Ricontattare '+l.nome+' ('+daysSince+'gg senza risposta)',categoria:'Commerciale',priorita:'Media',stato:'Aperto',scadenza:'',barca:'',note:'Lead in stato "'+l.stato+'" da '+daysSince+' giorni',leadId:l.id,clienteId:null,creatoIl:today()}; tasks.push(nt); persistTask(nt.id);
       }
     }
   });
@@ -1097,14 +1151,14 @@ function showPostBookingSummary(bookingId,leadId){
 function deleteBooking(id){
   if(!confirm('Eliminare questa prenotazione?'))return;
   const bk=bookings.find(x=>x.id===id);
+  var oldBoatName=bk?bk.barca:null;
   if(bk){
     syncBoatCalendar(bk,false);
-    // Remove from client prenotazioni
-    if(bk.clienteId){const c=clients.find(x=>x.id===bk.clienteId);if(c)c.prenotazioni=c.prenotazioni.filter(p=>p!==id);}
-    // Close related tasks
-    tasks.forEach(function(t){if(t.bookingId===id)t.stato='Completato';});
-  }bookings=bookings.filter(x=>x.id!==id);
-  saveData();closeModal();renderBookings();renderDailyBar();
+    if(bk.clienteId){const c=clients.find(x=>x.id===bk.clienteId);if(c){c.prenotazioni=c.prenotazioni.filter(p=>p!==id);persistClient(c.id);}}
+    tasks.forEach(function(t){if(t.bookingId===id){t.stato='Completato';persistTask(t.id);}});
+  }
+  bookings=bookings.filter(x=>x.id!==id);
+  saveData();rtdbDelete('bookings/'+id);if(oldBoatName)persistBoatByName(oldBoatName);closeModal();renderBookings();renderDailyBar();renderStats();
 }
 
 // ==================== FLEET ====================
@@ -1389,7 +1443,7 @@ function saveClientForm(id,leadId){
   }else{
     const nc={id:nextClientId++,nome,cognome:cogn,email:v('nc-email'),tel:v('nc-tel'),indirizzo:v('nc-addr'),docData:docInfo.data||null,docName:docInfo.name||null,docType:docInfo.type||null,tags:[],note:v('nc-note'),prenotazioni:[]};
     clients.push(nc);
-    if(leadId){const l=leads.find(x=>x.id===leadId);if(l){l.clienteId=nc.id;}}
+    if(leadId){const l=leads.find(x=>x.id===leadId);if(l){l.clienteId=nc.id;persistLead(l.id);}}
   }
   saveData();
   var _cli=id?clients.find(x=>x.id===id):clients[clients.length-1];
@@ -1418,7 +1472,7 @@ function importCSV(e){
       clients.push({id:nextClientId++,nome:cols[0]||'',cognome:cols[1]||'',email:cols[2]||'',tel:cols[3]||'',indirizzo:cols[4]||'',docData:null,docName:null,docType:null,tags:(cols[5]||'').split(';').filter(Boolean),note:cols[6]||'',prenotazioni:[]});
       added++;
     });
-    saveData();renderClients();alert(added+' clienti importati correttamente');
+    saveData();persistAllLocalAndRemote();renderClients();alert(added+' clienti importati correttamente');
   };
   r.readAsText(file,'UTF-8');e.target.value='';
 }
@@ -1513,17 +1567,6 @@ function renderStats(){
 
 
 // ==================== TASKS ====================
-let tasks=[
-  {id:1,titolo:'Rinnovare assicurazione Poseidon I',categoria:'Burocrazia',priorita:'Alta',stato:'Aperto',scadenza:'2024-12-31',barca:'Poseidon I',note:'Contattare agenzia entro fine mese',leadId:null,clienteId:null,creatoIl:'2024-11-01'},
-  {id:2,titolo:'Manutenzione motore Helios',categoria:'Manutenzione',priorita:'Media',stato:'In corso',scadenza:'2024-12-15',barca:'Helios',note:'',leadId:null,clienteId:null,creatoIl:'2024-11-05'},
-  {id:3,titolo:'Follow-up preventivo Sara Ferretti',categoria:'Commerciale',priorita:'Alta',stato:'Aperto',scadenza:'2024-12-10',barca:'',note:'Richiamare per confermare data luglio',leadId:2,clienteId:null,creatoIl:'2024-11-08'},
-];
-let nextTaskId=4;
-const TASK_CAT=['Commerciale','Manutenzione','Burocrazia','Marketing','Operativo','Altro'];
-const TASK_PRI=['Alta','Media','Bassa'];
-const TASK_STATI=['Aperto','In corso','Completato'];
-let taskFilter='Tutti';
-
 function renderTasks(){
   const counts={};TASK_STATI.forEach(s=>counts[s]=tasks.filter(t=>t.stato===s).length);
   const overdue=tasks.filter(t=>t.stato!=='Completato'&&t.scadenza&&t.scadenza<today()).length;
@@ -1700,6 +1743,38 @@ function renderDailyBar(){
   el.querySelectorAll('[data-goto]').forEach(function(btn){
     btn.addEventListener('click',function(){showPage(this.getAttribute('data-goto'));});
   });
+}
+
+
+// ==================== BACKUP / RIPRISTINO ====================
+function downloadBackup(){
+  const payload={version:'chartme_v3',exportedAt:new Date().toISOString(),leads,clients,bookings,boats,tasks,nextLeadId,nextClientId,nextBookingId,nextBoatId,nextTaskId};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='chartme_backup_'+today()+'.json';
+  a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},500);
+}
+
+function restoreBackup(e){
+  const file=e.target.files[0];if(!file)return;
+  if(!confirm('Ripristinare questo backup? I dati attuali verranno sostituiti localmente e su Firebase.')){e.target.value='';return;}
+  const r=new FileReader();
+  r.onload=function(ev){
+    try{
+      const p=JSON.parse(ev.target.result);
+      leads=p.leads||[];clients=p.clients||[];bookings=p.bookings||[];boats=p.boats||[];tasks=p.tasks||[];
+      nextLeadId=Math.max.apply(null,leads.map(function(x){return x.id||0;}).concat([0]))+1;
+      nextClientId=Math.max.apply(null,clients.map(function(x){return x.id||0;}).concat([0]))+1;
+      nextBookingId=Math.max.apply(null,bookings.map(function(x){return x.id||0;}).concat([0]))+1;
+      nextBoatId=Math.max.apply(null,boats.map(function(x){return x.id||0;}).concat([0]))+1;
+      nextTaskId=Math.max.apply(null,tasks.map(function(x){return x.id||0;}).concat([0]))+1;
+      saveData();rtdbPushAll().then(function(){alert('Backup ripristinato correttamente.');renderCRM();renderDailyBar();});
+    }catch(err){alert('Backup non valido: '+err.message);}
+    e.target.value='';
+  };
+  r.readAsText(file,'UTF-8');
 }
 
 // ==================== RTDB INIT ====================
