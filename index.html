@@ -345,6 +345,15 @@ function initials(s){return(s||'').split(' ').map(w=>w[0]||'').join('').toUpperC
 function badgeLead(s){return{Nuovo:'badge-new',Contattato:'badge-contact',Preventivo:'badge-quote',Confermato:'badge-confirmed',Perso:'badge-lost'}[s]||''}
 function fmtEur(n){return'€'+Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:0})}
 function today(){return new Date().toISOString().slice(0,10)}
+function normSortText(s){return String(s||'').trim().toLocaleLowerCase('it-IT')}
+function clientSortKey(c){return normSortText((c.cognome||'')+' '+(c.nome||''))}
+function sortClientsAZ(){
+  try {
+    clients = (clients||[]).filter(function(c){ return c && typeof c === 'object'; });
+    clients.sort(function(a,b){ return clientSortKey(a).localeCompare(clientSortKey(b),'it',{sensitivity:'base'}); });
+  } catch(e) { console.warn('sort clienti error', e); }
+}
+
 // ==================== REALTIME DB ====================
 const RTDB_URL = 'https://chartme-d70e6-default-rtdb.europe-west1.firebasedatabase.app';
 
@@ -395,11 +404,11 @@ function rtdbPushAll() {
     boats: {},
     tasks: {}
   };
-  leads.forEach(function(x) { payload.leads[x.id] = JSON.parse(JSON.stringify(x, function(k,v){ if(k==='photo'||k==='docData'||k==='docName'||k==='docType') return undefined; return v; })); });
-  clients.forEach(function(x) { payload.clients[x.id] = JSON.parse(JSON.stringify(x, function(k,v){ if(k==='photo'||k==='docData'||k==='docName'||k==='docType') return undefined; return v; })); });
-  bookings.forEach(function(x) { payload.bookings[x.id] = x; });
-  boats.forEach(function(x) { payload.boats[x.id] = JSON.parse(JSON.stringify(x, function(k,v){ if(k==='photo') return undefined; return v; })); });
-  tasks.forEach(function(x) { payload.tasks[x.id] = x; });
+  leads.filter(Boolean).forEach(function(x) { payload.leads[x.id] = JSON.parse(JSON.stringify(x, function(k,v){ if(k==='photo'||k==='docData'||k==='docName'||k==='docType') return undefined; return v; })); });
+  clients.filter(Boolean).forEach(function(x) { payload.clients[x.id] = JSON.parse(JSON.stringify(x, function(k,v){ if(k==='photo'||k==='docData'||k==='docName'||k==='docType') return undefined; return v; })); });
+  bookings.filter(Boolean).forEach(function(x) { payload.bookings[x.id] = x; });
+  boats.filter(Boolean).forEach(function(x) { payload.boats[x.id] = JSON.parse(JSON.stringify(x, function(k,v){ if(k==='photo') return undefined; return v; })); });
+  tasks.filter(Boolean).forEach(function(x) { payload.tasks[x.id] = x; });
   return fetch(RTDB_URL + '/.json', {
     method: 'PUT',
     headers: {'Content-Type': 'application/json'},
@@ -413,12 +422,16 @@ function rtdbRead() {
     .then(function(data) {
       window._fbDataLoaded=true;
       if(!data) return;
-      function objToArr(obj) { return obj ? Object.values(obj) : []; }
+      function objToArr(obj) {
+        if(!obj) return [];
+        return Object.values(obj).filter(function(v){ return v && typeof v === 'object'; });
+      }
       if(data.leads)    leads    = objToArr(data.leads);
       if(data.clients)  clients  = objToArr(data.clients);
       if(data.bookings) bookings = objToArr(data.bookings);
       if(data.boats)    boats    = objToArr(data.boats);
       if(data.tasks)    tasks    = objToArr(data.tasks);
+      sortClientsAZ();
       if(leads.length)    nextLeadId    = Math.max.apply(null, leads.map(function(x){return x.id||0;}))+1;
       if(clients.length)  nextClientId  = Math.max.apply(null, clients.map(function(x){return x.id||0;}))+1;
       if(bookings.length) nextBookingId = Math.max.apply(null, bookings.map(function(x){return x.id||0;}))+1;
@@ -430,11 +443,14 @@ function rtdbRead() {
       var active = document.querySelector('.page.active');
       if(active) { var fn = pages[active.id.replace('page-','')]; if(fn && window[fn]) try{window[fn]();}catch(e){} }
       if(window.renderDailyBar) renderDailyBar();
-    }).catch(function(e) { console.warn('rtdb read error', e); });
+    }).catch(function(e) {
+      window._fbDataLoaded=false;
+      console.warn('rtdb read error', e);
+      var bar=document.getElementById('daily-bar');
+      if(bar) bar.innerHTML='<span style="font-size:11px;color:#F5A89A;padding:2px 10px">Errore collegamento Firebase: dati locali in uso</span>';
+      try { renderCRM(); renderDailyBar(); } catch(_) {}
+    });
 }
-
-// Polling every 20 seconds
-setInterval(rtdbRead, 20000);
 
 function loadData() {
   try {
@@ -455,6 +471,8 @@ function loadData() {
   } catch(e) {}
 }
 loadData();
+sortClientsAZ();
+sortClientsAlpha();
 
 function showPage(p){
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
@@ -475,6 +493,15 @@ function showPage(p){
 function closeModal(){document.getElementById('modal-root').innerHTML=''}
 function modal(content){
   document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal">${content}</div></div>`;
+}
+
+
+function sortClientsAlpha(){
+  clients.sort((a,b)=>{
+    const na=((a.nome||'')+' '+(a.cognome||'')).trim().toLowerCase();
+    const nb=((b.nome||'')+' '+(b.cognome||'')).trim().toLowerCase();
+    return na.localeCompare(nb,'it');
+  });
 }
 
 // ==================== CRM ====================
@@ -1792,27 +1819,17 @@ function rtdbInitAll() {
 }
 
 // ==================== INIT ====================
-// Show loading state while waiting for Firestore
-// If Firestore loads within 3s, it will re-render. Otherwise fall back to localStorage.
-const _dailyBar = document.getElementById('daily-bar');
-if(_dailyBar) _dailyBar.innerHTML = '<span style="font-size:11px;color:rgba(255,255,255,.4);padding:2px 10px">Connessione a Firebase...</span>';
-// Fallback: if Firestore doesn't respond in 4s, render from localStorage
-setTimeout(function(){
-  if(!window._fbDataLoaded){
-    // Sync boat calendars from localStorage data
-    if(typeof syncBoatCalendar === 'function' && bookings && bookings.length) bookings.forEach(function(bk){try{syncBoatCalendar(bk,true);}catch(e){}});
-    checkBoatDocs();
-    checkLeadFollowups();
-    checkPaymentAlerts();
-    renderCRM();
-    renderDailyBar();
-  }
-}, 4000);
-// Run automations when Firestore data arrives (handled in listener)
-// But run checks immediately too for localStorage fallback
+// Render immediato con i dati inclusi/locali, poi sincronizza Firebase.
 checkBoatDocs();
 checkLeadFollowups();
 checkPaymentAlerts();
+try { renderCRM(); renderDailyBar(); } catch(e) { console.warn('initial render error', e); }
+
+// Prima lettura Firebase dopo il render locale + polling ogni 20 secondi.
+rtdbRead().then(function(){
+  try { checkBoatDocs(); checkLeadFollowups(); checkPaymentAlerts(); renderCRM(); renderDailyBar(); } catch(e) {}
+});
+setInterval(rtdbRead, 20000);
 // Year selector
 const allYears=[...new Set([...bookings.map(b=>b.data?.slice(0,4)).filter(Boolean),String(new Date().getFullYear())])].sort();
 const yearSel=document.getElementById('stats-year');
