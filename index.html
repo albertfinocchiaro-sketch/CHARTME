@@ -373,8 +373,25 @@ function normalizeTask(t){
   t.note=t.note||'';
   return t;
 }
+
+function normalizeLead(l){
+  l=l||{};
+  l.id=Number(l.id)||0;
+  l.nome=l.nome||'';
+  l.email=l.email||'';
+  l.tel=l.tel||'';
+  l.origine=l.origine||'Altro';
+  l.campagna=l.campagna||'';
+  l.stato=STATI_LEAD.includes(l.stato)?l.stato:'Nuovo';
+  l.note=l.note||'';
+  l.followups=safeArr(l.followups).map(function(f){return {date:f.date||'',text:f.text||''};});
+  l.clienteId=l.clienteId?Number(l.clienteId):null;
+  l.prenotazioneId=l.prenotazioneId?Number(l.prenotazioneId):null;
+  l.data=l.data||today();
+  return l;
+}
 function normalizeAllData(){
-  leads=safeArr(leads).filter(function(x){return x.id;});
+  leads=safeArr(leads).map(normalizeLead).filter(function(x){return x.id;});
   clients=safeArr(clients).filter(function(x){return x.id;});
   bookings=safeArr(bookings).map(normalizeBooking).filter(function(x){return x.id;});
   boats=safeArr(boats).map(normalizeBoat).filter(function(x){return x.id || x.name;});
@@ -499,7 +516,7 @@ function rtdbRead() {
       if(!data) data={};
       // IMPORTANT: assign even when a Firebase node is missing/empty.
       // Otherwise deleted data would be replaced by old localStorage/default data.
-      leads    = safeArr(data.leads);
+      leads    = safeArr(data.leads).map(normalizeLead);
       clients  = safeArr(data.clients);
       bookings = safeArr(data.bookings).map(normalizeBooking);
       boats    = safeArr(data.boats).map(normalizeBoat);
@@ -583,22 +600,41 @@ function sortClientsAlpha(){
 
 // ==================== CRM ====================
 function renderCRM(){
-  const q=((document.getElementById('crm-search')||{}).value||'').trim().toLowerCase();
-  leads = safeArr(leads).filter(function(l){ return l && l.id != null; });
-  const cleanLeads = leads;
+  const searchEl=document.getElementById('crm-search');
+  const q=((searchEl||{}).value||'').trim().toLowerCase();
+  leads = safeArr(leads).map(normalizeLead).filter(function(l){ return l && l.id; });
   if(crmFilter!=='Tutti' && !STATI_LEAD.includes(crmFilter)) crmFilter='Tutti';
-  const counts={};STATI_LEAD.forEach(s=>counts[s]=cleanLeads.filter(l=>l.stato===s).length);
-  document.getElementById('crm-stats').innerHTML=[
-    {l:'Lead totali',v:cleanLeads.length,s:''},
-    {l:'Da seguire',v:(counts['Nuovo']||0)+(counts['Contattato']||0),s:''},
-    {l:'Preventivi aperti',v:counts['Preventivo']||0,s:''},
-    {l:'Confermati',v:counts['Confermato']||0,s:''},
-  ].map(x=>`<div class="stat-card"><div class="stat-label">${x.l}</div><div class="stat-value" style="font-size:18px">${x.v}</div></div>`).join('');
 
-  document.getElementById('crm-pills').innerHTML=['Tutti',...STATI_LEAD].map(s=>`<span class="pill${crmFilter===s?' active':''}" onclick="crmFilter='${s}';renderCRM()">${s}${s!=='Tutti'?' ('+( counts[s]||0)+')':''}</span>`).join('');
+  const counts={};
+  STATI_LEAD.forEach(function(s){ counts[s]=0; });
+  leads.forEach(function(l){ if(counts[l.stato] == null) counts[l.stato]=0; counts[l.stato]++; });
 
-  const filtered=cleanLeads.filter(l=>(crmFilter==='Tutti'||l.stato===crmFilter)&&(((l.nome||'')+' '+(l.email||'')+' '+(l.tel||'')).toLowerCase().includes(q)));
-  document.getElementById('crm-table').innerHTML=filtered.length===0?`<div class="empty">Nessun lead trovato</div>`:`
+  const statsEl=document.getElementById('crm-stats');
+  if(statsEl){
+    statsEl.innerHTML=[
+      {l:'Lead totali',v:leads.length,s:''},
+      {l:'Da seguire',v:(counts['Nuovo']||0)+(counts['Contattato']||0),s:''},
+      {l:'Preventivi aperti',v:counts['Preventivo']||0,s:''},
+      {l:'Confermati',v:counts['Confermato']||0,s:''},
+    ].map(function(x){return '<div class="stat-card"><div class="stat-label">'+x.l+'</div><div class="stat-value" style="font-size:18px">'+x.v+'</div></div>';}).join('');
+  }
+
+  const pillsEl=document.getElementById('crm-pills');
+  if(pillsEl){
+    pillsEl.innerHTML=['Tutti'].concat(STATI_LEAD).map(function(s){
+      const label = s==='Tutti' ? 'Tutti ('+leads.length+')' : s+' ('+(counts[s]||0)+')';
+      return '<span class="pill'+(crmFilter===s?' active':'')+'" onclick="crmFilter=\''+s+'\';renderCRM()">'+label+'</span>';
+    }).join('');
+  }
+
+  const filtered=leads.filter(function(l){
+    const hay=((l.nome||'')+' '+(l.email||'')+' '+(l.tel||'')+' '+(l.origine||'')+' '+(l.campagna||'')).toLowerCase();
+    return (crmFilter==='Tutti'||l.stato===crmFilter) && hay.includes(q);
+  });
+
+  const tableEl=document.getElementById('crm-table');
+  if(!tableEl) return;
+  tableEl.innerHTML=filtered.length===0?'<div class="empty">Nessun lead trovato</div>':`
   <table class="tbl">
     <thead><tr><th>Lead</th><th>Contatto</th><th>Origine</th><th>Stato</th><th>Data</th><th>Follow-up</th><th></th></tr></thead>
     <tbody>${filtered.map(l=>`
@@ -608,15 +644,14 @@ function renderCRM(){
         <td><div style="font-size:12px">${l.origine}</div>${l.campagna?`<div style="font-size:11px;color:var(--text3)">${l.campagna}</div>`:''}</td>
         <td><span class="badge ${badgeLead(l.stato)}">${l.stato}</span></td>
         <td style="font-size:12px;color:var(--text3)">${l.data}</td>
-        <td style="font-size:12px;color:var(--text3)">${l.followups.length} nota${l.followups.length!==1?'':''}</td>
+        <td style="font-size:12px;color:var(--text3)">${(l.followups||[]).length} nota${(l.followups||[]).length!==1?'':''}</td>
         <td><button class="btn btn-sm" onclick="event.stopPropagation();openLeadForm(${l.id})">✎</button></td>
       </tr>`).join('')}
     </tbody>
   </table>`;
 }
-
 function openLeadDetail(id){
-  const l=leads.find(x=>x.id===id);if(!l)return;
+  const l=leads.find(function(x){return x && idEq(x.id,id);});if(!l)return;
   modal(`
     <div class="modal-title"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="width:40px;height:40px;font-size:14px">${initials(l.nome)}</div><div><div>${l.nome}</div><div style="font-size:12px;font-weight:400;color:var(--text3)">${l.email} · ${l.tel}</div></div></div><button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="g2" style="margin-bottom:12px">
@@ -625,7 +660,7 @@ function openLeadDetail(id){
     </div>
     ${l.note?`<div style="padding:8px 10px;background:var(--bg2);border-radius:var(--r);font-size:13px;color:var(--text2);margin-bottom:12px">${l.note}</div>`:''}
     <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Follow-up</div>
-    <div style="margin-bottom:10px">${l.followups.length===0?`<div style="font-size:13px;color:var(--text3)">Nessun follow-up registrato</div>`:l.followups.map(f=>`<div class="fu-row"><span class="fu-date">${f.date}</span><span>${f.text}</span></div>`).join('')}</div>
+    <div style="margin-bottom:10px">${(l.followups||[]).length===0?`<div style="font-size:13px;color:var(--text3)">Nessun follow-up registrato</div>`:(l.followups||[]).map(f=>`<div class="fu-row"><span class="fu-date">${f.date}</span><span>${f.text}</span></div>`).join('')}</div>
     <div style="display:flex;gap:6px;margin-bottom:14px">
       <input id="fu-date" type="date" value="${today()}" style="padding:6px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;background:var(--white);color:var(--text)">
       <input id="fu-text" placeholder="Nota follow-up..." style="flex:1;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;background:var(--white);color:var(--text)">
@@ -633,6 +668,7 @@ function openLeadDetail(id){
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
       <button class="btn btn-sm" onclick="closeModal();openLeadForm(${id})">Modifica lead</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteLead(${id})">Elimina lead</button>
       ${l.stato==='Confermato'&&!l.clienteId?`<button class="btn btn-sm btn-success" onclick="closeModal();openClientFormFromLead(${id})">+ Crea scheda cliente</button>`:''}
       ${l.stato==='Confermato'&&!l.prenotazioneId?`<button class="btn btn-sm btn-gold" onclick="closeModal();openBookingForm(null,${id})">+ Crea prenotazione</button>`:''}
       ${l.prenotazioneId?`<button class="btn btn-sm" onclick="closeModal();showPage('bookings');setTimeout(()=>openBookingDetail(${l.prenotazioneId}),50)">Vedi prenotazione</button>`:''}
@@ -641,7 +677,9 @@ function openLeadDetail(id){
 }
 
 function addFollowUp(id){
-  const l=leads.find(x=>x.id===id);
+  const l=leads.find(function(x){return x && idEq(x.id,id);});
+  if(!l)return;
+  if(!Array.isArray(l.followups)) l.followups=[];
   const d=document.getElementById('fu-date').value;
   const t=document.getElementById('fu-text').value.trim();
   if(!t)return;
@@ -650,7 +688,7 @@ function addFollowUp(id){
 }
 
 function openLeadForm(id){
-  const l=id?leads.find(x=>x.id===id):{id:null,nome:'',email:'',tel:'',origine:'Sito web',campagna:'',stato:'Nuovo',note:'',followups:[],clienteId:null,data:today(),prenotazioneId:null};
+  const l=id?leads.find(function(x){return x && idEq(x.id,id);}):{id:null,nome:'',email:'',tel:'',origine:'Sito web',campagna:'',stato:'Nuovo',note:'',followups:[],clienteId:null,data:today(),prenotazioneId:null};
   modal(`
     <div class="modal-title">${id?'Modifica lead':'Nuovo lead'}<button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="g2">
@@ -676,7 +714,8 @@ function saveLead(id){
   let isNewConfirm=false;
   let leadRef;
   if(id){
-    leadRef=leads.find(x=>x.id===id);
+    leadRef=leads.find(function(x){return x && idEq(x.id,id);});
+    if(!leadRef){ alert('Lead non trovato. Aggiorna la pagina e riprova.'); return; }
     const wasConfirmed=leadRef.stato==='Confermato';
     Object.assign(leadRef,d);
     if(!wasConfirmed && d.stato==='Confermato' && !leadRef.prenotazioneId) isNewConfirm=true;
@@ -688,7 +727,9 @@ function saveLead(id){
   }
   saveData();
   rtdbWrite("leads/"+leadRef.id, leadRef);
-  closeModal();renderCRM();
+  crmFilter='Tutti';
+  var crmSearch=document.getElementById('crm-search'); if(crmSearch) crmSearch.value='';
+  closeModal();renderCRM();renderDailyBar();
   if(isNewConfirm) setTimeout(()=>triggerConfirmFlow(leadRef.id),150);
 }
 
@@ -729,7 +770,61 @@ function openBookingFormFromLead(leadId){
   setTimeout(()=>banner.remove(),4000);
   openBookingForm(null,leadId);
 }
-function deleteLead(id){if(!confirm('Eliminare questo lead?'))return;tasks.forEach(function(t){if(t.leadId===id){t.leadId=null;persistTask(t.id);}});bookings.forEach(function(b){if(b.leadId===id){b.leadId=null;persistBooking(b.id);}});rtdbDelete('leads/'+id);leads=leads.filter(x=>x.id!==id);saveData();closeModal();renderCRM();renderDailyBar();}
+function buildLeadsPayload(){
+  var payload={};
+  safeArr(leads).map(normalizeLead).filter(function(x){return x && x.id;}).forEach(function(x){
+    payload[String(x.id)] = cleanForRemote(x);
+  });
+  return payload;
+}
+
+function syncLeadsCollection(){
+  var payload = buildLeadsPayload();
+  // Se non restano lead, scrivo null per svuotare davvero il nodo /leads su Firebase.
+  var body = Object.keys(payload).length ? payload : null;
+  return fetch(RTDB_URL + '/leads.json', {
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  }).catch(function(e){ console.warn('rtdb leads sync error', e); });
+}
+
+function deleteLead(id){
+  if(!confirm('Eliminare questo lead?'))return;
+  var before = safeArr(leads).length;
+  leads = safeArr(leads).map(normalizeLead).filter(function(x){ return x && x.id && !idEq(x.id,id); });
+  if(before === leads.length){
+    alert('Lead non trovato. Aggiorna la pagina e riprova.');
+    return;
+  }
+
+  tasks.forEach(function(t){
+    if(t && idEq(t.leadId,id)){
+      t.leadId=null;
+      persistTask(t.id);
+    }
+  });
+  bookings.forEach(function(b){
+    if(b && idEq(b.leadId,id)){
+      b.leadId=null;
+      persistBooking(b.id);
+    }
+  });
+
+  crmFilter='Tutti';
+  var crmSearch=document.getElementById('crm-search'); if(crmSearch) crmSearch.value='';
+  saveData();
+  closeModal();
+  renderCRM();
+  renderDailyBar();
+
+  // Sincronizzazione robusta: riscrivo l'intera collezione lead già filtrata.
+  // Così funziona sia quando Firebase salva lead come oggetto, sia quando rimangono buchi/null negli array.
+  syncLeadsCollection().then(function(){
+    if(window._fbReadTimer) { clearTimeout(window._fbReadTimer); }
+    window._fbReadTimer = setTimeout(function(){ rtdbRead(); }, 500);
+  });
+}
 function v(id){const el=document.getElementById(id);return el?el.value.trim():''}
 
 // ==================== BOOKINGS ====================
@@ -1868,7 +1963,7 @@ function renderDailyBar(){
   const weekEnd=new Date();weekEnd.setDate(weekEnd.getDate()+7);
   const saldiWk=bookings.filter(function(b){if(b.statoPagamento==='Saldato'||!b.data)return false;const d=new Date(b.data);return d>=new Date(todayStr)&&d<=weekEnd;});
   // Leads to follow
-  const leadsToFollow=leads.filter(function(l){return l.stato==='Nuovo'||l.stato==='Contattato'||l.stato==='Preventivo';}).length;
+  const leadsToFollow=safeArr(leads).map(normalizeLead).filter(function(l){return l.stato==='Nuovo'||l.stato==='Contattato'||l.stato==='Preventivo';}).length;
 
   var parts=[];
   parts.push('<span style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;padding-right:12px;border-right:1px solid rgba(201,184,138,.2);margin-right:4px">Oggi</span>');
