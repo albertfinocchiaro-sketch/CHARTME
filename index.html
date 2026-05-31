@@ -309,6 +309,69 @@ const DEFAULT_BANDS=[
   {label:'Sett–Ott',months:[8,9],price:450}
 ];
 
+// ===== NORMALIZZAZIONE DATI FIREBASE / SICUREZZA ARRAY =====
+function safeArr(x){
+  if(!x) return [];
+  if(Array.isArray(x)) return x.filter(function(v){ return v && typeof v === 'object'; });
+  if(typeof x === 'object') return Object.keys(x).map(function(k){ return x[k]; }).filter(function(v){ return v && typeof v === 'object'; });
+  return [];
+}
+function normalizeBoat(b){
+  b=b||{};
+  b.id = Number(b.id)||0;
+  b.name = b.name || b.nome || 'Imbarcazione';
+  b.type = b.type || '';
+  b.length = b.length || '';
+  b.passengers = b.passengers || '';
+  b.engine = b.engine || '';
+  b.homeport = b.homeport || '';
+  b.bands = safeArr(b.bands).length ? safeArr(b.bands).map(function(x){ x.months=Array.isArray(x.months)?x.months:[]; x.price=Number(x.price)||0; return x; }) : DEFAULT_BANDS.map(function(x){ return JSON.parse(JSON.stringify(x)); });
+  b.overrides = (b.overrides && typeof b.overrides==='object') ? b.overrides : {};
+  b.bookings = (b.bookings && typeof b.bookings==='object') ? b.bookings : {};
+  return b;
+}
+function normalizeBooking(b){
+  b=b||{};
+  b.id=Number(b.id)||0;
+  b.clienteId=b.clienteId?Number(b.clienteId):null;
+  b.clienteNome=b.clienteNome||'';
+  b.barca=b.barca||'';
+  b.data=b.data||'';
+  b.giorni=Number(b.giorni)||1;
+  b.passeggeri=Number(b.passeggeri)||0;
+  b.importo=Number(b.importo)||0;
+  b.acconto=Number(b.acconto)||0;
+  b.statoPagamento=b.statoPagamento||'Non pagato';
+  b.statoFattura=b.statoFattura||'Non fatturato';
+  return b;
+}
+function normalizeTask(t){
+  t=t||{};
+  t.id=Number(t.id)||0;
+  t.titolo=t.titolo||'Task';
+  t.categoria=t.categoria||'Commerciale';
+  t.priorita=t.priorita||'Media';
+  t.stato=t.stato||'Aperto';
+  t.scadenza=t.scadenza||'';
+  t.barca=t.barca||'';
+  t.note=t.note||'';
+  return t;
+}
+function normalizeAllData(){
+  leads=safeArr(leads).filter(function(x){return x.id;});
+  clients=safeArr(clients).filter(function(x){return x.id;});
+  bookings=safeArr(bookings).map(normalizeBooking).filter(function(x){return x.id;});
+  boats=safeArr(boats).map(normalizeBoat).filter(function(x){return x.id || x.name;});
+  tasks=safeArr(tasks).map(normalizeTask).filter(function(x){return x.id;});
+  if(!boats.length){ boats=[
+    {id:1,name:'Poseidon I',type:'Catamarano',length:'14m',passengers:'12',engine:'2x Volvo 40cv',homeport:'Messina',photo:null,bands:DEFAULT_BANDS.map(function(b){return Object.assign({},b);}),overrides:{},bookings:{}},
+    {id:2,name:'Artemide',type:'Barca a vela',length:'11m',passengers:'8',engine:'Volvo 30cv',homeport:'Messina',photo:null,bands:DEFAULT_BANDS.map(function(b){return Object.assign({},b);}),overrides:{},bookings:{}},
+    {id:3,name:'Helios',type:'Motobarca',length:'9m',passengers:'10',engine:'Mercury 150cv',homeport:'Milazzo',photo:null,bands:DEFAULT_BANDS.map(function(b){return Object.assign({},b);}),overrides:{},bookings:{}}
+  ]; }
+  if(activeBoat<0 || activeBoat>=boats.length) activeBoat=0;
+}
+
+
 let leads=[
   {id:1,nome:'Marco Russo',email:'marco.russo@email.it',tel:'+39 347 1234567',origine:'Instagram',campagna:'Estate 2024',stato:'Confermato',note:'Uscita Eolie 3 giorni',followups:[{date:'2024-03-10',text:'Inviato preventivo €1.200'}],clienteId:1,data:'2024-03-08',prenotazioneId:1},
   {id:2,nome:'Sara Ferretti',email:'s.ferretti@gmail.com',tel:'+39 333 9876543',origine:'Sito web',campagna:'',stato:'Preventivo',note:'Catamarano luglio',followups:[],clienteId:null,data:'2024-04-12',prenotazioneId:null},
@@ -422,15 +485,12 @@ function rtdbRead() {
     .then(function(data) {
       window._fbDataLoaded=true;
       if(!data) return;
-      function objToArr(obj) {
-        if(!obj) return [];
-        return Object.values(obj).filter(function(v){ return v && typeof v === 'object'; });
-      }
-      if(data.leads)    leads    = objToArr(data.leads);
-      if(data.clients)  clients  = objToArr(data.clients);
-      if(data.bookings) bookings = objToArr(data.bookings);
-      if(data.boats)    boats    = objToArr(data.boats);
-      if(data.tasks)    tasks    = objToArr(data.tasks);
+      if(data.leads)    leads    = safeArr(data.leads);
+      if(data.clients)  clients  = safeArr(data.clients);
+      if(data.bookings) bookings = safeArr(data.bookings).map(normalizeBooking);
+      if(data.boats)    boats    = safeArr(data.boats).map(normalizeBoat);
+      if(data.tasks)    tasks    = safeArr(data.tasks).map(normalizeTask);
+      normalizeAllData();
       sortClientsAZ();
       if(leads.length)    nextLeadId    = Math.max.apply(null, leads.map(function(x){return x.id||0;}))+1;
       if(clients.length)  nextClientId  = Math.max.apply(null, clients.map(function(x){return x.id||0;}))+1;
@@ -462,6 +522,8 @@ function loadData() {
       bookings = p.bookings || bookings;
       boats    = p.boats    || boats;
       tasks    = p.tasks    || tasks;
+      normalizeAllData();
+      sortClientsAZ();
       nextLeadId    = Math.max.apply(null, leads.map(function(x){return x.id||0;}).concat([0]))+1;
       nextClientId  = Math.max.apply(null, clients.map(function(x){return x.id||0;}).concat([0]))+1;
       nextBookingId = Math.max.apply(null, bookings.map(function(x){return x.id||0;}).concat([0]))+1;
@@ -471,6 +533,7 @@ function loadData() {
   } catch(e) {}
 }
 loadData();
+normalizeAllData();
 sortClientsAZ();
 sortClientsAlpha();
 
@@ -767,6 +830,7 @@ function openDayBookings(dateStr){
 }
 
 function renderBookings(){
+  normalizeAllData();
   renderBkCalendar();
   checkPaymentAlerts();
   // Payment alert banner (C)
@@ -843,7 +907,7 @@ function updateBkField(id,field,val){
   b[field]=val;
   if(field==='statoPagamento'&&val==='Saldato'){
     tasks.forEach(function(t){
-      if(t.bookingId===id&&t.titolo.toLowerCase().includes('saldo')){t.stato='Completato';persistTask(t.id);}
+      if(t.bookingId===id&&(t.titolo||'').toLowerCase().includes('saldo')){t.stato='Completato';persistTask(t.id);}
     });
   }
   if(field==='statoPagamento'&&oldPay==='Saldato'&&val!=='Saldato') checkPaymentAlerts();
@@ -899,7 +963,7 @@ function saveBookingStatus(id){
   b.statoFattura=document.getElementById('det-inv').value;
   if(oldPay!=='Saldato'&&b.statoPagamento==='Saldato'){
     tasks.forEach(function(t){
-      if(t.bookingId===id&&t.titolo.toLowerCase().includes('saldo')){t.stato='Completato';persistTask(t.id);}
+      if(t.bookingId===id&&(t.titolo||'').toLowerCase().includes('saldo')){t.stato='Completato';persistTask(t.id);}
     });
   }
   if(oldPay==='Saldato'&&b.statoPagamento!=='Saldato') checkPaymentAlerts();
@@ -961,6 +1025,7 @@ function calcTariffPrice(barcaName,dataStr,giorni){
   var boat=boats.find(function(b){return b.name===barcaName;});
   if(!boat||!dataStr)return 0;
   var m=new Date(dataStr).getMonth();
+  boat=normalizeBoat(boat);
   for(var i=0;i<boat.bands.length;i++){
     if(boat.bands[i].months.indexOf(m)>=0) return boat.bands[i].price*(parseInt(giorni)||1);
   }
@@ -1060,7 +1125,7 @@ function saveBooking(id,leadId){
 
 function syncBoatCalendar(bk,add){
   if(!bk||!bk.data||!bk.barca)return;
-  const boat=boats.find(b=>b.name===bk.barca);if(!boat)return;
+  const boat=boats.find(b=>b.name===bk.barca);if(!boat)return;normalizeBoat(boat);
   const start=new Date(bk.data);
   const giorni=parseInt(bk.giorni)||1;
   for(let g=0;g<giorni;g++){
@@ -1189,15 +1254,21 @@ function deleteBooking(id){
 }
 
 // ==================== FLEET ====================
-function getBandPrice(boat,m){for(const b of boat.bands)if(b.months.includes(m))return b.price;return 0;}
+function getBandPrice(boat,m){boat=normalizeBoat(boat);for(const b of boat.bands)if((b.months||[]).includes(m))return b.price;return 0;}
 function getDayInfo(boat,key){
+  boat=normalizeBoat(boat);
   const[y,m,d]=key.split('-').map(Number);
   if(boat.overrides[key]!==undefined)return{price:boat.overrides[key],over:true};
   return{price:getBandPrice(boat,m),over:false};
 }
 
 function renderFleet(){
-  document.getElementById('fleet-tabs').innerHTML=boats.map((b,i)=>`<div style="display:flex;align-items:center;gap:2px"><button class="btn${i===activeBoat?' btn-navy':''}" onclick="activeBoat=${i};renderFleet()">${b.name}</button>${i===activeBoat&&boats.length>1?`<button class="btn btn-sm btn-danger" title="Rimuovi ${b.name}" onclick="removeBoat(${i})" style="padding:4px 8px;border-radius:0 var(--r) var(--r) 0;border-left:none;margin-left:-1px">✕</button>`:''}</div>`).join('')+`<button class="btn" style="border-style:dashed" onclick="openAddBoatModal()">+ Aggiungi</button>`;
+  normalizeAllData();
+  var tabsEl=document.getElementById('fleet-tabs');
+  var cardEl=document.getElementById('fleet-card');
+  if(!tabsEl||!cardEl) return;
+  if(!boats.length){cardEl.innerHTML='<div class="empty">Nessuna imbarcazione presente</div>';return;}
+  tabsEl.innerHTML=boats.map((b,i)=>`<div style="display:flex;align-items:center;gap:2px"><button class="btn${i===activeBoat?' btn-navy':''}" onclick="activeBoat=${i};renderFleet()">${b.name}</button>${i===activeBoat&&boats.length>1?`<button class="btn btn-sm btn-danger" title="Rimuovi ${b.name}" onclick="removeBoat(${i})" style="padding:4px 8px;border-radius:0 var(--r) var(--r) 0;border-left:none;margin-left:-1px">✕</button>`:''}</div>`).join('')+`<button class="btn" style="border-style:dashed" onclick="openAddBoatModal()">+ Aggiungi</button>`;
   const boat=boats[activeBoat];
   const firstDay=new Date(calYear,calMonth,1).getDay();
   const offset=firstDay===0?6:firstDay-1;
@@ -1212,7 +1283,7 @@ function renderFleet(){
     const pc=booked?'var(--danger)':over?'var(--success)':'var(--navy)';
     cells+=`<div class="${cls}" onclick="openFleetDay('${key}')"><div style="font-size:11px;color:var(--text3)">${d}</div><div style="font-size:11px;font-weight:600;color:${pc}">${booked?'Pren.':'€'+price}</div></div>`;
   }
-  document.getElementById('fleet-card').innerHTML=`
+  cardEl.innerHTML=`
   <div class="card">
     <div style="display:grid;grid-template-columns:110px 1fr;gap:16px;margin-bottom:16px">
       <div style="width:110px;height:82px;border-radius:var(--r);background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden" onclick="document.getElementById('bp${boat.id}').click()">
@@ -1220,20 +1291,20 @@ function renderFleet(){
         <input type="file" id="bp${boat.id}" accept="image/*" style="display:none" onchange="loadBoatPhoto(event,${activeBoat})">
       </div>
       <div class="g2" style="gap:8px">
-        <div class="field" style="margin:0"><label>Nome</label><input value="${boat.name}" onchange="boats[${activeBoat}].name=this.value;saveData();renderFleet()"></div>
-        <div class="field" style="margin:0"><label>Tipo</label><input value="${boat.type}" onchange="boats[${activeBoat}].type=this.value;saveData()"></div>
-        <div class="field" style="margin:0"><label>Lunghezza</label><input value="${boat.length}" onchange="boats[${activeBoat}].length=this.value;saveData()"></div>
-        <div class="field" style="margin:0"><label>Passeggeri</label><input value="${boat.passengers}" onchange="boats[${activeBoat}].passengers=this.value;saveData()"></div>
-        <div class="field" style="margin:0"><label>Motore</label><input value="${boat.engine}" onchange="boats[${activeBoat}].engine=this.value;saveData()"></div>
-        <div class="field" style="margin:0"><label>Porto base</label><input value="${boat.homeport}" onchange="boats[${activeBoat}].homeport=this.value;saveData()"></div>
-        <div class="field" style="margin:0"><label>Scad. assicurazione</label><input type="date" value="${boat.scadAssicurazione||''}" onchange="boats[${activeBoat}].scadAssicurazione=this.value;saveData();checkBoatDocs()"></div>
-        <div class="field" style="margin:0"><label>Scad. revisione</label><input type="date" value="${boat.scadRevisione||''}" onchange="boats[${activeBoat}].scadRevisione=this.value;saveData();checkBoatDocs()"></div>
-        <div class="field" style="margin:0"><label>Scad. licenza</label><input type="date" value="${boat.scadLicenza||''}" onchange="boats[${activeBoat}].scadLicenza=this.value;saveData();checkBoatDocs()"></div>
+        <div class="field" style="margin:0"><label>Nome</label><input value="${boat.name}" onchange="boats[${activeBoat}].name=this.value;saveData();persistBoat(boats[${activeBoat}].id);renderFleet()"></div>
+        <div class="field" style="margin:0"><label>Tipo</label><input value="${boat.type}" onchange="boats[${activeBoat}].type=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
+        <div class="field" style="margin:0"><label>Lunghezza</label><input value="${boat.length}" onchange="boats[${activeBoat}].length=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
+        <div class="field" style="margin:0"><label>Passeggeri</label><input value="${boat.passengers}" onchange="boats[${activeBoat}].passengers=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
+        <div class="field" style="margin:0"><label>Motore</label><input value="${boat.engine}" onchange="boats[${activeBoat}].engine=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
+        <div class="field" style="margin:0"><label>Porto base</label><input value="${boat.homeport}" onchange="boats[${activeBoat}].homeport=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
+        <div class="field" style="margin:0"><label>Scad. assicurazione</label><input type="date" value="${boat.scadAssicurazione||''}" onchange="boats[${activeBoat}].scadAssicurazione=this.value;saveData();persistBoat(boats[${activeBoat}].id);checkBoatDocs()"></div>
+        <div class="field" style="margin:0"><label>Scad. revisione</label><input type="date" value="${boat.scadRevisione||''}" onchange="boats[${activeBoat}].scadRevisione=this.value;saveData();persistBoat(boats[${activeBoat}].id);checkBoatDocs()"></div>
+        <div class="field" style="margin:0"><label>Scad. licenza</label><input type="date" value="${boat.scadLicenza||''}" onchange="boats[${activeBoat}].scadLicenza=this.value;saveData();persistBoat(boats[${activeBoat}].id);checkBoatDocs()"></div>
       </div>
     </div>
     <div class="card-title">Fasce prezzo</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:16px">
-      ${boat.bands.map((b,bi)=>`<div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">${b.label}</div><div style="display:flex;align-items:center;gap:4px"><span style="color:var(--text3);font-size:13px">€</span><input type="number" value="${b.price}" onchange="boats[${activeBoat}].bands[${bi}].price=parseInt(this.value)||0;saveData();renderFleet()" style="width:72px;padding:5px 7px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--white);color:var(--text)"><span style="font-size:11px;color:var(--text3)">/g</span></div></div>`).join('')}
+      ${boat.bands.map((b,bi)=>`<div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">${b.label}</div><div style="display:flex;align-items:center;gap:4px"><span style="color:var(--text3);font-size:13px">€</span><input type="number" value="${b.price}" onchange="boats[${activeBoat}].bands[${bi}].price=parseInt(this.value)||0;saveData();persistBoat(boats[${activeBoat}].id);renderFleet()" style="width:72px;padding:5px 7px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--white);color:var(--text)"><span style="font-size:11px;color:var(--text3)">/g</span></div></div>`).join('')}
     </div>
     <div class="card-title">Calendario ${MONTHS[calMonth]} ${calYear}</div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
@@ -1281,12 +1352,12 @@ function saveFleetDay(key){
   if(ov!=='')boat.overrides[key]=parseInt(ov);else delete boat.overrides[key];
   const was=boat.bookings[key];
   if(booked)boat.bookings[key]=true;else delete boat.bookings[key];
-  saveData();closeModal();
+  saveData();persistBoat(boat.id);closeModal();
   if(booked&&!was&&confirm('Giorno segnato come prenotato. Vuoi creare una nuova prenotazione?')){
     showPage('bookings');setTimeout(()=>openBookingForm(null),50);
   }else{renderFleet();}
 }
-function removeOverride(key){delete boats[activeBoat].overrides[key];saveData();closeModal();renderFleet();}
+function removeOverride(key){delete boats[activeBoat].overrides[key];saveData();persistBoat(boats[activeBoat].id);closeModal();renderFleet();}
 function openAddBoatModal(){
   modal(`
     <div class="modal-title">Nuova imbarcazione<button class="modal-close" onclick="closeModal()">×</button></div>
@@ -1305,9 +1376,9 @@ function saveNewBoat(){
   activeBoat=boats.length-1;saveData();closeModal();renderFleet();
 }
 function removeBoat(i){
-  if(!confirm(`Eliminare "${boats[i].name}" dalla flotta? Questa azione non è reversibile.`))return;boats.splice(i,1);
-  activeBoat=Math.min(activeBoat,boats.length-1);
-  saveData();renderFleet();
+  if(!confirm(`Eliminare "${boats[i].name}" dalla flotta? Questa azione non è reversibile.`))return;var oldId=boats[i].id;boats.splice(i,1);
+  activeBoat=Math.max(0,Math.min(activeBoat,boats.length-1));
+  saveData();rtdbDelete('boats/'+oldId);renderFleet();
 }
 
 // ==================== CLIENTS ====================
@@ -1595,6 +1666,7 @@ function renderStats(){
 
 // ==================== TASKS ====================
 function renderTasks(){
+  normalizeAllData();
   const counts={};TASK_STATI.forEach(s=>counts[s]=tasks.filter(t=>t.stato===s).length);
   const overdue=tasks.filter(t=>t.stato!=='Completato'&&t.scadenza&&t.scadenza<today()).length;
   document.getElementById('task-stats').innerHTML=[
@@ -1653,7 +1725,7 @@ function renderTasks(){
 }
 
 function updateTaskStato(id,val){
-  const t=tasks.find(x=>x.id===id);if(t){t.stato=val;saveData();renderTasks();}
+  const t=tasks.find(x=>x.id===id);if(t){t.stato=val;saveData();persistTask(id);renderTasks();}
 }
 
 function openTaskDetail(id){
@@ -1792,6 +1864,7 @@ function restoreBackup(e){
     try{
       const p=JSON.parse(ev.target.result);
       leads=p.leads||[];clients=p.clients||[];bookings=p.bookings||[];boats=p.boats||[];tasks=p.tasks||[];
+      normalizeAllData(); sortClientsAZ();
       nextLeadId=Math.max.apply(null,leads.map(function(x){return x.id||0;}).concat([0]))+1;
       nextClientId=Math.max.apply(null,clients.map(function(x){return x.id||0;}).concat([0]))+1;
       nextBookingId=Math.max.apply(null,bookings.map(function(x){return x.id||0;}).concat([0]))+1;
