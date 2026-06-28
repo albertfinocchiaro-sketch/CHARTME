@@ -162,6 +162,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .admin-only{display:block}
 body.employee-mode .admin-only{display:none!important}
 body.employee-mode .admin-only-cell{display:none!important}
+body.employee-mode .employee-only{display:block!important}
+.employee-only{display:none}
 </style>
 </head>
 <body>
@@ -206,7 +208,7 @@ body.employee-mode .admin-only-cell{display:none!important}
     <button class="nav-tab" onclick="showPage('bookings')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>Prenotazioni
     </button>
-    <button class="nav-tab" onclick="showPage('fleet')">
+    <button class="nav-tab admin-only" onclick="showPage('fleet')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11l6-8 6 8"/><path d="M1 14l14-3"/></svg>Imbarcazioni
     </button>
     <button class="nav-tab" onclick="showPage('clients')">
@@ -312,7 +314,7 @@ body.employee-mode .admin-only-cell{display:none!important}
 </div>
 
 <!-- ===================== FLEET ===================== -->
-<div id="page-fleet" class="page">
+<div id="page-fleet" class="page admin-only">
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px" id="fleet-tabs"></div>
   <div id="fleet-card"></div>
 </div>
@@ -361,6 +363,13 @@ body.employee-mode .admin-only-cell{display:none!important}
 
 </div><!-- end #app -->
 
+<!-- Bridge onclick → module -->
+<script>
+function doLogin(){ if(window._doLogin) window._doLogin(); else setTimeout(doLogin,100); }
+function doLogout(){ if(window._doLogout) window._doLogout(); }
+function showUserMenu(){ if(window._showUserMenu) window._showUserMenu(); }
+</script>
+
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
@@ -401,7 +410,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-window.doLogin = async function() {
+window._doLogin = async function() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
   const errEl = document.getElementById('login-error');
@@ -417,7 +426,7 @@ window.doLogin = async function() {
   }
 };
 
-window.doLogout = async function() {
+window._doLogout = async function() {
   if(!confirm('Vuoi uscire dal gestionale?')) return;
   await signOut(auth);
 };
@@ -453,7 +462,7 @@ function showApp(user) {
   try { renderCRM(); renderDailyBar(); } catch(e) {}
 }
 
-window.showUserMenu = function() {
+window._showUserMenu = function() {
   const u = window._currentUser;
   if(!u) return;
   window.modal(`
@@ -720,6 +729,9 @@ function modal(content){
 
 // ==================== PAGE NAVIGATION ====================
 function showPage(p){
+  // Redirect employee away from admin-only pages
+  const adminPages=['fleet','stats'];
+  if(!window._isAdmin && adminPages.includes(p)){ showPage('crm'); return; }
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
   const pageEl=document.getElementById('page-'+p);
@@ -1062,12 +1074,10 @@ function renderBookings(){
   const pending=bookings.filter(b=>b.status==='pending');
   const totFatt=confirmed.reduce((s,b)=>s+Number(b.importo||0),0);
   const totIncassato=confirmed.reduce((s,b)=>s+(b.statoPagamento==='Saldato'?Number(b.importo||0):Number(b.acconto||0)),0);
-  document.getElementById('bk-stats').innerHTML=[
-    {l:'Confermate',v:confirmed.length},
-    {l:'In attesa',v:pending.length,danger:pending.length>0},
-    {l:'Fatturato',v:fmtEur(totFatt)},
-    {l:'Incassato',v:fmtEur(totIncassato)},
-  ].map(x=>`<div class="stat-card"><div class="stat-label">${x.l}</div><div class="stat-value" style="font-size:18px;${x.danger?'color:var(--warn)':''}">${x.v}</div></div>`).join('');
+  const bkStatsItems = window._isAdmin
+    ? [{l:'Confermate',v:confirmed.length},{l:'In attesa',v:pending.length,danger:pending.length>0},{l:'Fatturato',v:fmtEur(totFatt)},{l:'Incassato',v:fmtEur(totIncassato)}]
+    : [{l:'Confermate',v:confirmed.length},{l:'In attesa',v:pending.length,danger:pending.length>0}];
+  document.getElementById('bk-stats').innerHTML=bkStatsItems.map(x=>`<div class="stat-card"><div class="stat-label">${x.l}</div><div class="stat-value" style="font-size:18px;${x.danger?'color:var(--warn)':''}">${x.v}</div></div>`).join('');
   const filtered=bookings.filter(b=>
     (b.clienteNome+b.barca).toLowerCase().includes(q.toLowerCase())&&
     (!payF||b.statoPagamento===payF)&&
@@ -1357,6 +1367,9 @@ function openClientDetail(id){
         <div><div class="stat-label">Fatturato totale</div><div style="font-size:16px;font-weight:700;color:var(--navy)">${fmtEur(totale)}</div></div>
         <div><div class="stat-label">Prenotazioni</div><div style="font-size:16px;font-weight:700;color:var(--navy)">${cBks.length}</div></div>
       </div>
+    </div>
+    <div class="employee-only" style="background:var(--bg2);border-radius:var(--r);padding:10px;margin-bottom:10px">
+      <div><div class="stat-label">Prenotazioni</div><div style="font-size:16px;font-weight:700;color:var(--navy)">${cBks.length}</div></div>
     </div>
     ${c.note?`<div style="padding:8px 10px;background:var(--bg2);border-radius:var(--r);font-size:13px;margin-bottom:10px">${c.note}</div>`:''}
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
