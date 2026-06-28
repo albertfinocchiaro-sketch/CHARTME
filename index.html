@@ -34,6 +34,16 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+/* LOGIN SCREEN */
+#login-screen{position:fixed;inset:0;background:var(--navy-dark);display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-box{background:var(--white);border-radius:16px;padding:32px;width:100%;max-width:360px;border-top:3px solid var(--gold)}
+.login-logo{font-size:28px;font-weight:800;margin-bottom:4px}
+.login-logo .chart{color:var(--gold)}
+.login-logo .me{color:#4A7FCC}
+.login-sub{font-size:11px;letter-spacing:3px;color:var(--gold-dark);margin-bottom:24px;opacity:.7}
+.login-error{background:var(--danger-bg);color:var(--danger);border-radius:var(--r);padding:8px 12px;font-size:13px;margin-bottom:12px;display:none}
+
 /* TOPBAR */
 .topbar{background:var(--navy-dark);display:flex;align-items:center;gap:0;padding:0;border-bottom:2px solid var(--gold-dark)}
 .logo-area{display:flex;align-items:center;gap:10px;padding:10px 20px;border-right:1px solid rgba(255,255,255,0.08);min-width:200px}
@@ -43,9 +53,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .logo-main .me{color:#4A7FCC}
 .logo-sub{font-size:9px;letter-spacing:3px;color:var(--gold);opacity:.7;margin-top:2px}
 .nav-tabs{display:flex;flex:1;overflow-x:auto}
-.nav-tab{padding:14px 18px;color:rgba(255,255,255,0.55);font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;border-top:none;border-left:none;border-right:none;background:none;letter-spacing:.2px}
+.nav-tab{padding:14px 18px;color:rgba(255,255,255,0.55);font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;border-top:none;border-left:none;border-right:none;background:none;letter-spacing:.2px;position:relative}
 .nav-tab:hover{color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.04)}
 .nav-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.nav-badge{position:absolute;top:8px;right:6px;background:var(--danger);color:#fff;border-radius:20px;font-size:9px;font-weight:700;padding:1px 5px;min-width:16px;text-align:center;display:none}
+.nav-badge.show{display:block}
+
+/* USER CHIP */
+.user-chip{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,.06);cursor:pointer;margin-right:8px;border:none}
+.user-chip:hover{background:rgba(255,255,255,.1)}
+.user-role-badge{font-size:9px;padding:1px 6px;border-radius:10px;font-weight:700;letter-spacing:.04em}
+.role-admin{background:var(--gold);color:var(--navy-dark)}
+.role-employee{background:rgba(255,255,255,.15);color:rgba(255,255,255,.7)}
+
 /* LAYOUT */
 .page{display:none;padding:20px;max-width:1200px;margin:0 auto}
 .page.active{display:block}
@@ -88,8 +108,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .badge-paid{background:var(--success-bg);color:var(--success)}
 .badge-unpaid{background:var(--danger-bg);color:var(--danger)}
 .badge-partial{background:var(--warn-bg);color:var(--warn)}
-.badge-invoiced{background:var(--info-bg);color:var(--info)}
-.badge-noinvoice{background:var(--bg2);color:var(--text3)}
+.badge-pending{background:#FEF6E4;color:#8A5C00}
+.badge-rejected{background:var(--danger-bg);color:var(--danger)}
 /* TABLES */
 .tbl{width:100%;border-collapse:collapse}
 .tbl th{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;text-align:left;background:var(--bg2);font-weight:600}
@@ -113,19 +133,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .modal{background:var(--white);border-radius:var(--rl);padding:22px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;border-top:3px solid var(--gold)}
 .modal-title{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
 .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:0}
-/* DOC UPLOAD */
-.doc-zone{border:1.5px dashed var(--border2);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;color:var(--text3);font-size:13px;transition:all .15s}
-.doc-zone:hover{border-color:var(--navy-light);color:var(--navy);background:var(--info-bg)}
-.doc-thumb{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg2);border-radius:var(--r);font-size:13px;margin-top:6px}
-.doc-thumb img{width:48px;height:48px;object-fit:cover;border-radius:4px;border:0.5px solid var(--border)}
-/* FOLLOW UP */
-.fu-row{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:13px}
-.fu-row:last-child{border-bottom:none}
-.fu-date{font-size:11px;color:var(--text3);min-width:75px;margin-top:2px}
+/* REQUEST CARD */
+.request-card{background:var(--white);border:1px solid var(--border);border-left:4px solid var(--warn);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.request-card.new{border-left-color:var(--navy);animation:pulse-border 2s ease-in-out 3}
+@keyframes pulse-border{0%,100%{border-left-color:var(--navy)}50%{border-left-color:var(--gold)}}
 /* CALENDAR */
 .cal-day{min-height:50px;border:0.5px solid var(--border);border-radius:6px;padding:4px 5px;cursor:pointer;background:var(--white);transition:all .12s;position:relative}
 .cal-day:hover{border-color:var(--navy-light);background:var(--info-bg)}
 .cal-day.booked{background:var(--danger-bg);border-color:rgba(192,57,43,.3)}
+.cal-day.pending-day{background:var(--warn-bg);border-color:rgba(138,92,0,.3)}
 .cal-day.override{background:#E8F5E8;border-color:rgba(27,122,62,.3)}
 .cal-dow{font-size:10px;color:var(--text3);text-align:center;padding:4px 0;text-transform:uppercase;font-weight:600;letter-spacing:.06em}
 /* SECTION HEADER */
@@ -138,17 +154,39 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .bar:hover{background:var(--navy-light)}
 .bar-label{font-size:10px;color:var(--text3);text-align:center}
 .bar-val{font-size:10px;color:var(--navy);font-weight:600;text-align:center}
-/* NAV ICON SVG */
 .nav-icon{width:15px;height:15px;display:inline-block;vertical-align:middle;margin-right:5px;opacity:.7}
-/* EMPTY STATE */
 .empty{padding:32px;text-align:center;color:var(--text3);font-size:13px}
-/* TAG */
 .tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;background:var(--info-bg);color:var(--navy);margin:2px;font-weight:500}
-/* TOGGLE STATUS */
 .status-select{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238A8880'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;padding-right:18px}
+/* EMPLOYEE HIDDEN */
+.admin-only{display:block}
+body.employee-mode .admin-only{display:none!important}
+body.employee-mode .admin-only-cell{display:none!important}
 </style>
 </head>
 <body>
+
+<!-- ===================== LOGIN SCREEN ===================== -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo"><span class="chart">Chart</span><span class="me">ME</span></div>
+    <div class="login-sub">CHARTER MESSINA</div>
+    <div class="login-error" id="login-error"></div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="admin@chartermessina.it" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-navy" style="width:100%;margin-top:4px;padding:10px" onclick="doLogin()">Accedi</button>
+    <div id="login-loading" style="text-align:center;font-size:12px;color:var(--text3);margin-top:8px;display:none">Accesso in corso...</div>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app" style="display:none">
 
 <div class="topbar">
   <div class="logo-area">
@@ -161,6 +199,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <button class="nav-tab active" onclick="showPage('crm')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>CRM Lead
     </button>
+    <button class="nav-tab" onclick="showPage('requests')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8h6M5 5h3M5 11h4"/></svg>Richieste
+      <span class="nav-badge" id="requests-badge">0</span>
+    </button>
     <button class="nav-tab" onclick="showPage('bookings')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>Prenotazioni
     </button>
@@ -168,23 +210,45 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11l6-8 6 8"/><path d="M1 14l14-3"/></svg>Imbarcazioni
     </button>
     <button class="nav-tab" onclick="showPage('clients')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-2.8 2.2-5 5-5s5 2.2 5 5"/><circle cx="12" cy="5" r="2"/><path d="M15 14c0-2.2-1.3-4-3-4.5"/></svg>Anagrafica
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-2.8 2.2-5 5-5s5 2.2 5 5"/><circle cx="12" cy="5" r="2"/><path d="M15 14c0-2.2-1.3-4-4.5"/></svg>Anagrafica
     </button>
-    <button class="nav-tab" onclick="showPage('stats')">
+    <button class="nav-tab admin-only" onclick="showPage('stats')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,12 5,6 9,9 15,2"/><path d="M1 15h14"/></svg>Statistiche
     </button>
     <button class="nav-tab" onclick="showPage('tasks')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8l2 2 4-4"/></svg>Task
     </button>
-  </div>  <div style="margin-left:auto;padding:0 12px;display:flex;align-items:center;gap:8px">
-    <button onclick="downloadBackup()" style="padding:4px 10px;background:transparent;border:1px solid rgba(201,184,138,.45);border-radius:6px;color:var(--gold);font-size:11px;font-weight:700;cursor:pointer">↓ Backup JSON</button>
+  </div>
+  <div style="margin-left:auto;padding:0 12px;display:flex;align-items:center;gap:8px">
+    <button id="user-chip" class="user-chip" onclick="showUserMenu()">
+      <div class="avatar" style="width:26px;height:26px;font-size:10px" id="user-avatar">?</div>
+      <span style="font-size:12px;color:rgba(255,255,255,.7)" id="user-email-short"></span>
+      <span class="user-role-badge role-admin" id="user-role-badge">ADMIN</span>
+    </button>
+    <button onclick="downloadBackup()" style="padding:4px 10px;background:transparent;border:1px solid rgba(201,184,138,.45);border-radius:6px;color:var(--gold);font-size:11px;font-weight:700;cursor:pointer">↓ Backup</button>
     <label style="padding:4px 10px;background:transparent;border:1px solid rgba(201,184,138,.45);border-radius:6px;color:var(--gold);font-size:11px;font-weight:700;cursor:pointer">↑ Ripristina<input type="file" accept="application/json,.json" style="display:none" onchange="restoreBackup(event)"></label>
-    <button onclick="rtdbInitAll()" style="padding:4px 12px;background:var(--gold);border:none;border-radius:6px;color:var(--navy-dark);font-size:11px;font-weight:700;cursor:pointer">↑ Carica su Firebase</button>
   </div>
 </div>
 
-<!-- DAILY DASHBOARD -->
 <div id="daily-bar" style="background:var(--navy-dark);border-bottom:1px solid rgba(201,184,138,.2);padding:7px 16px;display:flex;gap:16px;overflow-x:auto;flex-wrap:nowrap;align-items:center"></div>
+
+<!-- ===================== RICHIESTE (NUOVO) ===================== -->
+<div id="page-requests" class="page">
+  <div class="section-header">
+    <h2>Richieste in attesa</h2>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span id="requests-count-label" style="font-size:13px;color:var(--text3)"></span>
+    </div>
+  </div>
+  <div id="requests-empty" style="display:none" class="card">
+    <div class="empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" style="margin-bottom:8px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <div>Nessuna richiesta in attesa</div>
+      <div style="font-size:12px;margin-top:4px">Le nuove richieste dal sito appariranno qui in tempo reale</div>
+    </div>
+  </div>
+  <div id="requests-list"></div>
+</div>
 
 <!-- ===================== CRM ===================== -->
 <div id="page-crm" class="page active">
@@ -217,7 +281,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div style="font-size:15px;font-weight:700;color:var(--navy)" id="bk-cal-title"></div>
       <div style="display:flex;gap:6px">
         <button class="btn btn-sm" onclick="bkCalPrev()">‹ Prec.</button>
-        <button class="btn btn-sm" onclick="bkCalToday()" style="font-size:12px">Oggi</button>
+        <button class="btn btn-sm" onclick="bkCalToday()">Oggi</button>
         <button class="btn btn-sm" onclick="bkCalNext()">Succ. ›</button>
       </div>
     </div>
@@ -227,17 +291,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="card" style="padding:0;overflow:hidden">
     <div style="padding:12px 14px;border-bottom:0.5px solid var(--border)">
       <div class="search-wrap" style="margin-bottom:8px">
-        <input placeholder="Cerca cliente, barca, destinazione..." id="bk-search" oninput="renderBookings()">
+        <input placeholder="Cerca cliente, barca..." id="bk-search" oninput="renderBookings()">
         <select id="bk-pay-filter" onchange="renderBookings()" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--white)">
           <option value="">Tutti i pagamenti</option>
           <option value="Saldato">Saldato</option>
           <option value="Parziale">Parziale</option>
           <option value="Non pagato">Non pagato</option>
         </select>
-        <select id="bk-inv-filter" onchange="renderBookings()" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--white)">
-          <option value="">Tutte le fatture</option>
-          <option value="Fatturato">Fatturata</option>
-          <option value="Non fatturato">Non fatturata</option>
+        <select id="bk-status-filter" onchange="renderBookings()" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--white)">
+          <option value="">Tutti gli stati</option>
+          <option value="confirmed">Confermate</option>
+          <option value="pending">In attesa</option>
+          <option value="rejected">Rifiutate</option>
+          <option value="manual">Manuali</option>
         </select>
       </div>
     </div>
@@ -272,8 +338,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
-<!-- ===================== STATS ===================== -->
-<div id="page-stats" class="page">
+<!-- ===================== STATS (admin only) ===================== -->
+<div id="page-stats" class="page admin-only">
   <div class="section-header"><h2>Statistiche economiche</h2>
     <select id="stats-year" onchange="renderStats()" style="padding:7px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--white);font-weight:600;color:var(--navy)"></select>
   </div>
@@ -291,8 +357,186 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div id="task-board"></div>
 </div>
 
-<!-- MODAL CONTAINER -->
 <div id="modal-root"></div>
+
+</div><!-- end #app -->
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getDatabase, ref, set, get, update, remove, onValue, off } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA3OrjiUzICrkAMNA3MTLeBaV-UFZEoGdA",
+  authDomain: "chartme-d70e6.firebaseapp.com",
+  databaseURL: "https://chartme-d70e6-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "chartme-d70e6",
+  storageBucket: "chartme-d70e6.firebasestorage.app",
+  messagingSenderId: "918112516109",
+  appId: "1:918112516109:web:1b052815fce0e2f72cbd44",
+  measurementId: "G-D36H0C6XB6"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// Expose to global scope
+window._fb = { auth, db, ref, set, get, update, remove, onValue, off, signInWithEmailAndPassword, signOut };
+
+// ── AUTH STATE ──
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    // Get role from custom claims (or fallback to DB)
+    const token = await user.getIdTokenResult();
+    const role = token.claims.role || 'admin'; // default admin until you set up claims
+    window._currentUser = { uid: user.uid, email: user.email, role };
+    window._isAdmin = (role === 'admin');
+    showApp(user);
+  } else {
+    window._currentUser = null;
+    window._isAdmin = false;
+    showLoginScreen();
+  }
+});
+
+window.doLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  const loadEl = document.getElementById('login-loading');
+  errEl.style.display = 'none';
+  loadEl.style.display = 'block';
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch(e) {
+    loadEl.style.display = 'none';
+    errEl.style.display = 'block';
+    errEl.textContent = e.code === 'auth/invalid-credential' ? 'Email o password non corretti.' : 'Errore: ' + e.message;
+  }
+};
+
+window.doLogout = async function() {
+  if(!confirm('Vuoi uscire dal gestionale?')) return;
+  await signOut(auth);
+};
+
+function showLoginScreen() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+function showApp(user) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  // Update user chip
+  const emailShort = user.email.split('@')[0];
+  document.getElementById('user-email-short').textContent = emailShort;
+  document.getElementById('user-avatar').textContent = emailShort.slice(0,2).toUpperCase();
+  const roleBadge = document.getElementById('user-role-badge');
+  const isAdmin = window._isAdmin;
+  roleBadge.textContent = isAdmin ? 'ADMIN' : 'STAFF';
+  roleBadge.className = 'user-role-badge ' + (isAdmin ? 'role-admin' : 'role-employee');
+
+  // Apply employee restrictions
+  if (!isAdmin) {
+    document.body.classList.add('employee-mode');
+  } else {
+    document.body.classList.remove('employee-mode');
+  }
+
+  // Start real-time listener
+  startRealtimeListener();
+  // Initial render
+  try { renderCRM(); renderDailyBar(); } catch(e) {}
+}
+
+window.showUserMenu = function() {
+  const u = window._currentUser;
+  if(!u) return;
+  window.modal(`
+    <div class="modal-title">Account<button class="modal-close" onclick="closeModal()">×</button></div>
+    <div style="padding:12px;background:var(--bg2);border-radius:var(--r);margin-bottom:16px">
+      <div style="font-weight:600">${u.email}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px">Ruolo: <strong>${u.role === 'admin' ? 'Amministratore' : 'Dipendente'}</strong></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-sm btn-danger" onclick="closeModal();doLogout()">Esci</button>
+    </div>
+  `);
+};
+
+// ── REALTIME LISTENER ──
+let _dbListener = null;
+function startRealtimeListener() {
+  const { db, ref, onValue } = window._fb;
+  const rootRef = ref(db, '/');
+  if (_dbListener) off(rootRef, _dbListener);
+
+  onValue(rootRef, (snapshot) => {
+    const data = snapshot.val() || {};
+    window._fbDataLoaded = true;
+
+    leads    = safeArr(data.leads).map(normalizeLead);
+    clients  = safeArr(data.clients);
+    bookings = safeArr(data.bookings).map(normalizeBooking);
+    boats    = safeArr(data.boats).map(normalizeBoat);
+    tasks    = safeArr(data.tasks).map(normalizeTask);
+    normalizeAllData();
+    sortClientsAZ();
+
+    nextLeadId    = leads.length    ? Math.max(...leads.map(x=>x.id||0))+1    : 1;
+    nextClientId  = clients.length  ? Math.max(...clients.map(x=>x.id||0))+1  : 1;
+    nextBookingId = bookings.length ? Math.max(...bookings.map(x=>x.id||0))+1 : 1;
+    nextBoatId    = boats.length    ? Math.max(...boats.map(x=>x.id||0))+1    : 1;
+    nextTaskId    = tasks.length    ? Math.max(...tasks.map(x=>x.id||0))+1    : 1;
+
+    saveData();
+    updateRequestsBadge();
+
+    // Re-render active page
+    const active = document.querySelector('.page.active');
+    if(active) {
+      const fn = {
+        'page-crm': 'renderCRM',
+        'page-requests': 'renderRequests',
+        'page-bookings': 'renderBookings',
+        'page-fleet': 'renderFleet',
+        'page-clients': 'renderClients',
+        'page-stats': 'renderStats',
+        'page-tasks': 'renderTasks'
+      }[active.id];
+      if(fn && window[fn]) try { window[fn](); } catch(e) {}
+    }
+    if(window.renderDailyBar) renderDailyBar();
+  }, (error) => {
+    console.warn('Firebase listener error:', error);
+  });
+}
+
+// ── WRITE HELPERS (using SDK) ──
+window.rtdbWrite = function(path, data) {
+  const { db, ref, set } = window._fb;
+  const clean = JSON.parse(JSON.stringify(data, (k,v) => {
+    if(['photo','docData','docName','docType'].includes(k)) return undefined;
+    return v;
+  }));
+  return set(ref(db, path), clean).catch(e => console.warn('write error', path, e));
+};
+
+window.rtdbDelete = function(path) {
+  const { db, ref, remove } = window._fb;
+  return remove(ref(db, path)).catch(e => console.warn('delete error', path, e));
+};
+
+window.rtdbUpdate = function(path, data) {
+  const { db, ref, update } = window._fb;
+  return update(ref(db, path), data).catch(e => console.warn('update error', path, e));
+};
+
+</script>
 
 <script>
 // ==================== DATA ====================
@@ -301,7 +545,6 @@ const MONTHS_SHORT=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott',
 const DOWS=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
 const STATI_LEAD=['Nuovo','Contattato','Preventivo','Confermato','Perso'];
 const ORIGINI=['Sito web','Instagram','Facebook','Passaparola','OTA','WhatsApp','Email','Altro'];
-const BARCHE_NOMI=['Poseidon I','Artemide','Helios'];
 const DEFAULT_BANDS=[
   {label:'Bassa (Nov–Apr)',months:[10,11,0,1,2,3],price:350},
   {label:'Media (Mag–Giu)',months:[4,5],price:480},
@@ -309,43 +552,44 @@ const DEFAULT_BANDS=[
   {label:'Sett–Ott',months:[8,9],price:450}
 ];
 
-// ===== NORMALIZZAZIONE DATI FIREBASE / SICUREZZA ARRAY =====
 function safeArr(x){
   if(!x) return [];
-  if(Array.isArray(x)) return x.filter(function(v){ return v && typeof v === 'object'; });
-  if(typeof x === 'object') return Object.keys(x).map(function(k){ return x[k]; }).filter(function(v){ return v && typeof v === 'object'; });
+  if(Array.isArray(x)) return x.filter(v => v && typeof v === 'object');
+  if(typeof x === 'object') return Object.keys(x).map(k => x[k]).filter(v => v && typeof v === 'object');
   return [];
 }
+
 function normalizeBoat(b){
   b=b||{};
-  b.id = Number(b.id)||0;
-  b.name = b.name || b.nome || 'Imbarcazione';
-  b.type = b.type || '';
-  b.length = b.length || '';
-  b.passengers = b.passengers || '';
-  b.engine = b.engine || '';
-  b.homeport = b.homeport || '';
-  b.bands = safeArr(b.bands).length ? safeArr(b.bands).map(function(x){ x.months=Array.isArray(x.months)?x.months:[]; x.price=Number(x.price)||0; return x; }) : DEFAULT_BANDS.map(function(x){ return JSON.parse(JSON.stringify(x)); });
-  function normalizeDateKey(k){
+  b.id=Number(b.id)||0;
+  b.name=b.name||b.nome||'Imbarcazione';
+  b.type=b.type||'';
+  b.length=b.length||'';
+  b.passengers=b.passengers||'';
+  b.engine=b.engine||'';
+  b.homeport=b.homeport||'';
+  b.priceFullDay=Number(b.priceFullDay)||0;
+  b.visible=b.visible!==false;
+  b.bands=safeArr(b.bands).length ? safeArr(b.bands).map(x=>{x.months=Array.isArray(x.months)?x.months:[];x.price=Number(x.price)||0;return x;}) : DEFAULT_BANDS.map(x=>JSON.parse(JSON.stringify(x)));
+  function normDateKey(k){
     var raw=String(k||'');
     var m=raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
     if(!m) return raw;
-    var yy=Number(m[1]), mm=Number(m[2]), dd=Number(m[3]);
-    // New keys are ISO yyyy-mm-dd. Old keys were yyyy-M-D with month 0-11.
-    // Treat as old only when the month was clearly not zero-padded or was 0.
-    if(m[2].length===1 || mm===0) mm=mm+1;
+    var yy=Number(m[1]),mm=Number(m[2]),dd=Number(m[3]);
+    if(m[2].length===1||mm===0) mm=mm+1;
     return yy+'-'+String(mm).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
   }
   function normalizeMapKeys(obj){
     var out={};
-    if(!obj || typeof obj!=='object') return out;
-    Object.keys(obj).forEach(function(k){ out[normalizeDateKey(k)] = obj[k]; });
+    if(!obj||typeof obj!=='object') return out;
+    Object.keys(obj).forEach(k=>{out[normDateKey(k)]=obj[k];});
     return out;
   }
-  b.overrides = normalizeMapKeys(b.overrides);
-  b.bookings = normalizeMapKeys(b.bookings);
+  b.overrides=normalizeMapKeys(b.overrides);
+  b.bookings=normalizeMapKeys(b.bookings);
   return b;
 }
+
 function normalizeBooking(b){
   b=b||{};
   b.id=Number(b.id)||0;
@@ -359,8 +603,21 @@ function normalizeBooking(b){
   b.acconto=Number(b.acconto)||0;
   b.statoPagamento=b.statoPagamento||'Non pagato';
   b.statoFattura=b.statoFattura||'Non fatturato';
+  // NEW: booking status for website requests
+  b.status=b.status||'manual'; // pending | confirmed | rejected | manual
+  // NEW: full client data from website form
+  b.email=b.email||'';
+  b.telefono=b.telefono||'';
+  b.codiceFiscale=b.codiceFiscale||'';
+  b.residenza=b.residenza||'';
+  b.tipoDocumento=b.tipoDocumento||'';
+  b.numeroDocumento=b.numeroDocumento||'';
+  b.dataEmissione=b.dataEmissione||'';
+  b.dataScadenza=b.dataScadenza||'';
+  b.note=b.note||'';
   return b;
 }
+
 function normalizeTask(t){
   t=t||{};
   t.id=Number(t.id)||0;
@@ -384,204 +641,76 @@ function normalizeLead(l){
   l.campagna=l.campagna||'';
   l.stato=STATI_LEAD.includes(l.stato)?l.stato:'Nuovo';
   l.note=l.note||'';
-  l.followups=safeArr(l.followups).map(function(f){return {date:f.date||'',text:f.text||''};});
+  l.followups=safeArr(l.followups).map(f=>({date:f.date||'',text:f.text||''}));
   l.clienteId=l.clienteId?Number(l.clienteId):null;
   l.prenotazioneId=l.prenotazioneId?Number(l.prenotazioneId):null;
   l.data=l.data||today();
   return l;
 }
+
 function normalizeAllData(){
-  leads=safeArr(leads).map(normalizeLead).filter(function(x){return x.id;});
-  clients=safeArr(clients).filter(function(x){return x.id;});
-  bookings=safeArr(bookings).map(normalizeBooking).filter(function(x){return x.id;});
-  boats=safeArr(boats).map(normalizeBoat).filter(function(x){return x.id || x.name;});
-  tasks=safeArr(tasks).map(normalizeTask).filter(function(x){return x.id;});
-  if(!boats.length){ boats=[
-    {id:1,name:'Poseidon I',type:'Catamarano',length:'14m',passengers:'12',engine:'2x Volvo 40cv',homeport:'Messina',photo:null,bands:DEFAULT_BANDS.map(function(b){return Object.assign({},b);}),overrides:{},bookings:{}},
-    {id:2,name:'Artemide',type:'Barca a vela',length:'11m',passengers:'8',engine:'Volvo 30cv',homeport:'Messina',photo:null,bands:DEFAULT_BANDS.map(function(b){return Object.assign({},b);}),overrides:{},bookings:{}},
-    {id:3,name:'Helios',type:'Motobarca',length:'9m',passengers:'10',engine:'Mercury 150cv',homeport:'Milazzo',photo:null,bands:DEFAULT_BANDS.map(function(b){return Object.assign({},b);}),overrides:{},bookings:{}}
-  ]; }
-  if(activeBoat<0 || activeBoat>=boats.length) activeBoat=0;
+  leads=safeArr(leads).map(normalizeLead).filter(x=>x&&x.id);
+  clients=safeArr(clients).filter(x=>x&&x.id);
+  bookings=safeArr(bookings).map(normalizeBooking).filter(x=>x&&x.id);
+  boats=safeArr(boats).map(normalizeBoat).filter(x=>x&&(x.id||x.name));
+  tasks=safeArr(tasks).map(normalizeTask).filter(x=>x&&x.id);
+  if(!boats.length){
+    boats=[
+      {id:1,name:'Poseidon I',type:'Catamarano',length:'14m',passengers:'12',engine:'2x Volvo 40cv',homeport:'Messina',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:2,name:'Artemide',type:'Barca a vela',length:'11m',passengers:'8',engine:'Volvo 30cv',homeport:'Messina',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:3,name:'Helios',type:'Motobarca',length:'9m',passengers:'10',engine:'Mercury 150cv',homeport:'Milazzo',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}}
+    ];
+  }
+  if(activeBoat<0||activeBoat>=boats.length) activeBoat=0;
 }
 
+let leads=[], clients=[], bookings=[], boats=[], tasks=[];
+let nextLeadId=1, nextClientId=1, nextBookingId=1, nextBoatId=4, nextTaskId=1;
+let activeBoat=0, calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
+let crmFilter='Tutti', taskFilter='Tutti';
 
-let leads=[];
-let clients=[{"id": 1, "nome": "Gregorio", "cognome": "Augusto", "email": "gregorio.augusto@lacascina.it", "tel": "+39 3492506606", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 2, "nome": "Michele", "cognome": "Palmieri", "email": "m.palmieri@itheredia.it", "tel": "+39 3939789425", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "1 noleggi", "prenotazioni": []}, {"id": 3, "nome": "Salvatore", "cognome": "Cammaroto", "email": "scpicks23@gmail.com", "tel": "+39 3319215794", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 4, "nome": "Elisa", "cognome": "Poli", "email": "elisa02.p@gmail.com", "tel": "+39 3314638589", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 5, "nome": "Francesco", "cognome": "Arcovito", "email": "", "tel": "+39 335403201", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 6, "nome": "Alessandro", "cognome": "Catalfamo", "email": "alessandrocatalfamo26@gmail.com", "tel": "+39 3207048126", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 7, "nome": "Maurizio", "cognome": "Traina", "email": "", "tel": "+39 3922600141", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 8, "nome": "Mariadele", "cognome": "Venuti", "email": "benevenutiamessina@gmail.com", "tel": "+39 3288867195", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 9, "nome": "Francesco", "cognome": "Alleruzzo", "email": "francesco.alleruzzo26@gmail.com", "tel": "+39 3425806030", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": ["Ritorno"], "note": "3 noleggi", "prenotazioni": []}, {"id": 10, "nome": "Gaetano", "cognome": "Montineri", "email": "gmonti@me.com", "tel": "+39 3358440407", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": ["Ritorno"], "note": "3 noleggi", "prenotazioni": []}, {"id": 11, "nome": "Giuseppe", "cognome": "Buceti", "email": "bucetig@gmail.com", "tel": "+39 3925754925", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 12, "nome": "Marco", "cognome": "Russo", "email": "marcorusso1304@gmail.com", "tel": "+39 3423565382", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 13, "nome": "Luigi", "cognome": "Russo", "email": "giggirusso1980@gmail.com", "tel": "+39 3400565662", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 14, "nome": "Gianfranco", "cognome": "Verboso", "email": "gianfrancoverboso@gmail.com", "tel": "+39 3881862606", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 15, "nome": "Paolo", "cognome": "Ferraù", "email": "paoloferru04@icloud.com", "tel": "+39 3332476590", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 16, "nome": "Mirko", "cognome": "Fusco", "email": "mirko.fusco06@gmail.com", "tel": "+39 3273912052", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 17, "nome": "Samuele", "cognome": "Arnò", "email": "milansamu33@gmail.com", "tel": "+39 3802614567", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 18, "nome": "Giuseppe", "cognome": "Privitera", "email": "felterhome@gmail.com", "tel": "+39 337426313", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 19, "nome": "Giorgia", "cognome": "Germanà", "email": "giorgiagermana@gmail.com", "tel": "+39 3407599748", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 20, "nome": "Maurizo", "cognome": "Grioli", "email": "mauriziogrioli@hotmail.it", "tel": "+39 3409681159", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 21, "nome": "Massimiliano", "cognome": "Passeri", "email": "massimialianopasseri73@gmail.com", "tel": "+39 3494913651", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 22, "nome": "Andrea", "cognome": "Speciale", "email": "", "tel": "+39 3487861499", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": ["Ritorno"], "note": "2 noleggi", "prenotazioni": []}, {"id": 23, "nome": "Luigi", "cognome": "Villari", "email": "luigivillari9@gmail.com", "tel": "+39 3669760208", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": ["Ritorno"], "note": "2 noleggi", "prenotazioni": []}, {"id": 24, "nome": "Fabio", "cognome": "Noli Maio", "email": "", "tel": "+39 3491121695", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 25, "nome": "Luigi", "cognome": "Asmundo", "email": "luigi.asm@gmail.com", "tel": "+39 3466211244", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 26, "nome": "Sofia", "cognome": "Russo", "email": "", "tel": "+39 3479639069", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 27, "nome": "Renata", "cognome": "Consoli", "email": "claudio@arigas.it", "tel": "+39 3393146371", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 28, "nome": "Giorgio", "cognome": "Marchese", "email": "", "tel": "+39 3357765083", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": ["Ritorno"], "note": "2 noleggi", "prenotazioni": []}, {"id": 29, "nome": "Giuseppe", "cognome": "Andò", "email": "peppeando@virgilio.it", "tel": "+39 3463769264", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 30, "nome": "Manuel", "cognome": "Nazzaro", "email": "nazzaromanuel@gmail.com", "tel": "+39 3884829080", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": ["Ritorno"], "note": "2 noleggi", "prenotazioni": []}, {"id": 31, "nome": "Andrea", "cognome": "Zuccarello", "email": "notaio@notaiozuccarello.it", "tel": "+39 3403790099", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 32, "nome": "Emilio", "cognome": "Palleschi", "email": "palleschi.emilio@gmail.com", "tel": "+39 3383685050", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 33, "nome": "Luigi", "cognome": "Crescenti", "email": "luigi.crescenti@libero.it", "tel": "+39 3488623659", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 34, "nome": "Christian", "cognome": "Calandra", "email": "", "tel": "+39 3286250237", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 35, "nome": "Salvatore", "cognome": "Micari", "email": "", "tel": "+39 3489822537", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 36, "nome": "Pietro", "cognome": "Mancuso", "email": "", "tel": "+39 3421938467", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 37, "nome": "Alessandro", "cognome": "de domenico", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 38, "nome": "Francesco", "cognome": "Picciolo", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 39, "nome": "alberto", "cognome": "vitale", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 40, "nome": "giuseppe", "cognome": "guerrera", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 41, "nome": "ivan", "cognome": "gugliandolo", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 42, "nome": "Emilio", "cognome": "Palleschi", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 43, "nome": "Salvatore", "cognome": "Mangraviti", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 44, "nome": "sethu", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 45, "nome": "giovanni", "cognome": "centorrino", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 46, "nome": "nino", "cognome": "Quinci", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 47, "nome": "Emilio", "cognome": "Palleschi", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 48, "nome": "emanuele", "cognome": "cardile", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 49, "nome": "giorgio", "cognome": "belvedere", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 50, "nome": "antonio", "cognome": "mancuso", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 51, "nome": "ale srl (anselmo)", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 52, "nome": "alessio", "cognome": "cimmino", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 53, "nome": "Alessandro", "cognome": "Siracusano", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 54, "nome": "giovanni", "cognome": "maimone", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 55, "nome": "Carmelo", "cognome": "Polimeni", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 56, "nome": "giuseppe", "cognome": "amante", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 57, "nome": "federica", "cognome": "zuccarello", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 58, "nome": "fabrizio", "cognome": "villari", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 59, "nome": "alessandra", "cognome": "barbera", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 60, "nome": "marco", "cognome": "gugliandolo", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 61, "nome": "giuseppe", "cognome": "ferrante", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 62, "nome": "antonio", "cognome": "barbera", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 63, "nome": "julian", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 64, "nome": "massimo", "cognome": "fulci", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 65, "nome": "CD FOSSO", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 66, "nome": "realealis", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 67, "nome": "patrizia", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 68, "nome": "Giorgio", "cognome": "Marchese", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 69, "nome": "Matteo", "cognome": "Mileto", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 70, "nome": "Liana", "cognome": "Cannata", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 71, "nome": "Andrea", "cognome": "Fiore", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 72, "nome": "Marco", "cognome": "Agrillo", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 73, "nome": "Saro", "cognome": "De Natale", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 74, "nome": "Julien", "cognome": "Tranchida", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 75, "nome": "Santino", "cognome": "Freni", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 76, "nome": "oliva", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 77, "nome": "federico", "cognome": "fotia", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 78, "nome": "alessandro", "cognome": "majolino", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 79, "nome": "Giuseppe", "cognome": "Currò", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 80, "nome": "Federica", "cognome": "Finocchiaro", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 81, "nome": "Nicola", "cognome": "Sottile", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 82, "nome": "saglimbeni", "cognome": "roberto", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 83, "nome": "nino", "cognome": "de domenico", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 84, "nome": "Simona", "cognome": "Sagone", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 85, "nome": "Antonio", "cognome": "Ruggeri", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 86, "nome": "Marco", "cognome": "romeo", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 87, "nome": "mefis srl", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 88, "nome": "Giovanni", "cognome": "Celi", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 89, "nome": "alessandro", "cognome": "oliva", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 90, "nome": "giannino", "cognome": "federico", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 91, "nome": "alex", "cognome": "ganci", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 92, "nome": "michele", "cognome": "palmieri", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 93, "nome": "alessandro", "cognome": "giacobbe", "email": "", "tel": "+39 3479467514", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 94, "nome": "giulia", "cognome": "crupi", "email": "", "tel": "+39 3247864798", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 95, "nome": "luigi", "cognome": "deodato", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 96, "nome": "piero", "cognome": "tagliavia", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}, {"id": 97, "nome": "barreca", "cognome": "", "email": "", "tel": "", "indirizzo": "", "docData": null, "docName": null, "docType": null, "tags": [], "note": "", "prenotazioni": []}];
-let bookings=[
-  {id:1,clienteId:1,clienteNome:'Marco Russo',barca:'Poseidon I',data:'2024-07-15',giorni:3,destinazione:'Isole Eolie',passeggeri:8,importo:1800,acconto:600,statoPagamento:'Parziale',statoFattura:'Non fatturato',note:'Skipper: Giovanni',leadId:1},
-];
-let boats=[
-  {id:1,name:'Poseidon I',type:'Catamarano',length:'14m',passengers:'12',engine:'2x Volvo 40cv',homeport:'Messina',photo:null,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
-  {id:2,name:'Artemide',type:'Barca a vela',length:'11m',passengers:'8',engine:'Volvo 30cv',homeport:'Messina',photo:null,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
-  {id:3,name:'Helios',type:'Motobarca',length:'9m',passengers:'10',engine:'Mercury 150cv',homeport:'Milazzo',photo:null,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}}
-];
-let nextLeadId=1,nextClientId=98,nextBookingId=2,nextBoatId=4;
-let activeBoat=0,calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
-let crmFilter='Tutti',bkPayFilter='',bkInvFilter='';
-
-let tasks=[
-  {id:1,titolo:'Rinnovare assicurazione Poseidon I',categoria:'Burocrazia',priorita:'Alta',stato:'Aperto',scadenza:'2024-12-31',barca:'Poseidon I',note:'Contattare agenzia entro fine mese',leadId:null,clienteId:null,creatoIl:'2024-11-01'},
-  {id:2,titolo:'Manutenzione motore Helios',categoria:'Manutenzione',priorita:'Media',stato:'In corso',scadenza:'2024-12-15',barca:'Helios',note:'',leadId:null,clienteId:null,creatoIl:'2024-11-05'},
-  {id:3,titolo:'Follow-up preventivo Sara Ferretti',categoria:'Commerciale',priorita:'Alta',stato:'Aperto',scadenza:'2024-12-10',barca:'',note:'Richiamare per confermare data luglio',leadId:2,clienteId:null,creatoIl:'2024-11-08'},
-];
-let nextTaskId=4;
 const TASK_CAT=['Commerciale','Manutenzione','Burocrazia','Marketing','Operativo','Altro'];
 const TASK_PRI=['Alta','Media','Bassa'];
 const TASK_STATI=['Aperto','In corso','Completato'];
-let taskFilter='Tutti';
+const BOAT_COLORS=['#1E3A6E','#C9B88A','#2E6B4F','#8B3A3A','#4A6B8A','#7A5C2E'];
 
 // ==================== UTILS ====================
 function initials(s){return(s||'').split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2)||'?'}
 function badgeLead(s){return{Nuovo:'badge-new',Contattato:'badge-contact',Preventivo:'badge-quote',Confermato:'badge-confirmed',Perso:'badge-lost'}[s]||''}
 function fmtEur(n){return'€'+Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:0})}
 function today(){return new Date().toISOString().slice(0,10)}
-function idEq(a,b){return String(a)==String(b)}
-function normSortText(s){return String(s||'').trim().toLocaleLowerCase('it-IT')}
-function clientSortKey(c){return normSortText((c.cognome||'')+' '+(c.nome||''))}
+function idEq(a,b){return String(a)===String(b)}
+function v(id){const el=document.getElementById(id);return el?el.value.trim():''}
+function clientSortKey(c){return((c.cognome||'')+' '+(c.nome||'')).trim().toLowerCase()}
 function sortClientsAZ(){
-  try {
-    clients = (clients||[]).filter(function(c){ return c && typeof c === 'object'; });
-    clients.sort(function(a,b){ return clientSortKey(a).localeCompare(clientSortKey(b),'it',{sensitivity:'base'}); });
-  } catch(e) { console.warn('sort clienti error', e); }
+  try{clients=clients.filter(c=>c&&typeof c==='object');clients.sort((a,b)=>clientSortKey(a).localeCompare(clientSortKey(b),'it',{sensitivity:'base'}));}catch(e){}
 }
 
-// ==================== REALTIME DB ====================
-const RTDB_URL = 'https://chartme-d70e6-default-rtdb.europe-west1.firebasedatabase.app';
-
-function saveData() {
-  try { localStorage.setItem('chartme_v2', JSON.stringify({leads,clients,bookings,boats,tasks})); } catch(e) {}
-}
-
-function rtdbWrite(path, data) {
-  var clean = JSON.parse(JSON.stringify(data, function(k,v) {
-    if(k==='photo'||k==='docData'||k==='docName'||k==='docType') return undefined;
-    return v;
-  }));
-  fetch(RTDB_URL + '/' + path + '.json', {
-    method: 'PUT',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(clean)
-  }).catch(function(e) { console.warn('rtdb write error', e); });
-}
-
-function rtdbDelete(path) {
-  fetch(RTDB_URL + '/' + path + '.json', {method: 'DELETE'})
-    .catch(function(e) { console.warn('rtdb delete error', e); });
-}
-
-function cleanForRemote(data) {
-  return JSON.parse(JSON.stringify(data, function(k,v) {
-    if(k==='photo'||k==='docData'||k==='docName'||k==='docType') return undefined;
-    return v;
-  }));
-}
-
-function persistAllLocalAndRemote() {
-  saveData();
-  return rtdbPushAll().catch(function(e){ console.warn('rtdb full sync error', e); });
-}
-
-function persistBooking(id) { var b=bookings.find(function(x){return x && idEq(x.id,id);}); if(b) rtdbWrite('bookings/'+String(id),b); }
-function persistBoat(id) { var b=boats.find(function(x){return x && idEq(x.id,id);}); if(b) rtdbWrite('boats/'+String(b.id),b); }
-function persistBoatByName(name) { var b=boats.find(function(x){return x && x.name===name;}); if(b) rtdbWrite('boats/'+b.id,b); }
-function persistClient(id) { var c=clients.find(function(x){return x.id===id;}); if(c) rtdbWrite('clients/'+id,c); }
-function persistTask(id) { var t=tasks.find(function(x){return x.id===id;}); if(t) rtdbWrite('tasks/'+id,t); }
-function persistLead(id) { var l=leads.find(function(x){return x.id===id;}); if(l) rtdbWrite('leads/'+id,l); }
-
-function rtdbPushAll() {
-  var payload = {
-    leads: {},
-    clients: {},
-    bookings: {},
-    boats: {},
-    tasks: {}
-  };
-  leads.filter(Boolean).forEach(function(x) { payload.leads[x.id] = JSON.parse(JSON.stringify(x, function(k,v){ if(k==='photo'||k==='docData'||k==='docName'||k==='docType') return undefined; return v; })); });
-  clients.filter(Boolean).forEach(function(x) { payload.clients[x.id] = JSON.parse(JSON.stringify(x, function(k,v){ if(k==='photo'||k==='docData'||k==='docName'||k==='docType') return undefined; return v; })); });
-  bookings.filter(Boolean).forEach(function(x) { payload.bookings[x.id] = x; });
-  boats.filter(Boolean).forEach(function(x) { payload.boats[x.id] = JSON.parse(JSON.stringify(x, function(k,v){ if(k==='photo') return undefined; return v; })); });
-  tasks.filter(Boolean).forEach(function(x) { payload.tasks[x.id] = x; });
-  return fetch(RTDB_URL + '/.json', {
-    method: 'PUT',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(payload)
-  }).then(function(r) { return r.json(); });
-}
-
-function rtdbRead() {
-  return fetch(RTDB_URL + '/.json')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      window._fbDataLoaded=true;
-      if(!data) data={};
-      // IMPORTANT: assign even when a Firebase node is missing/empty.
-      // Otherwise deleted data would be replaced by old localStorage/default data.
-      leads    = safeArr(data.leads).map(normalizeLead);
-      clients  = safeArr(data.clients);
-      bookings = safeArr(data.bookings).map(normalizeBooking);
-      boats    = safeArr(data.boats).map(normalizeBoat);
-      tasks    = safeArr(data.tasks).map(normalizeTask);
-      normalizeAllData();
-      sortClientsAZ();
-      nextLeadId    = leads.length    ? Math.max.apply(null, leads.map(function(x){return x.id||0;}))+1 : 1;
-      nextClientId  = clients.length  ? Math.max.apply(null, clients.map(function(x){return x.id||0;}))+1 : 1;
-      nextBookingId = bookings.length ? Math.max.apply(null, bookings.map(function(x){return x.id||0;}))+1 : 1;
-      nextBoatId    = boats.length    ? Math.max.apply(null, boats.map(function(x){return x.id||0;}))+1 : 1;
-      nextTaskId    = tasks.length    ? Math.max.apply(null, tasks.map(function(x){return x.id||0;}))+1 : 1;
-      saveData();
-      // Re-render active page
-      var pages = {crm:'renderCRM',bookings:'renderBookings',fleet:'renderFleet',clients:'renderClients',stats:'renderStats',tasks:'renderTasks'};
-      var active = document.querySelector('.page.active');
-      if(active) { var fn = pages[active.id.replace('page-','')]; if(fn && window[fn]) try{window[fn]();}catch(e){} }
-      if(window.renderDailyBar) renderDailyBar();
-    }).catch(function(e) {
-      window._fbDataLoaded=false;
-      console.warn('rtdb read error', e);
-      var bar=document.getElementById('daily-bar');
-      if(bar) bar.innerHTML='<span style="font-size:11px;color:#F5A89A;padding:2px 10px">Errore collegamento Firebase: dati locali in uso</span>';
-      try { renderCRM(); renderDailyBar(); } catch(_) {}
-    });
-}
-
-function loadData() {
-  try {
-    var d = localStorage.getItem('chartme_v2');
-    if(d) {
-      var p = JSON.parse(d);
-      leads    = p.leads    || leads;
-      clients  = p.clients  || clients;
-      bookings = p.bookings || bookings;
-      boats    = p.boats    || boats;
-      tasks    = p.tasks    || tasks;
-      normalizeAllData();
-      sortClientsAZ();
-      nextLeadId    = Math.max.apply(null, leads.map(function(x){return x.id||0;}).concat([0]))+1;
-      nextClientId  = Math.max.apply(null, clients.map(function(x){return x.id||0;}).concat([0]))+1;
-      nextBookingId = Math.max.apply(null, bookings.map(function(x){return x.id||0;}).concat([0]))+1;
-      nextBoatId    = Math.max.apply(null, boats.map(function(x){return x.id||0;}).concat([0]))+1;
-      nextTaskId    = Math.max.apply(null, tasks.map(function(x){return x.id||0;}).concat([0]))+1;
+// ==================== PERSIST HELPERS ====================
+function saveData(){try{localStorage.setItem('chartme_v2',JSON.stringify({leads,clients,bookings,boats,tasks}));}catch(e){}}
+function loadData(){
+  try{
+    const d=localStorage.getItem('chartme_v2');
+    if(d){
+      const p=JSON.parse(d);
+      leads=p.leads||[];clients=p.clients||[];bookings=p.bookings||[];boats=p.boats||[];tasks=p.tasks||[];
+      normalizeAllData();sortClientsAZ();
+      nextLeadId=Math.max(...leads.map(x=>x.id||0).concat([0]))+1;
+      nextClientId=Math.max(...clients.map(x=>x.id||0).concat([0]))+1;
+      nextBookingId=Math.max(...bookings.map(x=>x.id||0).concat([0]))+1;
+      nextBoatId=Math.max(...boats.map(x=>x.id||0).concat([0]))+1;
+      nextTaskId=Math.max(...tasks.map(x=>x.id||0).concat([0]))+1;
     }
-  } catch(e) {}
+  }catch(e){}
 }
-loadData();
-normalizeAllData();
-sortClientsAZ();
-sortClientsAlpha();
+loadData();normalizeAllData();sortClientsAZ();
 
-function showPage(p){
-  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
-  document.getElementById('page-'+p).classList.add('active');
-  const idx={crm:0,bookings:1,fleet:2,clients:3,stats:4,tasks:5}[p];
-  document.querySelectorAll('.nav-tab')[idx].classList.add('active');
-  closeModal();
-  if(p==='crm')renderCRM();
-  else if(p==='bookings')renderBookings();
-  else if(p==='fleet')renderFleet();
-  else if(p==='clients')renderClients();
-  else if(p==='stats'){renderStats();}
-  else if(p==='tasks'){renderTasks();}
-}
+function persistBooking(id){const b=bookings.find(x=>x&&idEq(x.id,id));if(b)rtdbWrite('bookings/'+String(id),b);}
+function persistBoat(id){const b=boats.find(x=>x&&idEq(x.id,id));if(b)rtdbWrite('boats/'+String(b.id),b);}
+function persistBoatByName(name){const b=boats.find(x=>x&&x.name===name);if(b)rtdbWrite('boats/'+b.id,b);}
+function persistClient(id){const c=clients.find(x=>x&&x.id===id);if(c)rtdbWrite('clients/'+id,c);}
+function persistTask(id){const t=tasks.find(x=>x&&x.id===id);if(t)rtdbWrite('tasks/'+id,t);}
+function persistLead(id){const l=leads.find(x=>x&&x.id===id);if(l)rtdbWrite('leads/'+id,l);}
 
 // ==================== MODAL ====================
 function closeModal(){document.getElementById('modal-root').innerHTML=''}
@@ -589,97 +718,211 @@ function modal(content){
   document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal">${content}</div></div>`;
 }
 
+// ==================== PAGE NAVIGATION ====================
+function showPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
+  const pageEl=document.getElementById('page-'+p);
+  if(!pageEl) return;
+  pageEl.classList.add('active');
+  const tabMap={crm:0,requests:1,bookings:2,fleet:3,clients:4,stats:5,tasks:6};
+  const tabs=document.querySelectorAll('.nav-tab');
+  if(tabs[tabMap[p]]) tabs[tabMap[p]].classList.add('active');
+  closeModal();
+  if(p==='crm')renderCRM();
+  else if(p==='requests')renderRequests();
+  else if(p==='bookings')renderBookings();
+  else if(p==='fleet')renderFleet();
+  else if(p==='clients')renderClients();
+  else if(p==='stats')renderStats();
+  else if(p==='tasks')renderTasks();
+}
 
-function sortClientsAlpha(){
-  clients.sort((a,b)=>{
-    const na=((a.nome||'')+' '+(a.cognome||'')).trim().toLowerCase();
-    const nb=((b.nome||'')+' '+(b.cognome||'')).trim().toLowerCase();
-    return na.localeCompare(nb,'it');
-  });
+// ==================== REQUESTS (NUOVO) ====================
+function updateRequestsBadge(){
+  const pending=bookings.filter(b=>b.status==='pending');
+  const badge=document.getElementById('requests-badge');
+  if(badge){
+    badge.textContent=pending.length;
+    badge.classList.toggle('show',pending.length>0);
+  }
+}
+
+function renderRequests(){
+  const pending=bookings.filter(b=>b.status==='pending').sort((a,b)=>new Date(b.creatoIl||b.data)-new Date(a.creatoIl||a.data));
+  const listEl=document.getElementById('requests-list');
+  const emptyEl=document.getElementById('requests-empty');
+  const countEl=document.getElementById('requests-count-label');
+  if(!listEl) return;
+  countEl.textContent=pending.length>0?pending.length+' richiesta'+(pending.length===1?'':'e')+' in attesa':'';
+  if(pending.length===0){
+    emptyEl.style.display='block';
+    listEl.innerHTML='';
+    return;
+  }
+  emptyEl.style.display='none';
+  listEl.innerHTML=pending.map(b=>`
+    <div class="request-card${b._new?' new':''}" id="req-${b.id}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:2px">${b.clienteNome}</div>
+          <div style="font-size:12px;color:var(--text3)">${b.email||'—'} · ${b.telefono||'—'}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:700;font-size:18px;color:var(--navy)">${fmtEur(b.importo)}</div>
+          <div style="font-size:11px;color:var(--text3)">${b.creatoIl||b.data}</div>
+        </div>
+      </div>
+      <div class="g3" style="gap:8px;margin-bottom:12px">
+        <div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px">
+          <div class="stat-label">Barca</div>
+          <div style="font-weight:600">${b.barca}</div>
+        </div>
+        <div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px">
+          <div class="stat-label">Data richiesta</div>
+          <div style="font-weight:600">${b.data}</div>
+        </div>
+        <div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px">
+          <div class="stat-label">Passeggeri</div>
+          <div style="font-weight:600">${b.passeggeri||'—'}</div>
+        </div>
+      </div>
+      ${b.codiceFiscale||b.numeroDocumento?`
+      <div style="background:var(--info-bg);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;font-size:12px">
+        <div style="font-weight:600;color:var(--navy);margin-bottom:6px">Dati cliente</div>
+        <div class="g2" style="gap:4px">
+          ${b.codiceFiscale?`<div><span style="color:var(--text3)">C.F.: </span><strong>${b.codiceFiscale}</strong></div>`:''}
+          ${b.residenza?`<div><span style="color:var(--text3)">Residenza: </span>${b.residenza}</div>`:''}
+          ${b.tipoDocumento?`<div><span style="color:var(--text3)">Documento: </span>${b.tipoDocumento} ${b.numeroDocumento}</div>`:''}
+          ${b.dataEmissione?`<div><span style="color:var(--text3)">Emissione: </span>${b.dataEmissione}</div>`:''}
+          ${b.dataScadenza?`<div><span style="color:var(--text3)">Scadenza doc.: </span>${b.dataScadenza}</div>`:''}
+        </div>
+      </div>`:''}
+      ${b.note?`<div style="padding:8px 10px;background:var(--warn-bg);border-radius:var(--r);font-size:12px;margin-bottom:12px"><strong>Note:</strong> ${b.note}</div>`:''}
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-sm btn-danger" onclick="rejectRequest(${b.id})" style="min-width:90px">
+          ✕ Rifiuta
+        </button>
+        <button class="btn btn-sm btn-success" onclick="acceptRequest(${b.id})" style="min-width:90px;background:var(--success);color:#fff;border-color:var(--success)">
+          ✓ Accetta
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function acceptRequest(id){
+  if(!confirm('Confermi la prenotazione? Verrà inviata email di conferma al cliente.')) return;
+  const b=bookings.find(x=>x.id===id);
+  if(!b) return;
+  b.status='confirmed';
+  b.statoPagamento='Non pagato';
+  saveData();
+  // Update in Firebase — Cloud Function will trigger the email
+  rtdbWrite('bookings/'+id, b);
+  renderRequests();
+  updateRequestsBadge();
+  renderBookings();
+  // Show confirmation
+  modal(`
+    <div style="text-align:center;padding:16px 0">
+      <div style="width:52px;height:52px;background:var(--success-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px">Prenotazione confermata!</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px">Email di conferma con istruzioni pagamento inviata automaticamente a <strong>${b.email}</strong></div>
+      <button class="btn btn-navy" onclick="closeModal()">Chiudi</button>
+    </div>
+  `);
+}
+
+function rejectRequest(id){
+  modal(`
+    <div class="modal-title">Rifiuta richiesta<button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="field">
+      <label>Motivo (opzionale, verrà incluso nell'email)</label>
+      <textarea id="reject-reason" placeholder="es. La data selezionata non è disponibile. Ti invitiamo a contattarci per trovare un'alternativa." style="min-height:80px"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
+      <button class="btn btn-sm btn-danger" onclick="confirmReject(${id})">Rifiuta e invia email</button>
+    </div>
+  `);
+}
+
+function confirmReject(id){
+  const reason=document.getElementById('reject-reason')?.value.trim()||'';
+  const b=bookings.find(x=>x.id===id);
+  if(!b) return;
+  b.status='rejected';
+  b.rejectReason=reason;
+  saveData();
+  rtdbWrite('bookings/'+id, b);
+  closeModal();
+  renderRequests();
+  updateRequestsBadge();
+  renderBookings();
 }
 
 // ==================== CRM ====================
 function renderCRM(){
-  const searchEl=document.getElementById('crm-search');
-  const q=((searchEl||{}).value||'').trim().toLowerCase();
-  leads = safeArr(leads).map(normalizeLead).filter(function(l){ return l && l.id; });
-  if(crmFilter!=='Tutti' && !STATI_LEAD.includes(crmFilter)) crmFilter='Tutti';
-
-  const counts={};
-  STATI_LEAD.forEach(function(s){ counts[s]=0; });
-  leads.forEach(function(l){ if(counts[l.stato] == null) counts[l.stato]=0; counts[l.stato]++; });
-
+  const q=((document.getElementById('crm-search')||{}).value||'').toLowerCase();
+  leads=safeArr(leads).map(normalizeLead).filter(l=>l&&l.id);
+  if(!STATI_LEAD.includes(crmFilter)) crmFilter='Tutti';
+  const counts={};STATI_LEAD.forEach(s=>counts[s]=0);leads.forEach(l=>{if(counts[l.stato]!=null)counts[l.stato]++;});
   const statsEl=document.getElementById('crm-stats');
-  if(statsEl){
-    statsEl.innerHTML=[
-      {l:'Lead totali',v:leads.length,s:''},
-      {l:'Da seguire',v:(counts['Nuovo']||0)+(counts['Contattato']||0),s:''},
-      {l:'Preventivi aperti',v:counts['Preventivo']||0,s:''},
-      {l:'Confermati',v:counts['Confermato']||0,s:''},
-    ].map(function(x){return '<div class="stat-card"><div class="stat-label">'+x.l+'</div><div class="stat-value" style="font-size:18px">'+x.v+'</div></div>';}).join('');
-  }
-
+  if(statsEl) statsEl.innerHTML=[
+    {l:'Lead totali',v:leads.length},{l:'Da seguire',v:(counts['Nuovo']||0)+(counts['Contattato']||0)},
+    {l:'Preventivi',v:counts['Preventivo']||0},{l:'Confermati',v:counts['Confermato']||0}
+  ].map(x=>`<div class="stat-card"><div class="stat-label">${x.l}</div><div class="stat-value" style="font-size:18px">${x.v}</div></div>`).join('');
   const pillsEl=document.getElementById('crm-pills');
-  if(pillsEl){
-    pillsEl.innerHTML=['Tutti'].concat(STATI_LEAD).map(function(s){
-      const label = s==='Tutti' ? 'Tutti ('+leads.length+')' : s+' ('+(counts[s]||0)+')';
-      return '<span class="pill'+(crmFilter===s?' active':'')+'" onclick="crmFilter=\''+s+'\';renderCRM()">'+label+'</span>';
-    }).join('');
-  }
-
-  const filtered=leads.filter(function(l){
-    const hay=((l.nome||'')+' '+(l.email||'')+' '+(l.tel||'')+' '+(l.origine||'')+' '+(l.campagna||'')).toLowerCase();
-    return (crmFilter==='Tutti'||l.stato===crmFilter) && hay.includes(q);
+  if(pillsEl) pillsEl.innerHTML=['Tutti'].concat(STATI_LEAD).map(s=>{
+    const label=s==='Tutti'?'Tutti ('+leads.length+')':s+' ('+(counts[s]||0)+')';
+    return`<span class="pill${crmFilter===s?' active':''}" onclick="crmFilter='${s}';renderCRM()">${label}</span>`;
+  }).join('');
+  const filtered=leads.filter(l=>{
+    const hay=((l.nome||'')+' '+(l.email||'')+' '+(l.tel||'')).toLowerCase();
+    return(crmFilter==='Tutti'||l.stato===crmFilter)&&hay.includes(q);
   });
-
   const tableEl=document.getElementById('crm-table');
   if(!tableEl) return;
   tableEl.innerHTML=filtered.length===0?'<div class="empty">Nessun lead trovato</div>':`
-  <table class="tbl">
-    <thead><tr><th>Lead</th><th>Contatto</th><th>Origine</th><th>Stato</th><th>Data</th><th>Follow-up</th><th></th></tr></thead>
-    <tbody>${filtered.map(l=>`
-      <tr style="cursor:pointer" onclick="openLeadDetail(${l.id})">
-        <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${initials(l.nome)}</div><div><div style="font-weight:600">${l.nome}</div>${l.note?`<div style="font-size:11px;color:var(--text3)">${l.note.slice(0,40)}${l.note.length>40?'…':''}</div>`:''}</div></div></td>
-        <td><div style="font-size:12px">${l.email}</div><div style="font-size:12px;color:var(--text3)">${l.tel}</div></td>
-        <td><div style="font-size:12px">${l.origine}</div>${l.campagna?`<div style="font-size:11px;color:var(--text3)">${l.campagna}</div>`:''}</td>
-        <td><span class="badge ${badgeLead(l.stato)}">${l.stato}</span></td>
-        <td style="font-size:12px;color:var(--text3)">${l.data}</td>
-        <td style="font-size:12px;color:var(--text3)">${(l.followups||[]).length} nota${(l.followups||[]).length!==1?'':''}</td>
-        <td><button class="btn btn-sm" onclick="event.stopPropagation();openLeadForm(${l.id})">✎</button></td>
-      </tr>`).join('')}
-    </tbody>
-  </table>`;
+  <table class="tbl"><thead><tr><th>Lead</th><th>Contatto</th><th>Origine</th><th>Stato</th><th>Data</th><th></th></tr></thead>
+  <tbody>${filtered.map(l=>`<tr style="cursor:pointer" onclick="openLeadDetail(${l.id})">
+    <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${initials(l.nome)}</div><div><div style="font-weight:600">${l.nome}</div>${l.note?`<div style="font-size:11px;color:var(--text3)">${l.note.slice(0,40)}${l.note.length>40?'…':''}</div>`:''}</div></div></td>
+    <td><div style="font-size:12px">${l.email}</div><div style="font-size:12px;color:var(--text3)">${l.tel}</div></td>
+    <td><div style="font-size:12px">${l.origine}</div></td>
+    <td><span class="badge ${badgeLead(l.stato)}">${l.stato}</span></td>
+    <td style="font-size:12px;color:var(--text3)">${l.data}</td>
+    <td><button class="btn btn-sm" onclick="event.stopPropagation();openLeadForm(${l.id})">✎</button></td>
+  </tr>`).join('')}</tbody></table>`;
 }
+
 function openLeadDetail(id){
-  const l=leads.find(function(x){return x && idEq(x.id,id);});if(!l)return;
+  const l=leads.find(x=>x&&idEq(x.id,id));if(!l)return;
   modal(`
     <div class="modal-title"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="width:40px;height:40px;font-size:14px">${initials(l.nome)}</div><div><div>${l.nome}</div><div style="font-size:12px;font-weight:400;color:var(--text3)">${l.email} · ${l.tel}</div></div></div><button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="g2" style="margin-bottom:12px">
       <div><div class="stat-label">Stato</div><span class="badge ${badgeLead(l.stato)}">${l.stato}</span></div>
-      <div><div class="stat-label">Origine</div><span style="font-size:13px">${l.origine}${l.campagna?' — '+l.campagna:''}</span></div>
+      <div><div class="stat-label">Origine</div><span style="font-size:13px">${l.origine}</span></div>
     </div>
-    ${l.note?`<div style="padding:8px 10px;background:var(--bg2);border-radius:var(--r);font-size:13px;color:var(--text2);margin-bottom:12px">${l.note}</div>`:''}
+    ${l.note?`<div style="padding:8px 10px;background:var(--bg2);border-radius:var(--r);font-size:13px;margin-bottom:12px">${l.note}</div>`:''}
     <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Follow-up</div>
-    <div style="margin-bottom:10px">${(l.followups||[]).length===0?`<div style="font-size:13px;color:var(--text3)">Nessun follow-up registrato</div>`:(l.followups||[]).map(f=>`<div class="fu-row"><span class="fu-date">${f.date}</span><span>${f.text}</span></div>`).join('')}</div>
+    <div style="margin-bottom:10px">${(l.followups||[]).length===0?`<div style="font-size:13px;color:var(--text3)">Nessun follow-up</div>`:(l.followups||[]).map(f=>`<div class="fu-row"><span class="fu-date">${f.date}</span><span>${f.text}</span></div>`).join('')}</div>
     <div style="display:flex;gap:6px;margin-bottom:14px">
       <input id="fu-date" type="date" value="${today()}" style="padding:6px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;background:var(--white);color:var(--text)">
-      <input id="fu-text" placeholder="Nota follow-up..." style="flex:1;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;background:var(--white);color:var(--text)">
+      <input id="fu-text" placeholder="Nota..." style="flex:1;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--r);font-size:12px;background:var(--white);color:var(--text)">
       <button class="btn btn-sm btn-navy" onclick="addFollowUp(${id})">+</button>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
-      <button class="btn btn-sm" onclick="closeModal();openLeadForm(${id})">Modifica lead</button>
-      <button class="btn btn-sm btn-danger" onclick="deleteLead(${id})">Elimina lead</button>
-      ${l.stato==='Confermato'&&!l.clienteId?`<button class="btn btn-sm btn-success" onclick="closeModal();openClientFormFromLead(${id})">+ Crea scheda cliente</button>`:''}
-      ${l.stato==='Confermato'&&!l.prenotazioneId?`<button class="btn btn-sm btn-gold" onclick="closeModal();openBookingForm(null,${id})">+ Crea prenotazione</button>`:''}
-      ${l.prenotazioneId?`<button class="btn btn-sm" onclick="closeModal();showPage('bookings');setTimeout(()=>openBookingDetail(${l.prenotazioneId}),50)">Vedi prenotazione</button>`:''}
-      ${l.clienteId?`<button class="btn btn-sm" onclick="closeModal();showPage('clients');setTimeout(()=>openClientDetail(${l.clienteId}),50)">Vedi cliente →</button>`:''}
+      <button class="btn btn-sm" onclick="closeModal();openLeadForm(${id})">Modifica</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteLead(${id})">Elimina</button>
     </div>`);
 }
 
 function addFollowUp(id){
-  const l=leads.find(function(x){return x && idEq(x.id,id);});
-  if(!l)return;
-  if(!Array.isArray(l.followups)) l.followups=[];
+  const l=leads.find(x=>x&&idEq(x.id,id));if(!l)return;
+  if(!Array.isArray(l.followups))l.followups=[];
   const d=document.getElementById('fu-date').value;
   const t=document.getElementById('fu-text').value.trim();
   if(!t)return;
@@ -688,16 +931,15 @@ function addFollowUp(id){
 }
 
 function openLeadForm(id){
-  const l=id?leads.find(function(x){return x && idEq(x.id,id);}):{id:null,nome:'',email:'',tel:'',origine:'Sito web',campagna:'',stato:'Nuovo',note:'',followups:[],clienteId:null,data:today(),prenotazioneId:null};
+  const l=id?leads.find(x=>x&&idEq(x.id,id)):{id:null,nome:'',email:'',tel:'',origine:'Sito web',campagna:'',stato:'Nuovo',note:'',followups:[],data:today()};
   modal(`
     <div class="modal-title">${id?'Modifica lead':'Nuovo lead'}<button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="g2">
       <div class="field"><label>Nome completo</label><input id="l-nome" value="${l.nome}"></div>
-      <div class="field"><label>Data contatto</label><input id="l-data" type="date" value="${l.data}"></div>
+      <div class="field"><label>Data</label><input id="l-data" type="date" value="${l.data}"></div>
       <div class="field"><label>Email</label><input id="l-email" value="${l.email}"></div>
       <div class="field"><label>Telefono</label><input id="l-tel" value="${l.tel}"></div>
       <div class="field"><label>Origine</label><select id="l-orig">${ORIGINI.map(o=>`<option${o===l.origine?' selected':''}>${o}</option>`).join('')}</select></div>
-      <div class="field"><label>Campagna</label><input id="l-camp" value="${l.campagna}" placeholder="es. Estate 2024"></div>
       <div class="field"><label>Stato</label><select id="l-stato">${STATI_LEAD.map(s=>`<option${s===l.stato?' selected':''}>${s}</option>`).join('')}</select></div>
     </div>
     <div class="field"><label>Note</label><textarea id="l-note">${l.note}</textarea></div>
@@ -709,132 +951,25 @@ function openLeadForm(id){
 }
 
 function saveLead(id){
-  const d={nome:v('l-nome'),email:v('l-email'),tel:v('l-tel'),origine:v('l-orig'),campagna:v('l-camp'),stato:v('l-stato'),note:v('l-note'),data:v('l-data')};
+  const d={nome:v('l-nome'),email:v('l-email'),tel:v('l-tel'),origine:v('l-orig'),stato:v('l-stato'),note:v('l-note'),data:v('l-data')};
   if(!d.nome)return;
-  let isNewConfirm=false;
-  let leadRef;
-  if(id){
-    leadRef=leads.find(function(x){return x && idEq(x.id,id);});
-    if(!leadRef){ alert('Lead non trovato. Aggiorna la pagina e riprova.'); return; }
-    const wasConfirmed=leadRef.stato==='Confermato';
-    Object.assign(leadRef,d);
-    if(!wasConfirmed && d.stato==='Confermato' && !leadRef.prenotazioneId) isNewConfirm=true;
-  } else {
-    const newLead={id:nextLeadId++,...d,followups:[],clienteId:null,prenotazioneId:null};
-    leads.push(newLead);
-    leadRef=newLead;
-    if(d.stato==='Confermato') isNewConfirm=true;
-  }
+  if(id){const l=leads.find(x=>x&&idEq(x.id,id));if(l)Object.assign(l,d);}
+  else{leads.push({id:nextLeadId++,...d,campagna:'',followups:[],clienteId:null,prenotazioneId:null});}
   saveData();
-  rtdbWrite("leads/"+leadRef.id, leadRef);
-  crmFilter='Tutti';
-  var crmSearch=document.getElementById('crm-search'); if(crmSearch) crmSearch.value='';
-  closeModal();renderCRM();renderDailyBar();
-  if(isNewConfirm) setTimeout(()=>triggerConfirmFlow(leadRef.id),150);
-}
-
-function triggerConfirmFlow(leadId){
-  const l=leads.find(x=>x.id===leadId);
-  if(!l)return;
-  // Auto-create client if not existing
-  if(!l.clienteId){
-    const parts=(l.nome||'').trim().split(' ');
-    const nc={
-      id:nextClientId++,
-      nome:parts[0]||'',
-      cognome:parts.slice(1).join(' ')||'',
-      email:l.email||'',
-      tel:l.tel||'',
-      indirizzo:'',
-      docData:null,docName:null,docType:null,
-      tags:['Nuovo cliente'],
-      note:'Creato automaticamente da lead confermato',
-      prenotazioni:[]
-    };
-    clients.push(nc);
-    l.clienteId=nc.id;
-    saveData();persistClient(nc.id);persistLead(l.id);
-  }
-  // Open booking form pre-filled with lead data
-  showPage('bookings');
-  setTimeout(()=>openBookingFormFromLead(leadId),100);
-}
-
-function openBookingFormFromLead(leadId){
-  const l=leads.find(x=>x.id===leadId);if(!l)return;
-  // Show a clear notification banner then open form
-  const banner=document.createElement('div');
-  banner.style.cssText='position:fixed;top:52px;left:0;right:0;background:var(--success);color:#fff;padding:10px 20px;font-size:13px;font-weight:600;z-index:999;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.2)';
-  banner.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Lead confermato! Scheda cliente creata automaticamente. Completa ora la prenotazione.`;
-  document.body.appendChild(banner);
-  setTimeout(()=>banner.remove(),4000);
-  openBookingForm(null,leadId);
-}
-function buildLeadsPayload(){
-  var payload={};
-  safeArr(leads).map(normalizeLead).filter(function(x){return x && x.id;}).forEach(function(x){
-    payload[String(x.id)] = cleanForRemote(x);
-  });
-  return payload;
-}
-
-function syncLeadsCollection(){
-  var payload = buildLeadsPayload();
-  // Se non restano lead, scrivo null per svuotare davvero il nodo /leads su Firebase.
-  var body = Object.keys(payload).length ? payload : null;
-  return fetch(RTDB_URL + '/leads.json', {
-    method:'PUT',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(body)
-  }).catch(function(e){ console.warn('rtdb leads sync error', e); });
+  const l=id?leads.find(x=>x&&idEq(x.id,id)):leads[leads.length-1];
+  if(l)rtdbWrite('leads/'+l.id,l);
+  crmFilter='Tutti';closeModal();renderCRM();renderDailyBar();
 }
 
 function deleteLead(id){
   if(!confirm('Eliminare questo lead?'))return;
-  var before = safeArr(leads).length;
-  leads = safeArr(leads).map(normalizeLead).filter(function(x){ return x && x.id && !idEq(x.id,id); });
-  if(before === leads.length){
-    alert('Lead non trovato. Aggiorna la pagina e riprova.');
-    return;
-  }
-
-  tasks.forEach(function(t){
-    if(t && idEq(t.leadId,id)){
-      t.leadId=null;
-      persistTask(t.id);
-    }
-  });
-  bookings.forEach(function(b){
-    if(b && idEq(b.leadId,id)){
-      b.leadId=null;
-      persistBooking(b.id);
-    }
-  });
-
-  crmFilter='Tutti';
-  var crmSearch=document.getElementById('crm-search'); if(crmSearch) crmSearch.value='';
-  saveData();
-  closeModal();
-  renderCRM();
-  renderDailyBar();
-
-  // Sincronizzazione robusta: riscrivo l'intera collezione lead già filtrata.
-  // Così funziona sia quando Firebase salva lead come oggetto, sia quando rimangono buchi/null negli array.
-  syncLeadsCollection().then(function(){
-    if(window._fbReadTimer) { clearTimeout(window._fbReadTimer); }
-    window._fbReadTimer = setTimeout(function(){ rtdbRead(); }, 500);
-  });
+  leads=safeArr(leads).filter(x=>x&&!idEq(x.id,id));
+  saveData();rtdbDelete('leads/'+id);closeModal();renderCRM();renderDailyBar();
 }
-function v(id){const el=document.getElementById(id);return el?el.value.trim():''}
 
 // ==================== BOOKINGS ====================
-// ===== BOOKING CALENDAR =====
 let bkCalYear=new Date().getFullYear();
 let bkCalMonth=new Date().getMonth();
-
-// boat color palette (navy shades + gold variants)
-const BOAT_COLORS=['#1E3A6E','#C9B88A','#2E6B4F','#8B3A3A','#4A6B8A','#7A5C2E','#3A4E6E','#6E4A2E'];
-
 function bkCalPrev(){bkCalMonth--;if(bkCalMonth<0){bkCalMonth=11;bkCalYear--;}renderBkCalendar();}
 function bkCalNext(){bkCalMonth++;if(bkCalMonth>11){bkCalMonth=0;bkCalYear++;}renderBkCalendar();}
 function bkCalToday(){bkCalYear=new Date().getFullYear();bkCalMonth=new Date().getMonth();renderBkCalendar();}
@@ -842,80 +977,64 @@ function bkCalToday(){bkCalYear=new Date().getFullYear();bkCalMonth=new Date().g
 function renderBkCalendar(){
   const calTitleEl=document.getElementById('bk-cal-title');
   const calEl=document.getElementById('bk-calendar');
-  const legEl=document.getElementById('bk-cal-legend');
-  if(!calTitleEl||!calEl||!legEl)return;
-
+  if(!calTitleEl||!calEl)return;
   calTitleEl.textContent=MONTHS[bkCalMonth]+' '+bkCalYear;
   const firstDay=new Date(bkCalYear,bkCalMonth,1).getDay();
   const offset=firstDay===0?6:firstDay-1;
   const dim=new Date(bkCalYear,bkCalMonth+1,0).getDate();
   const tod=today();
-
   const boatColorMap={};
-  boats.forEach(function(b,i){boatColorMap[b.name]=BOAT_COLORS[i%BOAT_COLORS.length];});
-  bookings.forEach(function(bk){if(!boatColorMap[bk.barca])boatColorMap[bk.barca]=BOAT_COLORS[Object.keys(boatColorMap).length%BOAT_COLORS.length];});
-
+  boats.forEach((b,i)=>{boatColorMap[b.name]=BOAT_COLORS[i%BOAT_COLORS.length];});
   const dayMap={};
-  bookings.forEach(function(bk){
+  bookings.filter(b=>b.status!=='rejected').forEach(bk=>{
     if(!bk.data)return;
-    var start=new Date(bk.data);
-    var giorni=parseInt(bk.giorni)||1;
-    for(var g=0;g<giorni;g++){
-      var dd=new Date(start);dd.setDate(dd.getDate()+g);
+    const start=new Date(bk.data);
+    for(let g=0;g<(parseInt(bk.giorni)||1);g++){
+      const dd=new Date(start);dd.setDate(dd.getDate()+g);
       if(dd.getFullYear()===bkCalYear&&dd.getMonth()===bkCalMonth){
-        var day=dd.getDate();
+        const day=dd.getDate();
         if(!dayMap[day])dayMap[day]=[];
-        dayMap[day].push({bk:bk,color:boatColorMap[bk.barca]||'#1E3A6E'});
+        dayMap[day].push({bk,color:boatColorMap[bk.barca]||'#1E3A6E',isPending:bk.status==='pending'});
       }
     }
   });
-
-  var parts=['<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">'];
-  ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'].forEach(function(d){
-    parts.push('<div style="font-size:10px;color:var(--text3);text-align:center;padding:4px 0;text-transform:uppercase;font-weight:600;letter-spacing:.06em">'+d+'</div>');
-  });
-  for(var i=0;i<offset;i++)parts.push('<div></div>');
-
-  for(var d=1;d<=dim;d++){
-    var mm=String(bkCalMonth+1).padStart(2,'0');
-    var dd2=String(d).padStart(2,'0');
-    var dateStr=bkCalYear+'-'+mm+'-'+dd2;
-    var entries=dayMap[d]||[];
-    var isToday=dateStr===tod;
-    var isWeekend=((offset+d-1)%7)>=5;
-    var count=entries.length;
-
-    var bg=isWeekend?'var(--bg2)':'var(--white)';
-    var borderStyle=isToday?'2px solid var(--navy)':'0.5px solid var(--border)';
-    var minH=count>0?'64px':'44px';
-    var cursor=count>0?'pointer':'default';
-    var clickAttr=count>0?('onclick="openDayBookings(\'' + dateStr + '\')"'):'';
-
-    var cell='<div style="min-height:'+minH+';border:'+borderStyle+';border-radius:6px;padding:3px 4px;background:'+bg+';cursor:'+cursor+'" '+clickAttr+'>';
-    cell+='<div style="font-size:11px;font-weight:'+(isToday?'700':'400')+';color:'+(isToday?'var(--navy)':'var(--text3)')+';margin-bottom:2px">'+d+'</div>';
-    entries.slice(0,3).forEach(function(e){
-      var label=e.bk.barca.split(' ')[0]+' · '+e.bk.clienteNome.split(' ')[0];
-      cell+='<div style="font-size:10px;font-weight:600;color:#fff;background:'+e.color+';border-radius:3px;padding:1px 4px;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+e.bk.clienteNome+' — '+e.bk.barca+'">'+label+'</div>';
+  let parts=['<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">'];
+  ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'].forEach(d=>parts.push(`<div class="cal-dow">${d}</div>`));
+  for(let i=0;i<offset;i++)parts.push('<div></div>');
+  for(let d=1;d<=dim;d++){
+    const mm=String(bkCalMonth+1).padStart(2,'0');
+    const dd=String(d).padStart(2,'0');
+    const dateStr=`${bkCalYear}-${mm}-${dd}`;
+    const entries=dayMap[d]||[];
+    const isToday=dateStr===tod;
+    const hasPending=entries.some(e=>e.isPending);
+    let cellClass=`cal-day${entries.length>0?(hasPending?' pending-day':' booked'):''}`;
+    let cell=`<div class="${cellClass}" onclick="${entries.length>0?`openDayBookings('${dateStr}')`:''}" style="min-height:${entries.length>0?'64px':'44px'};cursor:${entries.length>0?'pointer':'default'};border:${isToday?'2px solid var(--navy)':'0.5px solid var(--border)'}">`;
+    cell+=`<div style="font-size:11px;font-weight:${isToday?'700':'400'};color:${isToday?'var(--navy)':'var(--text3)'};">${d}</div>`;
+    entries.slice(0,3).forEach(e=>{
+      const opacity=e.isPending?'0.6':'1';
+      cell+=`<div style="font-size:10px;font-weight:600;color:#fff;background:${e.color};border-radius:3px;padding:1px 4px;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:${opacity}">${e.isPending?'⏳ ':''} ${e.bk.barca.split(' ')[0]}</div>`;
     });
-    if(entries.length>3)cell+='<div style="font-size:10px;color:var(--text3);padding:1px 4px">+' +(entries.length-3)+' altri</div>';
+    if(entries.length>3)cell+=`<div style="font-size:10px;color:var(--text3)">+${entries.length-3}</div>`;
     cell+='</div>';
     parts.push(cell);
   }
   parts.push('</div>');
   calEl.innerHTML=parts.join('');
-
-  var usedBoats=[...new Set(bookings.map(function(b){return b.barca;}))];
-  legEl.innerHTML=usedBoats.length===0
-    ?'<span style="font-size:12px;color:var(--text3)">Nessuna prenotazione questo mese</span>'
-    :usedBoats.map(function(name){return '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:2px;background:'+(boatColorMap[name]||'#1E3A6E')+'"></div>'+name+'</div>';}).join('');
+  const legEl=document.getElementById('bk-cal-legend');
+  if(legEl){
+    legEl.innerHTML=`
+      <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--danger-bg);border:0.5px solid var(--danger);display:inline-block"></span>Confermata</span>
+      <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--warn-bg);border:0.5px solid var(--warn);display:inline-block"></span>In attesa</span>
+    `;
+  }
 }
 
 function openDayBookings(dateStr){
   const d=new Date(dateStr);
-  const label=d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();
-  // Find all bookings that cover this day
+  const label=`${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
   const matching=bookings.filter(bk=>{
-    if(!bk.data)return false;
+    if(!bk.data||bk.status==='rejected')return false;
     const start=new Date(bk.data);
     const end=new Date(bk.data);end.setDate(end.getDate()+(parseInt(bk.giorni)||1)-1);
     const check=new Date(dateStr);
@@ -924,81 +1043,56 @@ function openDayBookings(dateStr){
   if(!matching.length)return;
   modal(`
     <div class="modal-title">${label}<button class="modal-close" onclick="closeModal()">×</button></div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">${matching.length} prenotazion${matching.length===1?'e':'i'} attiv${matching.length===1?'a':'e'}</div>
     ${matching.map(bk=>`
-      <div style="border:1px solid var(--border);border-left:4px solid ${boats.find(b=>b.name===bk.barca)?BOAT_COLORS[boats.findIndex(b=>b.name===bk.barca)%BOAT_COLORS.length]:'var(--navy)'};border-radius:var(--r);padding:10px 12px;margin-bottom:8px;cursor:pointer" onclick="closeModal();openBookingDetail(${bk.id})">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div>
-            <div style="font-weight:600;font-size:14px">${bk.clienteNome}</div>
-            <div style="font-size:12px;color:var(--text2);margin-top:2px">${bk.barca} · ${bk.passeggeri||'?'} passeggeri · ${bk.destinazione||'—'}</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-weight:700;color:var(--navy)">${fmtEur(bk.importo)}</div>
-            ${bk.checkin||bk.checkout?`<div style="font-size:11px;color:var(--text3)">${bk.checkin||'—'} → ${bk.checkout||'—'}</div>`:''}
-          </div>
+      <div style="border:1px solid var(--border);border-left:4px solid ${bk.status==='pending'?'var(--warn)':'var(--navy)'};border-radius:var(--r);padding:10px 12px;margin-bottom:8px;cursor:pointer" onclick="closeModal();openBookingDetail(${bk.id})">
+        <div style="display:flex;justify-content:space-between">
+          <div><div style="font-weight:600">${bk.clienteNome}</div><div style="font-size:12px;color:var(--text2)">${bk.barca}</div></div>
+          <div><span class="badge badge-${bk.status==='pending'?'pending':bk.status==='confirmed'?'confirmed':'new'}">${bk.status==='pending'?'In attesa':'Confermata'}</span></div>
         </div>
       </div>`).join('')}
   `);
 }
 
 function renderBookings(){
-  normalizeAllData();
   renderBkCalendar();
-  checkPaymentAlerts();
-  // Payment alert banner (C)
-  const soon=new Date();soon.setDate(soon.getDate()+7);
-  const urgentBks=bookings.filter(function(bk){
-    if(bk.statoPagamento==='Saldato'||!bk.data)return false;
-    const bkDate=new Date(bk.data);
-    return bkDate<=soon&&bkDate>=new Date(today());
-  });
-  const alertBanner=document.getElementById('bk-alert-banner');
-  if(alertBanner){
-    if(urgentBks.length>0){
-      alertBanner.style.display='block';
-      alertBanner.innerHTML='<div style="background:var(--warn-bg);border:1px solid var(--warn);border-radius:var(--r);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span style="font-size:13px;font-weight:600;color:var(--warn)">'+urgentBks.length+' prenotazion'+(urgentBks.length===1?'e':'i')+' in scadenza questa settimana con pagamento incompleto: '+urgentBks.map(function(b){return b.clienteNome+' ('+b.data+')'}).join(', ')+'</span></div>';
-    } else { alertBanner.style.display='none'; alertBanner.innerHTML=''; }
-  }
   const q=(document.getElementById('bk-search')||{}).value||'';
   const payF=(document.getElementById('bk-pay-filter')||{}).value||'';
-  const invF=(document.getElementById('bk-inv-filter')||{}).value||'';
-  const filtered=bookings.filter(b=>
-    (b.clienteNome+b.barca+(b.destinazione||'')).toLowerCase().includes(q.toLowerCase())&&
-    (!payF||b.statoPagamento===payF)&&(!invF||b.statoFattura===invF)
-  );
-  const totFatt=bookings.reduce((s,b)=>s+Number(b.importo||0),0);
-  const totIncassato=bookings.reduce((s,b)=>s+(b.statoPagamento==='Saldato'?Number(b.importo||0):Number(b.acconto||0)),0);
-  const totDaIncassare=totFatt-totIncassato;
-  const daFatturare=bookings.filter(b=>b.statoFattura==='Non fatturato').length;
+  const statusF=(document.getElementById('bk-status-filter')||{}).value||'';
+  const confirmed=bookings.filter(b=>b.status==='confirmed'||b.status==='manual');
+  const pending=bookings.filter(b=>b.status==='pending');
+  const totFatt=confirmed.reduce((s,b)=>s+Number(b.importo||0),0);
+  const totIncassato=confirmed.reduce((s,b)=>s+(b.statoPagamento==='Saldato'?Number(b.importo||0):Number(b.acconto||0)),0);
   document.getElementById('bk-stats').innerHTML=[
-    {l:'Prenotazioni totali',v:bookings.length},
-    {l:'Fatturato lordo',v:fmtEur(totFatt)},
+    {l:'Confermate',v:confirmed.length},
+    {l:'In attesa',v:pending.length,danger:pending.length>0},
+    {l:'Fatturato',v:fmtEur(totFatt)},
     {l:'Incassato',v:fmtEur(totIncassato)},
-    {l:'Da fatturare',v:daFatturare+' pren.'},
-  ].map(x=>`<div class="stat-card"><div class="stat-label">${x.l}</div><div class="stat-value" style="font-size:18px">${x.v}</div></div>`).join('');
-
+  ].map(x=>`<div class="stat-card"><div class="stat-label">${x.l}</div><div class="stat-value" style="font-size:18px;${x.danger?'color:var(--warn)':''}">${x.v}</div></div>`).join('');
+  const filtered=bookings.filter(b=>
+    (b.clienteNome+b.barca).toLowerCase().includes(q.toLowerCase())&&
+    (!payF||b.statoPagamento===payF)&&
+    (!statusF||b.status===statusF)
+  ).sort((a,b)=>new Date(b.data)-new Date(a.data));
   document.getElementById('bk-table').innerHTML=filtered.length===0?`<div class="empty">Nessuna prenotazione</div>`:`
   <table class="tbl">
-    <thead><tr><th>Cliente</th><th>Barca</th><th>Data</th><th>Destinazione</th><th>Importo</th><th>Acconto</th><th>Pagamento</th><th>Fattura</th><th></th></tr></thead>
+    <thead><tr><th>Cliente</th><th>Barca</th><th>Data</th><th>Stato</th><th class="admin-only-cell">Importo</th><th class="admin-only-cell">Pagamento</th><th></th></tr></thead>
     <tbody>${filtered.map(b=>`
       <tr style="cursor:pointer" onclick="openBookingDetail(${b.id})">
-        <td><div style="font-weight:600">${b.clienteNome}</div><div style="font-size:11px;color:var(--text3)">${b.passeggeri||''} pass. · ${b.giorni||1}gg</div></td>
+        <td><div style="font-weight:600">${b.clienteNome}</div><div style="font-size:11px;color:var(--text3)">${b.email||''}</div></td>
         <td style="font-size:13px">${b.barca}</td>
-        <td style="font-size:12px"><div style="color:var(--text3)">${b.data}</div>${b.checkin||b.checkout?`<div style="color:var(--navy);font-weight:500">${b.checkin||'—'} → ${b.checkout||'—'}</div>`:''}${b.checkinPerson||b.checkoutPerson?`<div style="font-size:10px;color:var(--text3);margin-top:1px">▲ ${b.checkinPerson||'—'} · ▼ ${b.checkoutPerson||'—'}</div>`:''}</td>
-        <td style="font-size:13px">${b.destinazione||'—'}</td>
-        <td style="font-weight:600">${fmtEur(b.importo)}</td>
-        <td style="color:var(--text2)">${fmtEur(b.acconto)}</td>
-        <td>
+        <td style="font-size:12px;color:var(--text3)">${b.data}</td>
+        <td><span class="badge badge-${b.status==='pending'?'pending':b.status==='rejected'?'rejected':b.status==='confirmed'||b.status==='manual'?'confirmed':'new'}">${
+          {pending:'In attesa',confirmed:'Confermata',rejected:'Rifiutata',manual:'Manuale'}[b.status]||b.status
+        }</span></td>
+        <td class="admin-only-cell" style="font-weight:600">${fmtEur(b.importo)}</td>
+        <td class="admin-only-cell">
           <select class="status-select" style="${payStyle(b.statoPagamento)}" onclick="event.stopPropagation()" onchange="updateBkField(${b.id},'statoPagamento',this.value)">
             ${['Non pagato','Parziale','Saldato'].map(s=>`<option${s===b.statoPagamento?' selected':''}>${s}</option>`).join('')}
           </select>
         </td>
         <td>
-          <select class="status-select" style="${invStyle(b.statoFattura)}" onclick="event.stopPropagation()" onchange="updateBkField(${b.id},'statoFattura',this.value)">
-            ${['Non fatturato','Fatturato'].map(s=>`<option${s===b.statoFattura?' selected':''}>${s}</option>`).join('')}
-          </select>
+          ${b.status==='pending'?`<button class="btn btn-xs btn-gold" onclick="event.stopPropagation();showPage('requests')">Gestisci</button>`:`<button class="btn btn-xs" onclick="event.stopPropagation();openBookingForm(${b.id})">✎</button>`}
         </td>
-        <td><button class="btn btn-xs" onclick="event.stopPropagation();openBookingForm(${b.id})">✎</button></td>
       </tr>`).join('')}
     </tbody>
   </table>`;
@@ -1009,424 +1103,116 @@ function payStyle(s){
   if(s==='Parziale')return'background:#FEF6E4;color:#8A5C00;border-color:#C8900A';
   return'background:#FDECEA;color:#C0392B;border-color:#C0392B';
 }
-function invStyle(s){
-  if(s==='Fatturato')return'background:#E6EDF8;color:#1E3A6E;border-color:#1E3A6E';
-  return'background:#F7F6F2;color:#8A8880;border-color:#ccc';
-}
+
 function updateBkField(id,field,val){
-  const b=bookings.find(function(x){return x && idEq(x.id,id);});if(!b)return;
-  const oldPay=b.statoPagamento;
-  b[field]=val;
-  if(field==='statoPagamento'&&val==='Saldato'){
-    tasks.forEach(function(t){
-      if(t && idEq(t.bookingId,id)&&(t.titolo||'').toLowerCase().includes('saldo')){t.stato='Completato';persistTask(t.id);}
-    });
-  }
-  if(field==='statoPagamento'&&oldPay==='Saldato'&&val!=='Saldato') checkPaymentAlerts();
-  saveData();persistBooking(id);renderBookings();renderDailyBar();renderStats();
+  const b=bookings.find(x=>x&&idEq(x.id,id));if(!b)return;
+  b[field]=val;saveData();persistBooking(id);renderBookings();
 }
 
 function openBookingDetail(id){
-  const b=bookings.find(function(x){return x && idEq(x.id,id);});if(!b)return;
-  const saldo=Number(b.importo)-Number(b.acconto);
+  const b=bookings.find(x=>x&&idEq(x.id,id));if(!b)return;
   modal(`
     <div class="modal-title">Prenotazione #${b.id}<button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="g2" style="margin-bottom:12px">
       <div><div class="stat-label">Cliente</div><div style="font-weight:600">${b.clienteNome}</div></div>
-      <div><div class="stat-label">Imbarcazione</div><div>${b.barca}</div></div>
-      <div><div class="stat-label">Data uscita</div><div>${b.data} · ${b.giorni||1} giorni</div></div>
-      <div><div class="stat-label">Passeggeri</div><div>${b.passeggeri||'—'}</div></div>
-      <div><div class="stat-label">Check-in</div><div style="font-weight:600;color:var(--navy)">${b.checkin||'—'}</div>${b.checkinPerson?`<div style="font-size:11px;color:var(--text3)">Resp.: ${b.checkinPerson}</div>`:''}</div>
-      <div><div class="stat-label">Check-out</div><div style="font-weight:600;color:var(--navy)">${b.checkout||'—'}</div>${b.checkoutPerson?`<div style="font-size:11px;color:var(--text3)">Resp.: ${b.checkoutPerson}</div>`:''}</div>
-      <div><div class="stat-label">Destinazione</div><div>${b.destinazione||'—'}</div></div>
-      <div><div class="stat-label">Note</div><div style="font-size:12px;color:var(--text2)">${b.note||'—'}</div></div>
+      <div><div class="stat-label">Stato</div><span class="badge badge-${b.status==='pending'?'pending':b.status==='rejected'?'rejected':'confirmed'}">${{pending:'In attesa',confirmed:'Confermata',rejected:'Rifiutata',manual:'Manuale'}[b.status]||b.status}</span></div>
+      <div><div class="stat-label">Barca</div><div>${b.barca}</div></div>
+      <div><div class="stat-label">Data</div><div>${b.data}</div></div>
+      <div><div class="stat-label">Email</div><div style="font-size:12px">${b.email||'—'}</div></div>
+      <div><div class="stat-label">Telefono</div><div style="font-size:12px">${b.telefono||'—'}</div></div>
     </div>
-    <div style="background:var(--bg2);border-radius:var(--r);padding:12px;margin-bottom:12px">
+    ${b.codiceFiscale?`<div style="background:var(--info-bg);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;font-size:12px"><div style="font-weight:600;color:var(--navy);margin-bottom:6px">Dati legali</div><div class="g2"><div>C.F.: <strong>${b.codiceFiscale}</strong></div><div>Residenza: ${b.residenza||'—'}</div><div>Documento: ${b.tipoDocumento} ${b.numeroDocumento}</div><div>Scadenza: ${b.dataScadenza||'—'}</div></div></div>`:''}
+    <div class="admin-only" style="background:var(--bg2);border-radius:var(--r);padding:12px;margin-bottom:12px">
       <div class="g3">
         <div><div class="stat-label">Totale</div><div style="font-size:18px;font-weight:700;color:var(--navy)">${fmtEur(b.importo)}</div></div>
         <div><div class="stat-label">Acconto</div><div style="font-size:16px;font-weight:600;color:var(--success)">${fmtEur(b.acconto)}</div></div>
-        <div><div class="stat-label">Saldo residuo</div><div style="font-size:16px;font-weight:600;color:${saldo>0?'var(--danger)':'var(--success)'}">${fmtEur(saldo)}</div></div>
+        <div><div class="stat-label">Saldo</div><div style="font-size:16px;font-weight:600;color:var(--danger)">${fmtEur(Number(b.importo)-Number(b.acconto))}</div></div>
       </div>
     </div>
-    <div class="g2" style="margin-bottom:14px">
-      <div class="field" style="margin:0">
-        <label>Stato pagamento</label>
-        <select id="det-pay" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px">
-          ${['Non pagato','Parziale','Saldato'].map(s=>`<option${s===b.statoPagamento?' selected':''}>${s}</option>`).join('')}
-        </select>
-      </div>
-      <div class="field" style="margin:0">
-        <label>Stato fattura</label>
-        <select id="det-inv" style="padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px">
-          ${['Non fatturato','Fatturato'].map(s=>`<option${s===b.statoFattura?' selected':''}>${s}</option>`).join('')}
-        </select>
-      </div>
-    </div>
+    ${b.status==='pending'?`<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn btn-danger" onclick="closeModal();rejectRequest(${id})" style="flex:1">✕ Rifiuta</button><button class="btn btn-success" onclick="closeModal();acceptRequest(${id})" style="flex:1;background:var(--success);color:#fff;border-color:var(--success)">✓ Accetta</button></div>`:''}
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn btn-sm" onclick="closeModal();openBookingForm(${b.id})">Modifica</button>
-      <button class="btn btn-sm btn-navy" onclick="saveBookingStatus(${b.id})">Aggiorna stato</button>
     </div>`);
 }
 
-function saveBookingStatus(id){
-  const b=bookings.find(function(x){return x && idEq(x.id,id);});if(!b)return;
-  const oldPay=b.statoPagamento;
-  b.statoPagamento=document.getElementById('det-pay').value;
-  b.statoFattura=document.getElementById('det-inv').value;
-  if(oldPay!=='Saldato'&&b.statoPagamento==='Saldato'){
-    tasks.forEach(function(t){
-      if(t && idEq(t.bookingId,id)&&(t.titolo||'').toLowerCase().includes('saldo')){t.stato='Completato';persistTask(t.id);}
-    });
-  }
-  if(oldPay==='Saldato'&&b.statoPagamento!=='Saldato') checkPaymentAlerts();
-  saveData();persistBooking(id);closeModal();renderBookings();renderStats();renderDailyBar();
+function openBookingForm(id){
+  const b=id?bookings.find(x=>x&&idEq(x.id,id)):{id:null,clienteNome:'',barca:boats[0]?.name||'',data:today(),giorni:1,passeggeri:2,importo:0,acconto:0,statoPagamento:'Non pagato',statoFattura:'Non fatturato',note:'',status:'manual',email:'',telefono:''};
+  modal(`
+    <div class="modal-title">${id?'Modifica prenotazione':'Nuova prenotazione manuale'}<button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="g2">
+      <div class="field"><label>Nome cliente</label><input id="bk-cnome" value="${b.clienteNome}"></div>
+      <div class="field"><label>Email</label><input id="bk-email" type="email" value="${b.email||''}"></div>
+      <div class="field"><label>Telefono</label><input id="bk-tel" value="${b.telefono||''}"></div>
+      <div class="field"><label>Barca</label><select id="bk-barca">${boats.map(bt=>`<option${bt.name===b.barca?' selected':''}>${bt.name}</option>`).join('')}</select></div>
+      <div class="field"><label>Data</label><input id="bk-data" type="date" value="${b.data}"></div>
+      <div class="field"><label>N. giorni</label><input id="bk-giorni" type="number" min="1" value="${b.giorni||1}"></div>
+      <div class="field"><label>Passeggeri</label><input id="bk-pass" type="number" min="1" value="${b.passeggeri||2}"></div>
+      <div class="field"><label>Importo €</label><input id="bk-imp" type="number" value="${b.importo||0}"></div>
+      <div class="field"><label>Acconto €</label><input id="bk-acc" type="number" value="${b.acconto||0}"></div>
+      <div class="field"><label>Pagamento</label><select id="bk-pay">${['Non pagato','Parziale','Saldato'].map(s=>`<option${s===b.statoPagamento?' selected':''}>${s}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label>Note</label><textarea id="bk-note">${b.note||''}</textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+      ${id?`<button class="btn btn-sm btn-danger" onclick="deleteBooking(${id})">Elimina</button>`:''}
+      <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
+      <button class="btn btn-sm btn-navy" onclick="saveBooking(${id||'null'})">Salva</button>
+    </div>`);
 }
 
-function openBookingForm(id,leadId){
-  const b=id?bookings.find(function(x){return x && idEq(x.id,id);}):{id:null,clienteNome:'',clienteId:null,barca:boats[0]?.name||'',data:today(),giorni:1,destinazione:'',passeggeri:2,importo:0,acconto:0,statoPagamento:'Non pagato',statoFattura:'Non fatturato',note:'',leadId:leadId||null,checkin:'',checkout:''};
-  const preNome=leadId?leads.find(x=>x.id===leadId)?.nome||'':'';
-  const preLeadCliente=leadId?leads.find(x=>x.id===leadId):null;
-  const existingClient=b.clienteId?clients.find(x=>x.id===b.clienteId):null;
-  const allClientBks=existingClient?bookings.filter(function(bk){return bk && idEq(bk.clienteId,existingClient.id) && !idEq(bk.id,id);}):[];
-  const isRecurring=allClientBks.length>0;
-  const recurringTotal=allClientBks.reduce((s,bk)=>s+Number(bk.importo||0),0);
-  const initPrice=b.importo||calcTariffPrice(b.barca,b.data,b.giorni||1);
-  window._bkPriceManual=b.importo>0&&!!id;
-
-  const recurringBanner=isRecurring?
-    '<div style="padding:6px 12px;background:var(--gold);border-radius:var(--r);font-size:12px;color:var(--navy-dark);font-weight:700;margin-bottom:10px">&#9850; Cliente di ritorno — '+allClientBks.length+' prenotazioni · '+fmtEur(recurringTotal)+' storico</div>':
-    '';
-
-  modal(
-    '<div class="modal-title">'+(id?'Modifica prenotazione':'Nuova prenotazione')+'<button class="modal-close" onclick="closeModal()">×</button></div>'+
-    recurringBanner+
-    '<div id="bk-recurring-banner"></div>'+
-    '<div class="g2">'+
-    '<div class="field" style="position:relative"><label>Cliente</label>'+
-      '<input id="bk-cnome" value="'+(b.clienteNome||preNome)+'" autocomplete="off" placeholder="Cerca cliente o inserisci nome..." oninput="bkClientSearch(this.value)" onblur="hideBkSuggest()">'+
-      '<input type="hidden" id="bk-cliente-id" value="'+(b.clienteId||'')+'">'+
-      '<div id="bk-suggest" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--white);border:1px solid var(--border2);border-radius:var(--r);z-index:200;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>'+
-    '</div>'+
-    '<div class="field"><label>Imbarcazione</label><select id="bk-barca" onchange="recalcPrice()">'+boats.map(bt=>'<option'+(bt.name===b.barca?' selected':'')+'>'+bt.name+'</option>').join('')+'</select></div>'+
-    '<div class="field"><label>Data uscita</label><input id="bk-data" type="date" value="'+b.data+'" onchange="recalcPrice()"></div>'+
-    '<div class="field"><label>N. giorni</label><input id="bk-giorni" type="number" min="1" value="'+(b.giorni||1)+'" onchange="recalcPrice()"></div>'+
-    '<div class="field"><label>Destinazione</label><input id="bk-dest" value="'+(b.destinazione||'')+'" placeholder="es. Isole Eolie"></div>'+
-    '<div class="field"><label>Passeggeri</label><input id="bk-pass" type="number" min="1" value="'+(b.passeggeri||2)+'"></div>'+
-    '<div class="field"><label>Importo € <span id="bk-price-src" style="font-size:10px;color:var(--gold-dark);font-weight:600"></span></label>'+
-      '<input id="bk-imp" type="number" value="'+initPrice+'" oninput="window._bkPriceManual=true">'+
-    '</div>'+
-    '<div class="field"><label>Acconto ricevuto €</label><input id="bk-acc" type="number" value="'+(b.acconto||0)+'"></div>'+
-    '<div class="field"><label>Check-in (orario)</label><input id="bk-checkin" type="time" value="'+(b.checkin||'')+'"></div>'+
-    '<div class="field"><label>Responsabile check-in</label><input id="bk-checkin-person" value="'+(b.checkinPerson||'')+'" placeholder="es. Mario Rossi"></div>'+
-    '<div class="field"><label>Check-out (orario)</label><input id="bk-checkout" type="time" value="'+(b.checkout||'')+'"></div>'+
-    '<div class="field"><label>Responsabile check-out</label><input id="bk-checkout-person" value="'+(b.checkoutPerson||'')+'" placeholder="es. Giulia Bianchi"></div>'+
-    '<div class="field"><label>Stato pagamento</label><select id="bk-pay">'+['Non pagato','Parziale','Saldato'].map(s=>'<option'+(s===b.statoPagamento?' selected':'')+'>'+s+'</option>').join('')+'</select></div>'+
-    '<div class="field"><label>Stato fattura</label><select id="bk-inv">'+['Non fatturato','Fatturato'].map(s=>'<option'+(s===b.statoFattura?' selected':'')+'>'+s+'</option>').join('')+'</select></div>'+
-    '</div>'+
-    '<div class="field"><label>Note</label><textarea id="bk-note">'+(b.note||'')+'</textarea></div>'+
-    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">'+
-    (id?'<button class="btn btn-sm btn-danger" onclick="deleteBooking('+id+')">Elimina</button>':'')+
-    '<button class="btn btn-sm" onclick="closeModal()">Annulla</button>'+
-    '<button class="btn btn-sm btn-navy" onclick="saveBooking('+(id||'null')+','+(leadId||'null')+')">Salva</button>'+
-    '</div>'
-  );
-  if(!window._bkPriceManual) setTimeout(recalcPrice,50);
-}
-
-function priceKeyFromDate(dt){
-  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
-}
-
-function getPriceForDate(boat,dateObj){
-  boat=normalizeBoat(boat);
-  var key=priceKeyFromDate(dateObj);
-  var m=dateObj.getMonth();
-  if(boat.overrides && boat.overrides[key]!==undefined && boat.overrides[key]!==null && boat.overrides[key]!==''){
-    return {price:Number(boat.overrides[key])||0, custom:true, key:key};
-  }
-  return {price:getBandPrice(boat,m), custom:false, key:key};
-}
-
-function calcTariffPrice(barcaName,dataStr,giorni){
-  var boat=boats.find(function(b){return b.name===barcaName;});
-  if(!boat||!dataStr)return 0;
-  boat=normalizeBoat(boat);
-  var n=parseInt(giorni)||1;
-  var start=new Date(dataStr+'T12:00:00');
-  var total=0;
-  for(var i=0;i<n;i++){
-    var dt=new Date(start);
-    dt.setDate(start.getDate()+i);
-    total+=getPriceForDate(boat,dt).price;
-  }
-  return total;
-}
-
-function tariffDescription(barcaName,dataStr,giorni){
-  var boat=boats.find(function(b){return b.name===barcaName;});
-  if(!boat||!dataStr)return '';
-  boat=normalizeBoat(boat);
-  var n=parseInt(giorni)||1;
-  var start=new Date(dataStr+'T12:00:00');
-  var custom=0, parts=[];
-  for(var i=0;i<n;i++){
-    var dt=new Date(start); dt.setDate(start.getDate()+i);
-    var info=getPriceForDate(boat,dt);
-    if(info.custom) custom++;
-    parts.push('€'+info.price);
-  }
-  if(n===1){
-    var info=getPriceForDate(boat,start);
-    if(info.custom) return '(prezzo personalizzato · €'+info.price+'/g)';
-    var band=boat.bands.find(function(b){return (b.months||[]).indexOf(start.getMonth())>=0;});
-    return band?'('+band.label+' · €'+band.price+'/g)':'';
-  }
-  return custom>0?'('+n+' giorni · '+custom+' prezzo/i personalizzato/i · totale giorno per giorno)':'('+n+' giorni · fascia stagionale)';
-}
-
-function recalcPrice(){
-  if(window._bkPriceManual)return;
-  var barcaEl=document.getElementById('bk-barca');
-  var dataEl=document.getElementById('bk-data');
-  var giorniEl=document.getElementById('bk-giorni');
-  if(!barcaEl||!dataEl)return;
-  var barca=barcaEl.value,data=dataEl.value,giorni=parseInt(giorniEl?giorniEl.value:1)||1;
-  if(!barca||!data)return;
-  var price=calcTariffPrice(barca,data,giorni);
-  var impEl=document.getElementById('bk-imp');
-  var srcEl=document.getElementById('bk-price-src');
-  if(impEl) impEl.value=price;
-  if(srcEl&&price>0){
-    srcEl.textContent=tariffDescription(barca,data,giorni);
-  }
-}
-
-function hideBkSuggest(){setTimeout(function(){var s=document.getElementById('bk-suggest');if(s)s.style.display='none';},200);}
-function bkClientSearch(q){
-  var sug=document.getElementById('bk-suggest');
-  if(!sug)return;
-  if(!q||q.length<2){sug.style.display='none';return;}
-  var res=clients.filter(function(c){return (c.nome+' '+c.cognome+c.email).toLowerCase().indexOf(q.toLowerCase())>=0;}).slice(0,6);
-  if(!res.length){sug.style.display='none';return;}
-  sug.style.display='block';
-  sug.innerHTML='';
-  res.forEach(function(c){
-    var pren=bookings.filter(function(bk){return bk.clienteId===c.id;}).length;
-    var item=document.createElement('div');
-    item.style.cssText='padding:8px 10px;cursor:pointer;border-bottom:0.5px solid var(--color-border-tertiary,#eee);font-size:13px;display:flex;justify-content:space-between;align-items:center';
-    item.innerHTML='<div><div style="font-weight:600">'+c.nome+' '+c.cognome+'</div><div style="font-size:11px;color:var(--text3)">'+c.email+(c.tel?' · '+c.tel:'')+'</div></div>'+(pren>0?'<span style="font-size:10px;padding:2px 7px;background:var(--gold);color:var(--navy-dark);border-radius:10px;font-weight:700">'+pren+' pren.</span>':'');
-    item.addEventListener('mouseover',function(){this.style.background='#E6EDF8';});
-    item.addEventListener('mouseout',function(){this.style.background='';});
-    item.addEventListener('mousedown',function(){selectBkClient(c.id);});
-    sug.appendChild(item);
-  });
-}
-
-function selectBkClient(id){
-  var c=clients.find(function(x){return x.id===id;});if(!c)return;
-  document.getElementById('bk-cnome').value=c.nome+' '+c.cognome;
-  document.getElementById('bk-cliente-id').value=id;
-  document.getElementById('bk-suggest').style.display='none';
-  var pren=bookings.filter(function(bk){return bk.clienteId===id;});
-  var total=pren.reduce(function(s,bk){return s+Number(bk.importo||0);},0);
-  var banner=document.getElementById('bk-recurring-banner');
-  if(pren.length>0&&banner){
-    banner.innerHTML='<div style="padding:6px 12px;background:var(--gold);border-radius:var(--r);font-size:12px;color:var(--navy-dark);font-weight:700;margin-bottom:10px">&#9850; Cliente di ritorno — '+pren.length+' prenotazioni precedenti · '+fmtEur(total)+' storico</div>';
-  }
-}
-
-function saveBooking(id,leadId){
-  const clienteIdVal=document.getElementById('bk-cliente-id')?parseInt(document.getElementById('bk-cliente-id').value)||null:null;
-  const d={clienteNome:v('bk-cnome'),clienteId:clienteIdVal,barca:v('bk-barca'),data:v('bk-data'),giorni:parseInt(v('bk-giorni'))||1,destinazione:v('bk-dest'),passeggeri:parseInt(v('bk-pass'))||0,importo:parseFloat(v('bk-imp'))||0,acconto:parseFloat(v('bk-acc'))||0,statoPagamento:v('bk-pay'),statoFattura:v('bk-inv'),note:v('bk-note'),checkin:v('bk-checkin')||'',checkout:v('bk-checkout')||'',checkinPerson:v('bk-checkin-person')||'',checkoutPerson:v('bk-checkout-person')||''};
+function saveBooking(id){
+  const d={clienteNome:v('bk-cnome'),email:v('bk-email'),telefono:v('bk-tel'),barca:v('bk-barca'),data:v('bk-data'),giorni:parseInt(v('bk-giorni'))||1,passeggeri:parseInt(v('bk-pass'))||0,importo:parseFloat(v('bk-imp'))||0,acconto:parseFloat(v('bk-acc'))||0,statoPagamento:v('bk-pay'),statoFattura:'Non fatturato',note:v('bk-note'),status:'manual'};
   if(!d.clienteNome)return;
   let bid;
-  const oldBk=id?bookings.find(x=>x.id===id):null;
-  const oldBoatName=oldBk?oldBk.barca:null;
-  if(oldBk) syncBoatCalendar(oldBk,false);
-  if(id){Object.assign(oldBk,d);bid=id;}
-  else{bid=nextBookingId++;bookings.push({id:bid,...d,leadId:leadId});}
-  const savedBk=bookings.find(x=>x.id===bid);
-  syncBoatCalendar(savedBk,true);
-  if(leadId){
-    const l=leads.find(x=>x.id===leadId);
-    if(l){
-      l.prenotazioneId=bid;
-      if(l.clienteId){const c=clients.find(x=>x.id===l.clienteId);if(c&&!c.prenotazioni.includes(bid))c.prenotazioni.push(bid);}
-      persistLead(l.id);
-    }
-  }
-  if(d.clienteId){
-    const c=clients.find(x=>x.id===d.clienteId);
-    if(c&&!c.prenotazioni.includes(bid))c.prenotazioni.push(bid);
-    persistClient(d.clienteId);
-  }
-  if(!id) autoCreateBookingTasks(bid,d);
-  checkPaymentAlerts();
-  saveData();
-  persistBooking(bid);
-  persistBoatByName(d.barca);
-  if(oldBoatName&&oldBoatName!==d.barca) persistBoatByName(oldBoatName);
-  tasks.filter(function(t){return t.bookingId===bid;}).forEach(function(t){persistTask(t.id);});
-  closeModal();
-  renderDailyBar();
-  showPostBookingSummary(bid,leadId);
+  if(id){const b=bookings.find(x=>x&&idEq(x.id,id));if(b){syncBoatCalendar(b,false);Object.assign(b,d);bid=id;syncBoatCalendar(b,true);}}
+  else{bid=nextBookingId++;const nb={id:bid,...d,creatoIl:today()};bookings.push(nb);syncBoatCalendar(nb,true);}
+  saveData();persistBooking(bid);persistBoatByName(d.barca);
+  closeModal();renderBookings();renderDailyBar();
 }
 
 function syncBoatCalendar(bk,add){
   if(!bk||!bk.data||!bk.barca)return;
   const boat=boats.find(b=>b.name===bk.barca);if(!boat)return;normalizeBoat(boat);
   const start=new Date(bk.data);
-  const giorni=parseInt(bk.giorni)||1;
-  for(let g=0;g<giorni;g++){
+  for(let g=0;g<(parseInt(bk.giorni)||1);g++){
     const d=new Date(start);d.setDate(d.getDate()+g);
     const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    if(add){boat.bookings[key]={bookingId:bk.id,clienteNome:bk.clienteNome};}
-    else{delete boat.bookings[key];}
+    if(add)boat.bookings[key]={bookingId:bk.id,clienteNome:bk.clienteNome,status:bk.status};
+    else delete boat.bookings[key];
   }
 }
 
-function autoCreateBookingTasks(bookingId,d){
-  const uscitaDate=new Date(d.data);
-  const prepDate=new Date(uscitaDate);prepDate.setDate(prepDate.getDate()-1);
-  const detailDate=new Date(uscitaDate);detailDate.setDate(detailDate.getDate()-2);
-  function iso(dt){return dt.toISOString().slice(0,10);}
-  const templates=[
-    {titolo:'Preparare imbarcazione per '+d.clienteNome,categoria:'Operativo',priorita:'Alta',scadenza:iso(prepDate),note:'Check carburante, dotazioni sicurezza, pulizia e cambusa base'},
-    {titolo:'Confermare skipper — '+d.barca+' il '+d.data,categoria:'Operativo',priorita:'Media',scadenza:iso(detailDate),note:'Confermare nome, orario check-in e punto di imbarco'},
-    {titolo:'Inviare dettagli uscita a '+d.clienteNome,categoria:'Commerciale',priorita:'Media',scadenza:iso(detailDate),note:'Inviare orario, posizione porto, documenti richiesti, saldo e previsioni meteo'}
-  ];
-  templates.forEach(function(item){
-    var exists=tasks.some(function(t){return t.bookingId===bookingId&&t.titolo===item.titolo;});
-    if(!exists){
-      var nt={id:nextTaskId++,titolo:item.titolo,categoria:item.categoria,priorita:item.priorita,stato:'Aperto',scadenza:item.scadenza,barca:d.barca,note:item.note,leadId:null,clienteId:d.clienteId||null,creatoIl:today(),bookingId:bookingId};
-      tasks.push(nt);persistTask(nt.id);
-    }
-  });
-}
-
-function checkPaymentAlerts(){
-  const soon=new Date();soon.setDate(soon.getDate()+7);
-  const todayStr=today();
-  bookings.forEach(function(bk){
-    if(bk.statoPagamento==='Saldato')return;
-    if(!bk.data)return;
-    const saldo=Number(bk.importo||0)-Number(bk.acconto||0);
-    if(saldo<=0)return;
-    const bkDate=new Date(bk.data);
-    if(bkDate<=soon&&bkDate>=new Date(todayStr)){
-      const exists=tasks.some(function(t){return t.bookingId===bk.id&&t.titolo.toLowerCase().includes('saldo')&&t.stato!=='Completato';});
-      if(!exists){
-        var nt={id:nextTaskId++,titolo:'Richiedere saldo a '+bk.clienteNome,categoria:'Commerciale',priorita:'Alta',stato:'Aperto',scadenza:bk.data,barca:bk.barca,note:'Prenotazione del '+bk.data+' — '+fmtEur(saldo)+' ancora da incassare',leadId:null,clienteId:bk.clienteId||null,creatoIl:today(),bookingId:bk.id};
-        tasks.push(nt);persistTask(nt.id);
-      }
-    }
-  });
-  saveData();
-}
-
-function checkBoatDocs(){
-  const warn=new Date();warn.setDate(warn.getDate()+30);
-  boats.forEach(function(boat){
-    [
-      {field:'scadAssicurazione',label:'assicurazione'},
-      {field:'scadRevisione',label:'revisione'},
-      {field:'scadLicenza',label:'licenza'}
-    ].forEach(function(doc){
-      if(!boat[doc.field])return;
-      const scad=new Date(boat[doc.field]);
-      if(scad<=warn){
-        const exists=tasks.some(function(t){return t.barca===boat.name&&t.titolo.includes(doc.label);});
-        if(!exists){
-          var nt={id:nextTaskId++,titolo:'Scadenza '+doc.label+' — '+boat.name,categoria:'Burocrazia',priorita:'Alta',stato:'Aperto',scadenza:boat[doc.field],barca:boat.name,note:'Scadenza entro 30 giorni',leadId:null,clienteId:null,creatoIl:today()}; tasks.push(nt); persistTask(nt.id);
-        }
-      }
-    });
-  });
-  saveData();
-}
-
-function checkLeadFollowups(){
-  const threshold=7;
-  leads.forEach(function(l){
-    if(l.stato!=='Contattato'&&l.stato!=='Preventivo')return;
-    const lastActivity=l.followups.length>0?l.followups[l.followups.length-1].date:l.data;
-    const daysSince=Math.floor((new Date()-new Date(lastActivity))/(1000*60*60*24));
-    if(daysSince>=threshold){
-      const exists=tasks.some(function(t){return t.leadId===l.id&&t.titolo.includes('Ricontattare');});
-      if(!exists){
-        var nt={id:nextTaskId++,titolo:'Ricontattare '+l.nome+' ('+daysSince+'gg senza risposta)',categoria:'Commerciale',priorita:'Media',stato:'Aperto',scadenza:'',barca:'',note:'Lead in stato "'+l.stato+'" da '+daysSince+' giorni',leadId:l.id,clienteId:null,creatoIl:today()}; tasks.push(nt); persistTask(nt.id);
-      }
-    }
-  });
-  saveData();
-}
-
-function showPostBookingSummary(bookingId,leadId){
-  const b=bookings.find(x=>x.id===bookingId);
-  const l=leadId?leads.find(x=>x.id===leadId):null;
-  const c=l&&l.clienteId?clients.find(x=>x.id===l.clienteId):null;
-  modal(`
-    <div style="text-align:center;padding:8px 0 16px">
-      <div style="width:52px;height:52px;background:var(--success-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px">Tutto registrato!</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:20px">Prenotazione e anagrafica aggiornate automaticamente.</div>
-    </div>
-    <div style="background:var(--bg2);border-radius:var(--r);padding:14px;margin-bottom:16px">
-      <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px">Riepilogo</div>
-      <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Cliente</span><strong>${b.clienteNome}</strong></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Imbarcazione</span><span>${b.barca}</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Data uscita</span><span>${b.data}</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Importo</span><strong style="color:var(--navy)">${fmtEur(b.importo)}</strong></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Pagamento</span><span>${b.statoPagamento}</span></div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <button class="btn btn-sm" onclick="closeModal();showPage('bookings')">→ Vai a prenotazioni</button>
-      ${c?`<button class="btn btn-sm btn-navy" onclick="closeModal();showPage('clients');setTimeout(()=>openClientDetail(${c.id}),50)">→ Scheda cliente</button>`:'<button class="btn btn-sm" onclick="closeModal()">Chiudi</button>'}
-    </div>`);
-  renderBookings();
-}
 function deleteBooking(id){
   if(!confirm('Eliminare questa prenotazione?'))return;
-  id = String(id);
-  const bk=bookings.find(function(x){return x && idEq(x.id,id);});
-  var oldBoatName=bk?bk.barca:null;
-  if(bk){
-    syncBoatCalendar(bk,false);
-    if(bk.clienteId){
-      const c=clients.find(function(x){return x && idEq(x.id,bk.clienteId);});
-      if(c){c.prenotazioni=safeArr(c.prenotazioni).filter(function(p){return !idEq(p,id);});persistClient(c.id);}
-    }
-    tasks.forEach(function(t){if(t && idEq(t.bookingId,id)){t.stato='Completato';persistTask(t.id);}});
-  }
-  bookings=bookings.filter(function(x){return x && !idEq(x.id,id);});
-  saveData();
-  rtdbDelete('bookings/'+id);
-  if(oldBoatName)persistBoatByName(oldBoatName);
-  closeModal();renderBookings();renderDailyBar();renderStats();
-  setTimeout(rtdbRead,300);
+  const bk=bookings.find(x=>x&&idEq(x.id,id));
+  if(bk){syncBoatCalendar(bk,false);persistBoatByName(bk.barca);}
+  bookings=bookings.filter(x=>x&&!idEq(x.id,id));
+  saveData();rtdbDelete('bookings/'+id);closeModal();renderBookings();renderDailyBar();
 }
 
 // ==================== FLEET ====================
-function getBandPrice(boat,m){boat=normalizeBoat(boat);for(const b of boat.bands)if((b.months||[]).includes(m))return b.price;return 0;}
+function getBandPrice(boat,m){
+  boat=normalizeBoat(boat);
+  for(const b of boat.bands)if((b.months||[]).includes(m))return b.price;
+  return boat.priceFullDay||0;
+}
 function getDayInfo(boat,key){
   boat=normalizeBoat(boat);
-  var parts=String(key).split('-').map(Number);
-  var monthIndex = (parts[1]||1)-1;
-  if(boat.overrides && boat.overrides[key]!==undefined)return{price:Number(boat.overrides[key])||0,over:true};
+  const parts=String(key).split('-').map(Number);
+  const monthIndex=(parts[1]||1)-1;
+  if(boat.overrides&&boat.overrides[key]!==undefined)return{price:Number(boat.overrides[key])||0,over:true};
   return{price:getBandPrice(boat,monthIndex),over:false};
 }
 
 function renderFleet(){
   normalizeAllData();
-  var tabsEl=document.getElementById('fleet-tabs');
-  var cardEl=document.getElementById('fleet-card');
-  if(!tabsEl||!cardEl) return;
-  if(!boats.length){cardEl.innerHTML='<div class="empty">Nessuna imbarcazione presente</div>';return;}
-  tabsEl.innerHTML=boats.map((b,i)=>`<div style="display:flex;align-items:center;gap:2px"><button class="btn${i===activeBoat?' btn-navy':''}" onclick="activeBoat=${i};renderFleet()">${b.name}</button>${i===activeBoat&&boats.length>1?`<button class="btn btn-sm btn-danger" title="Rimuovi ${b.name}" onclick="removeBoat(${i})" style="padding:4px 8px;border-radius:0 var(--r) var(--r) 0;border-left:none;margin-left:-1px">✕</button>`:''}</div>`).join('')+`<button class="btn" style="border-style:dashed" onclick="openAddBoatModal()">+ Aggiungi</button>`;
+  const tabsEl=document.getElementById('fleet-tabs');
+  const cardEl=document.getElementById('fleet-card');
+  if(!tabsEl||!cardEl)return;
+  if(!boats.length){cardEl.innerHTML='<div class="empty">Nessuna imbarcazione</div>';return;}
+  tabsEl.innerHTML=boats.map((b,i)=>`
+    <div style="display:flex;align-items:center;gap:2px">
+      <button class="btn${i===activeBoat?' btn-navy':''}" onclick="activeBoat=${i};renderFleet()">${b.name}</button>
+    </div>`).join('')+`<button class="btn" style="border-style:dashed" onclick="openAddBoatModal()">+ Aggiungi</button>`;
   const boat=boats[activeBoat];
   const firstDay=new Date(calYear,calMonth,1).getDay();
   const offset=firstDay===0?6:firstDay-1;
@@ -1437,27 +1223,31 @@ function renderFleet(){
     const key=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     const{price,over}=getDayInfo(boat,key);
     const booked=boat.bookings[key];
-    const cls='cal-day'+(booked?' booked':over?' override':'');
-    const pc=booked?'var(--danger)':over?'var(--success)':'var(--navy)';
-    cells+=`<div class="${cls}" onclick="openFleetDay('${key}')"><div style="font-size:11px;color:var(--text3)">${d}</div><div style="font-size:11px;font-weight:600;color:${pc}">${booked?'Pren.':'€'+price}</div></div>`;
+    const isPending=booked&&booked.status==='pending';
+    const cls='cal-day'+(booked?(isPending?' pending-day':' booked'):(over?' override':''));
+    const pc=booked?(isPending?'var(--warn)':'var(--danger)'):over?'var(--success)':'var(--navy)';
+    cells+=`<div class="${cls}" onclick="openFleetDay('${key}')"><div style="font-size:11px;color:var(--text3)">${d}</div><div style="font-size:11px;font-weight:600;color:${pc}">${booked?(isPending?'⏳':'Pren.'):'€'+price}</div></div>`;
   }
   cardEl.innerHTML=`
   <div class="card">
     <div style="display:grid;grid-template-columns:110px 1fr;gap:16px;margin-bottom:16px">
       <div style="width:110px;height:82px;border-radius:var(--r);background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden" onclick="document.getElementById('bp${boat.id}').click()">
-        ${boat.photo?`<img src="${boat.photo}" style="width:100%;height:100%;object-fit:cover">`:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M9 5l1-2h4l1 2"/></svg>`}
+        ${boat.photo?`<img src="${boat.photo}" style="width:100%;height:100%;object-fit:cover">`:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3"/></svg>`}
         <input type="file" id="bp${boat.id}" accept="image/*" style="display:none" onchange="loadBoatPhoto(event,${activeBoat})">
       </div>
       <div class="g2" style="gap:8px">
         <div class="field" style="margin:0"><label>Nome</label><input value="${boat.name}" onchange="boats[${activeBoat}].name=this.value;saveData();persistBoat(boats[${activeBoat}].id);renderFleet()"></div>
         <div class="field" style="margin:0"><label>Tipo</label><input value="${boat.type}" onchange="boats[${activeBoat}].type=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
         <div class="field" style="margin:0"><label>Lunghezza</label><input value="${boat.length}" onchange="boats[${activeBoat}].length=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
-        <div class="field" style="margin:0"><label>Passeggeri</label><input value="${boat.passengers}" onchange="boats[${activeBoat}].passengers=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
+        <div class="field" style="margin:0"><label>Passeggeri max</label><input value="${boat.passengers}" onchange="boats[${activeBoat}].passengers=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
         <div class="field" style="margin:0"><label>Motore</label><input value="${boat.engine}" onchange="boats[${activeBoat}].engine=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
         <div class="field" style="margin:0"><label>Porto base</label><input value="${boat.homeport}" onchange="boats[${activeBoat}].homeport=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
-        <div class="field" style="margin:0"><label>Scad. assicurazione</label><input type="date" value="${boat.scadAssicurazione||''}" onchange="boats[${activeBoat}].scadAssicurazione=this.value;saveData();persistBoat(boats[${activeBoat}].id);checkBoatDocs()"></div>
-        <div class="field" style="margin:0"><label>Scad. revisione</label><input type="date" value="${boat.scadRevisione||''}" onchange="boats[${activeBoat}].scadRevisione=this.value;saveData();persistBoat(boats[${activeBoat}].id);checkBoatDocs()"></div>
-        <div class="field" style="margin:0"><label>Scad. licenza</label><input type="date" value="${boat.scadLicenza||''}" onchange="boats[${activeBoat}].scadLicenza=this.value;saveData();persistBoat(boats[${activeBoat}].id);checkBoatDocs()"></div>
+        <div class="field" style="margin:0"><label>Visibile sul sito</label>
+          <select onchange="boats[${activeBoat}].visible=this.value==='true';saveData();persistBoat(boats[${activeBoat}].id)">
+            <option value="true" ${boat.visible!==false?'selected':''}>Sì — visibile sul sito</option>
+            <option value="false" ${boat.visible===false?'selected':''}>No — nascosta</option>
+          </select>
+        </div>
       </div>
     </div>
     <div class="card-title">Fasce prezzo</div>
@@ -1473,9 +1263,9 @@ function renderFleet(){
       ${DOWS.map(d=>`<div class="cal-dow">${d}</div>`).join('')}${cells}
     </div>
     <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
-      <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--white);border:0.5px solid var(--border);display:inline-block"></span>Fascia</span>
+      <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--danger-bg);border:0.5px solid var(--danger);display:inline-block"></span>Confermata</span>
+      <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--warn-bg);border:0.5px solid var(--warn);display:inline-block"></span>In attesa</span>
       <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#E8F5E8;border:0.5px solid #1B7A3E;display:inline-block"></span>Prezzo custom</span>
-      <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--danger-bg);border:0.5px solid var(--danger);display:inline-block"></span>Prenotato</span>
     </div>
   </div>`;
 }
@@ -1483,348 +1273,195 @@ function renderFleet(){
 function loadBoatPhoto(e,i){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{boats[i].photo=ev.target.result;saveData();renderFleet()};r.readAsDataURL(f);}
 
 function openFleetDay(key){
-  const boat=normalizeBoat(boats[activeBoat]);
-  boats[activeBoat]=boat;
+  const boat=normalizeBoat(boats[activeBoat]);boats[activeBoat]=boat;
   const parts=String(key).split('-').map(Number);
-  const y=parts[0], monthIndex=(parts[1]||1)-1, d=parts[2];
+  const y=parts[0],monthIndex=(parts[1]||1)-1,d=parts[2];
   const band=getBandPrice(boat,monthIndex);
-  const over=boat.overrides ? boat.overrides[key] : undefined;
-  const booked=boat.bookings ? boat.bookings[key] : false;
+  const over=boat.overrides?boat.overrides[key]:undefined;
+  const booked=boat.bookings?boat.bookings[key]:false;
   modal(`
     <div class="modal-title">${d} ${MONTHS[monthIndex]} ${y} — ${boat.name}<button class="modal-close" onclick="closeModal()">×</button></div>
-    <div style="padding:8px 10px;background:var(--info-bg);color:var(--info);border-radius:var(--r);font-size:12px;margin-bottom:10px">Puoi lasciare il prezzo vuoto per usare la fascia stagionale, oppure inserire un prezzo diverso valido solo per questo giorno.</div>
     <div class="field"><label>Prezzo fascia stagionale</label><input value="€${band}" readonly style="background:var(--bg2);color:var(--text3)"></div>
-    <div class="field"><label>Prezzo personalizzato per questo giorno</label><input type="number" id="day-ov" value="${over!==undefined?over:''}" placeholder="Es. 900"></div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-      <input type="checkbox" id="day-booked" ${booked?'checked':''} style="width:16px;height:16px;accent-color:var(--navy)">
-      <label for="day-booked" style="font-size:13px;cursor:pointer">Giorno prenotato</label>
-    </div>
+    <div class="field"><label>Prezzo personalizzato (solo questo giorno)</label><input type="number" id="day-ov" value="${over!==undefined?over:''}" placeholder="Lascia vuoto per usare la fascia"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
-      ${over!==undefined?`<button class="btn btn-sm btn-danger" onclick="removeOverride('${key}')">Rimuovi prezzo custom</button>`:''}
+      ${over!==undefined?`<button class="btn btn-sm btn-danger" onclick="removeOverride('${key}')">Rimuovi custom</button>`:''}
       <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
       <button class="btn btn-sm btn-navy" onclick="saveFleetDay('${key}')">Salva</button>
     </div>`);
 }
 
 function saveFleetDay(key){
-  const boat=normalizeBoat(boats[activeBoat]);
-  boats[activeBoat]=boat;
+  const boat=normalizeBoat(boats[activeBoat]);boats[activeBoat]=boat;
   const ov=document.getElementById('day-ov').value;
-  const booked=document.getElementById('day-booked').checked;
-  if(ov!=='' && !isNaN(Number(ov))) boat.overrides[key]=Number(ov); else delete boat.overrides[key];
-  const was=boat.bookings[key];
-  if(booked)boat.bookings[key]=true;else delete boat.bookings[key];
-  saveData();persistBoat(boat.id);closeModal();
-  if(booked&&!was&&confirm('Giorno segnato come prenotato. Vuoi creare una nuova prenotazione?')){
-    showPage('bookings');setTimeout(()=>openBookingForm(null),50);
-  }else{renderFleet();}
+  if(ov!==''&&!isNaN(Number(ov)))boat.overrides[key]=Number(ov);else delete boat.overrides[key];
+  saveData();persistBoat(boat.id);closeModal();renderFleet();
 }
 function removeOverride(key){boats[activeBoat]=normalizeBoat(boats[activeBoat]);delete boats[activeBoat].overrides[key];saveData();persistBoat(boats[activeBoat].id);closeModal();renderFleet();}
+
 function openAddBoatModal(){
   modal(`
     <div class="modal-title">Nuova imbarcazione<button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="field"><label>Nome</label><input id="nb-nome" placeholder="es. Nettuno II"></div>
     <div class="g2">
-      <div class="field"><label>Tipo</label><input id="nb-tipo" placeholder="es. Catamarano"></div>
+      <div class="field"><label>Tipo</label><input id="nb-tipo" placeholder="es. Gommone"></div>
       <div class="field"><label>Porto base</label><input id="nb-porto" value="Messina"></div>
+      <div class="field"><label>Passeggeri max</label><input id="nb-pass" type="number" value="10"></div>
+      <div class="field"><label>Lunghezza</label><input id="nb-len" placeholder="es. 8m"></div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
       <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
       <button class="btn btn-sm btn-navy" onclick="saveNewBoat()">Aggiungi</button>
     </div>`);
 }
+
 function saveNewBoat(){
-  const _nb={id:nextBoatId++,name:v('nb-nome')||'Nuova barca',type:v('nb-tipo'),length:'',passengers:'',engine:'',homeport:v('nb-porto')||'Messina',photo:null,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}};boats.push(_nb);rtdbWrite('boats/'+_nb.id,_nb);
+  const nb={id:nextBoatId++,name:v('nb-nome')||'Nuova barca',type:v('nb-tipo'),length:v('nb-len'),passengers:v('nb-pass'),engine:'',homeport:v('nb-porto')||'Messina',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}};
+  boats.push(nb);
+  rtdbWrite('boats/'+nb.id,nb);
   activeBoat=boats.length-1;saveData();closeModal();renderFleet();
-}
-function removeBoat(i){
-  if(!confirm(`Eliminare "${boats[i].name}" dalla flotta? Questa azione non è reversibile.`))return;var oldId=boats[i].id;boats.splice(i,1);
-  activeBoat=Math.max(0,Math.min(activeBoat,boats.length-1));
-  saveData();rtdbDelete('boats/'+oldId);renderFleet();
 }
 
 // ==================== CLIENTS ====================
 function renderClients(){
   const q=(document.getElementById('cli-search')||{}).value||'';
-  const filtered=clients.filter(c=>(c.nome+' '+c.cognome+c.email+(c.tags||[]).join(' ')).toLowerCase().includes(q.toLowerCase()));
+  const filtered=clients.filter(c=>(c.nome+' '+c.cognome+(c.email||'')+(c.tags||[]).join(' ')).toLowerCase().includes(q.toLowerCase()));
   document.getElementById('cli-stats').innerHTML=[
     {l:'Clienti totali',v:clients.length},
     {l:'Con prenotazioni',v:clients.filter(c=>(c.prenotazioni||[]).length>0).length},
     {l:'Con documento',v:clients.filter(c=>c.docName).length},
   ].map(x=>`<div class="stat-card"><div class="stat-label">${x.l}</div><div class="stat-value" style="font-size:18px">${x.v}</div></div>`).join('');
   document.getElementById('cli-table').innerHTML=filtered.length===0?`<div class="empty">Nessun cliente</div>`:`
-  <table class="tbl">
-    <thead><tr><th>Cliente</th><th>Email</th><th>Telefono</th><th>Indirizzo</th><th>Doc.</th><th>Tag</th><th>Pren.</th><th></th></tr></thead>
-    <tbody>${filtered.map(c=>`
-      <tr style="cursor:pointer" onclick="openClientDetail(${c.id})">
-        <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${initials(c.nome+' '+c.cognome)}</div><div style="font-weight:600">${c.nome} ${c.cognome}</div></div></td>
-        <td style="font-size:12px">${c.email}</td>
-        <td style="font-size:12px">${c.tel}</td>
-        <td style="font-size:12px;color:var(--text3)">${c.indirizzo||'—'}</td>
-        <td>${c.docName?`<span style="font-size:11px;color:var(--success)">✓ caricato</span>`:`<span style="font-size:11px;color:var(--text3)">—</span>`}</td>
-        <td>${(c.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</td>
-        <td style="font-weight:600">${(c.prenotazioni||[]).length}</td>
-        <td><button class="btn btn-xs" onclick="event.stopPropagation();openClientDetail(${c.id})">✎</button></td>
-      </tr>`).join('')}
-    </tbody>
-  </table>`;
+  <table class="tbl"><thead><tr><th>Cliente</th><th>Email</th><th>Telefono</th><th>Tag</th><th>Pren.</th><th></th></tr></thead>
+  <tbody>${filtered.map(c=>`<tr style="cursor:pointer" onclick="openClientDetail(${c.id})">
+    <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${initials(c.nome+' '+c.cognome)}</div><div style="font-weight:600">${c.nome} ${c.cognome}</div></div></td>
+    <td style="font-size:12px">${c.email||'—'}</td>
+    <td style="font-size:12px">${c.tel||'—'}</td>
+    <td>${(c.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</td>
+    <td style="font-weight:600">${(c.prenotazioni||[]).length}</td>
+    <td><button class="btn btn-xs" onclick="event.stopPropagation();openClientEdit(${c.id})">✎</button></td>
+  </tr>`).join('')}</tbody></table>`;
 }
 
 function openClientDetail(id){
   const c=clients.find(x=>x.id===id);if(!c)return;
+  const cBks=bookings.filter(b=>b.clienteId===c.id);
+  const totale=cBks.reduce((s,b)=>s+Number(b.importo||0),0);
   modal(`
-    <div class="modal-title"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="width:42px;height:42px;font-size:14px">${initials(c.nome+' '+c.cognome)}</div><div><div>${c.nome} ${c.cognome}</div><div style="font-size:12px;font-weight:400;color:var(--text3)">${c.email}</div></div></div><button class="modal-close" onclick="closeModal()">×</button></div>
-    <div class="g2" style="font-size:13px;gap:6px;margin-bottom:10px">
+    <div class="modal-title"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="width:40px;height:40px;font-size:14px">${initials(c.nome+' '+c.cognome)}</div><div><div>${c.nome} ${c.cognome}</div><div style="font-size:12px;font-weight:400;color:var(--text3)">${c.email||'—'}</div></div></div><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="g2" style="font-size:13px;margin-bottom:10px">
       <div><span style="color:var(--text3)">Tel: </span>${c.tel||'—'}</div>
-      <div><span style="color:var(--text3)">Indirizzo: </span>${c.indirizzo||'—'}</div>
+      <div><span style="color:var(--text3)">Residenza: </span>${c.indirizzo||'—'}</div>
     </div>
-    <div style="margin-bottom:10px">${(c.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}<input id="new-tag-${id}" placeholder="+ tag" style="border:none;background:transparent;font-size:12px;color:var(--navy);width:70px;outline:none" onkeydown="if(event.key==='Enter'){addTag(${id},this.value);this.value=''}"></div>
-    <div class="card-title">Documento d'identità</div>
-    ${c.docName ? `
-      <div style="border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:8px">
-        ${c.docData && c.docType && c.docType.startsWith('image/') ? 
-          `<img src="${c.docData}" style="width:100%;max-height:220px;object-fit:contain;background:#f0f0f0;display:block">` :
-          `<div style="padding:20px;text-align:center;background:var(--bg2)">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="1.5" style="margin-bottom:6px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-            <div style="font-size:13px;font-weight:600;color:var(--navy)">PDF caricato</div>
-          </div>`
-        }
-        <div style="padding:8px 10px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between">
-          <span style="font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${c.docName}</span>
-          <div style="display:flex;gap:6px;margin-left:8px">
-            ${c.docData ? `<a href="${c.docData}" download="${c.docName}" class="btn btn-xs btn-navy">↓ Scarica</a>` : ''}
-            <button class="btn btn-xs btn-danger" onclick="removeDoc(${id})">✕ Rimuovi</button>
-          </div>
-        </div>
-      </div>` :
-      `<div class="doc-zone" onclick="document.getElementById('doc-up-${id}').click()" style="margin-bottom:8px">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:6px;display:block;margin-left:auto;margin-right:auto"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-        <div style="font-weight:500;margin-bottom:3px">Carica documento d'identità</div>
-        <div style="font-size:11px">JPG, PNG o PDF — max 5MB</div>
+    <div class="admin-only" style="background:var(--bg2);border-radius:var(--r);padding:10px;margin-bottom:10px">
+      <div class="g2">
+        <div><div class="stat-label">Fatturato totale</div><div style="font-size:16px;font-weight:700;color:var(--navy)">${fmtEur(totale)}</div></div>
+        <div><div class="stat-label">Prenotazioni</div><div style="font-size:16px;font-weight:700;color:var(--navy)">${cBks.length}</div></div>
       </div>
-      <input type="file" id="doc-up-${id}" accept="image/*,.pdf" style="display:none" onchange="uploadDoc(${id},this)">`
-    }
-    ${c.note?`<div style="margin-top:10px;padding:8px 10px;background:var(--bg2);border-radius:var(--r);font-size:13px">${c.note}</div>`:''}
-    <div style="margin-top:10px">
-      <div class="card-title">Statistiche cliente</div>
-      ${(function(){
-        const cBks=bookings.filter(b=>b.clienteId===c.id||b.clienteNome.toLowerCase().includes((c.nome+' '+c.cognome).toLowerCase()));
-        const totale=cBks.reduce((s,b)=>s+Number(b.importo||0),0);
-        const barcaCount={};cBks.forEach(b=>{barcaCount[b.barca]=(barcaCount[b.barca]||0)+1;});
-        const barcaPref=Object.entries(barcaCount).sort((a,b)=>b[1]-a[1])[0];
-        const mesiCount={};cBks.forEach(b=>{if(b.data){const m=new Date(b.data).getMonth();mesiCount[m]=(mesiCount[m]||0)+1;}});
-        const mesePref=Object.entries(mesiCount).sort((a,b)=>b[1]-a[1])[0];
-        const lastBk=cBks.sort((a,b)=>new Date(b.data)-new Date(a.data))[0];
-        return '<div class="g2" style="gap:8px;margin-bottom:10px">'+
-          '<div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px"><div class="stat-label">Fatturato totale</div><div style="font-size:16px;font-weight:700;color:var(--navy)">'+fmtEur(totale)+'</div></div>'+
-          '<div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px"><div class="stat-label">N. prenotazioni</div><div style="font-size:16px;font-weight:700;color:var(--navy)">'+cBks.length+'</div></div>'+
-          '<div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px"><div class="stat-label">Barca preferita</div><div style="font-size:13px;font-weight:600">'+(barcaPref?barcaPref[0]:'—')+'</div></div>'+
-          '<div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px"><div class="stat-label">Mese preferito</div><div style="font-size:13px;font-weight:600">'+(mesePref?MONTHS[mesePref[0]]:'—')+'</div></div>'+
-          '</div>'+
-          (lastBk?'<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Ultima prenotazione: '+lastBk.data+' · '+lastBk.barca+'</div>':'');
-      })()}
-      <div class="card-title">Prenotazioni (${bookings.filter(b=>b.clienteId===c.id||b.clienteNome.toLowerCase().includes((c.nome+' '+c.cognome).toLowerCase())).length})</div>
-      ${(function(){const cBks=bookings.filter(b=>b.clienteId===c.id||b.clienteNome.toLowerCase().includes((c.nome+' '+c.cognome).toLowerCase())).sort((a,b)=>new Date(b.data)-new Date(a.data));return cBks.length===0?'<div style="font-size:13px;color:var(--text3)">Nessuna prenotazione</div>':cBks.map(b=>'<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:13px"><div><div>'+b.data+' · '+b.barca+(b.destinazione?' · '+b.destinazione:'')+'</div><div style="font-size:11px;color:var(--text3)">'+b.statoPagamento+' · '+b.statoFattura+'</div></div><span style="font-weight:600">'+fmtEur(b.importo)+'</span></div>').join('');})()}
     </div>
+    ${c.note?`<div style="padding:8px 10px;background:var(--bg2);border-radius:var(--r);font-size:13px;margin-bottom:10px">${c.note}</div>`:''}
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
       <button class="btn btn-sm btn-danger" onclick="deleteClient(${id})">Elimina</button>
-      <button class="btn btn-sm btn-navy" onclick="closeModal();openClientEdit(${id})">Modifica dati</button>
+      <button class="btn btn-sm btn-navy" onclick="closeModal();openClientEdit(${id})">Modifica</button>
     </div>`);
 }
 
-function uploadDoc(id,input){
-  const f=input.files[0];if(!f)return;
-  if(f.size>5*1024*1024){alert('File troppo grande. Massimo 5MB.');return;}
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    const c=clients.find(x=>x.id===id);
-    c.docData=ev.target.result;c.docName=f.name;c.docType=f.type;
-    saveData();openClientDetail(id);renderClients();
-  };
-  reader.readAsDataURL(f);
-}
-function removeDoc(id){const c=clients.find(x=>x.id===id);c.docData=null;c.docName=null;c.docType=null;saveData();openClientDetail(id);renderClients();}
-function addTag(id,val){const t=val.trim();if(!t)return;const c=clients.find(x=>x.id===id);if(!(c.tags||[]).includes(t)){c.tags=c.tags||[];c.tags.push(t);}saveData();openClientDetail(id);renderClients();}
-function deleteClient(id){if(!confirm('Eliminare questo cliente?'))return;clients=clients.filter(x=>x.id!==id);saveData();
-  var _cli=id?clients.find(x=>x.id===id):clients[clients.length-1];
-  if(_cli) rtdbWrite('clients/'+_cli.id,_cli);
-  closeModal();renderClients();}
-
-function openClientFormFromLead(leadId){
-  const l=leads.find(x=>x.id===leadId);
-  const parts=(l.nome||'').split(' ');
-  openClientFormInner(null,{nome:parts[0]||'',cognome:parts.slice(1).join(' ')||'',email:l.email,tel:l.tel},leadId);
-}
-function openClientForm(id){
-  const c=id?clients.find(x=>x.id===id):null;
-  openClientFormInner(id,c,null);
-}
-function openClientEdit(id){openClientForm(id);}
-function openClientFormInner(id,prefill,leadId){
-  const p=prefill||{};
+function openClientEdit(id){
+  const c=id?clients.find(x=>x.id===id):{};
+  const p=c||{};
   modal(`
-    <div class="modal-title">${id?'Modifica cliente':'Nuova scheda cliente'}<button class="modal-close" onclick="closeModal()">×</button></div>
-    ${leadId?`<div style="padding:6px 10px;background:var(--success-bg);border-radius:var(--r);font-size:12px;color:var(--success);margin-bottom:12px">Da lead: ${leads.find(x=>x.id===leadId)?.nome||''}</div>`:''}
+    <div class="modal-title">${id?'Modifica cliente':'Nuovo cliente'}<button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="g2">
       <div class="field"><label>Nome</label><input id="nc-nome" value="${p.nome||''}"></div>
       <div class="field"><label>Cognome</label><input id="nc-cogn" value="${p.cognome||''}"></div>
       <div class="field"><label>Email</label><input id="nc-email" value="${p.email||''}"></div>
       <div class="field"><label>Telefono</label><input id="nc-tel" value="${p.tel||''}"></div>
     </div>
-    <div class="field"><label>Indirizzo di residenza</label><input id="nc-addr" value="${p.indirizzo||''}" placeholder="Via, Città, CAP, Provincia"></div>
+    <div class="field"><label>Indirizzo di residenza</label><input id="nc-addr" value="${p.indirizzo||''}"></div>
     <div class="field"><label>Note</label><textarea id="nc-note">${p.note||''}</textarea></div>
-    <div class="field"><label>Documento d'identità</label>
-      <div class="doc-zone" id="dz" onclick="document.getElementById('nc-doc').click()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:3px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
-        Carica documento (JPG, PNG, PDF)
-      </div>
-      <input type="file" id="nc-doc" accept="image/*,.pdf" style="display:none" onchange="previewFormDoc(this)">
-      <div id="doc-prev"></div>
-    </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
       <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
-      <button class="btn btn-sm btn-navy" onclick="saveClientForm(${id||'null'},${leadId||'null'})">Salva</button>
+      <button class="btn btn-sm btn-navy" onclick="saveClientForm(${id||'null'})">Salva</button>
     </div>`);
-  window._formDoc={data:p.docData||null,name:p.docName||null,type:p.docType||null};
 }
-function previewFormDoc(input){
-  const f=input.files[0];if(!f)return;
-  document.getElementById('dz').style.display='none';
-  document.getElementById('doc-prev').innerHTML=`<div class="doc-thumb"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg><span>${f.name}</span></div>`;
-  const r=new FileReader();r.onload=ev=>{window._formDoc={data:ev.target.result,name:f.name,type:f.type}};r.readAsDataURL(f);
-}
-function saveClientForm(id,leadId){
-  const nome=v('nc-nome');const cogn=v('nc-cogn');if(!nome)return;
-  const docInfo=window._formDoc||{};
+function openClientForm(id){openClientEdit(id);}
+
+function saveClientForm(id){
+  const nome=v('nc-nome');if(!nome)return;
   if(id){
     const c=clients.find(x=>x.id===id);
-    Object.assign(c,{nome,cognome:cogn,email:v('nc-email'),tel:v('nc-tel'),indirizzo:v('nc-addr'),note:v('nc-note')});
-    if(docInfo.name){c.docData=docInfo.data;c.docName=docInfo.name;c.docType=docInfo.type;}
+    Object.assign(c,{nome,cognome:v('nc-cogn'),email:v('nc-email'),tel:v('nc-tel'),indirizzo:v('nc-addr'),note:v('nc-note')});
+    persistClient(id);
   }else{
-    const nc={id:nextClientId++,nome,cognome:cogn,email:v('nc-email'),tel:v('nc-tel'),indirizzo:v('nc-addr'),docData:docInfo.data||null,docName:docInfo.name||null,docType:docInfo.type||null,tags:[],note:v('nc-note'),prenotazioni:[]};
+    const nc={id:nextClientId++,nome,cognome:v('nc-cogn'),email:v('nc-email'),tel:v('nc-tel'),indirizzo:v('nc-addr'),docData:null,docName:null,docType:null,tags:[],note:v('nc-note'),prenotazioni:[]};
     clients.push(nc);
-    if(leadId){const l=leads.find(x=>x.id===leadId);if(l){l.clienteId=nc.id;persistLead(l.id);}}
+    rtdbWrite('clients/'+nc.id,nc);
   }
-  saveData();
-  var _cli=id?clients.find(x=>x.id===id):clients[clients.length-1];
-  if(_cli) rtdbWrite('clients/'+_cli.id,_cli);
-  closeModal();renderClients();
+  saveData();closeModal();renderClients();
+}
+
+function deleteClient(id){
+  if(!confirm('Eliminare questo cliente?'))return;
+  clients=clients.filter(x=>x.id!==id);
+  saveData();rtdbDelete('clients/'+id);closeModal();renderClients();
 }
 
 function exportCSV(){
-  const rows=[['Nome','Cognome','Email','Telefono','Indirizzo','Tag','Note','N.Prenotazioni']];
-  clients.forEach(c=>rows.push([c.nome,c.cognome,c.email,c.tel,c.indirizzo,(c.tags||[]).join(';'),c.note,(c.prenotazioni||[]).length]));
+  const rows=[['Nome','Cognome','Email','Telefono','Indirizzo','Note']];
+  clients.forEach(c=>rows.push([c.nome,c.cognome,c.email,c.tel,c.indirizzo,c.note]));
   const csv=rows.map(r=>r.map(x=>'"'+(String(x||'')).replace(/"/g,'""')+'"').join(',')).join('\r\n');
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='clienti_chartme.csv';a.click();
 }
+
 function importCSV(e){
   const file=e.target.files[0];if(!file)return;
   const r=new FileReader();
   r.onload=ev=>{
-    const lines=ev.target.result.split(/\r?\n/).slice(1);
-    let added=0;
+    const lines=ev.target.result.split(/\r?\n/).slice(1);let added=0;
     lines.forEach(line=>{
       if(!line.trim())return;
       const cols=[];let cur='',inQ=false;
       for(let i=0;i<line.length;i++){if(line[i]==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else{inQ=!inQ;}}else if(line[i]===','&&!inQ){cols.push(cur.trim());cur='';}else{cur+=line[i];}}
       cols.push(cur.trim());
       if(!cols[0])return;
-      clients.push({id:nextClientId++,nome:cols[0]||'',cognome:cols[1]||'',email:cols[2]||'',tel:cols[3]||'',indirizzo:cols[4]||'',docData:null,docName:null,docType:null,tags:(cols[5]||'').split(';').filter(Boolean),note:cols[6]||'',prenotazioni:[]});
-      added++;
+      const nc={id:nextClientId++,nome:cols[0]||'',cognome:cols[1]||'',email:cols[2]||'',tel:cols[3]||'',indirizzo:cols[4]||'',docData:null,docName:null,docType:null,tags:[],note:cols[5]||'',prenotazioni:[]};
+      clients.push(nc);rtdbWrite('clients/'+nc.id,nc);added++;
     });
-    saveData();persistAllLocalAndRemote();renderClients();alert(added+' clienti importati correttamente');
+    saveData();renderClients();alert(added+' clienti importati');
   };
   r.readAsText(file,'UTF-8');e.target.value='';
 }
 
 // ==================== STATS ====================
 function renderStats(){
+  if(!window._isAdmin) return;
   const yearSel=document.getElementById('stats-year');
-  const years=[...new Set(bookings.map(b=>b.data?b.data.slice(0,4):'2024'))].sort();
-  if(years.length===0)years.push(String(new Date().getFullYear()));
+  const years=[...new Set(bookings.filter(b=>b.status!=='pending'&&b.status!=='rejected').map(b=>b.data?b.data.slice(0,4):'2025'))].sort();
+  if(!years.length)years.push(String(new Date().getFullYear()));
   yearSel.innerHTML=years.map(y=>`<option>${y}</option>`).join('');
   const selYear=yearSel.value||years[years.length-1];
   yearSel.value=selYear;
-
-  const bkYear=bookings.filter(b=>b.data&&b.data.startsWith(selYear));
+  const bkYear=bookings.filter(b=>b.data&&b.data.startsWith(selYear)&&b.status!=='pending'&&b.status!=='rejected');
   const totFatt=bkYear.reduce((s,b)=>s+Number(b.importo||0),0);
   const totInc=bkYear.reduce((s,b)=>s+(b.statoPagamento==='Saldato'?Number(b.importo||0):Number(b.acconto||0)),0);
-  const totIVA=totFatt*22/122;
-  const totImpon=totFatt-totIVA;
-  const totDaInc=totFatt-totInc;
-  const countFatt=bkYear.filter(b=>b.statoFattura==='Fatturato').length;
-  const countNF=bkYear.filter(b=>b.statoFattura==='Non fatturato').length;
   const monthlyFatt=Array(12).fill(0);
-  const monthlyInc=Array(12).fill(0);
-  bkYear.forEach(b=>{const m=parseInt((b.data||'').slice(5,7))-1;if(m>=0&&m<12){monthlyFatt[m]+=Number(b.importo||0);monthlyInc[m]+=(b.statoPagamento==='Saldato'?Number(b.importo||0):Number(b.acconto||0));}});
+  bkYear.forEach(b=>{const m=parseInt((b.data||'').slice(5,7))-1;if(m>=0&&m<12)monthlyFatt[m]+=Number(b.importo||0);});
   const maxBar=Math.max(...monthlyFatt,1);
-  const byOrigine={};leads.forEach(l=>{byOrigine[l.origine]=(byOrigine[l.origine]||0)+1;});
   const byBarca={};bkYear.forEach(b=>{byBarca[b.barca]=(byBarca[b.barca]||0)+1;});
-
   document.getElementById('stats-content').innerHTML=`
   <div class="g4" style="margin-bottom:16px">
-    <div class="stat-card"><div class="stat-label">Fatturato lordo ${selYear}</div><div class="stat-value">${fmtEur(totFatt)}</div></div>
-    <div class="stat-card"><div class="stat-label">Imponibile (IVA 22%)</div><div class="stat-value">${fmtEur(Math.round(totImpon))}</div><div class="stat-sub">IVA: ${fmtEur(Math.round(totIVA))}</div></div>
+    <div class="stat-card"><div class="stat-label">Fatturato ${selYear}</div><div class="stat-value">${fmtEur(totFatt)}</div></div>
     <div class="stat-card"><div class="stat-label">Incassato</div><div class="stat-value" style="color:var(--success)">${fmtEur(totInc)}</div></div>
-    <div class="stat-card"><div class="stat-label">Da incassare</div><div class="stat-value" style="color:${totDaInc>0?'var(--danger)':'var(--success)'}">${fmtEur(totDaInc)}</div></div>
-  </div>
-  <div class="g2" style="margin-bottom:16px">
-    <div class="card">
-      <div class="card-title">Andamento mensile ${selYear}</div>
-      <div class="bar-wrap">
-        ${monthlyFatt.map((val,i)=>{
-          const hFatt=val>0?Math.max(Math.round((val/maxBar)*120),4):0;
-          const hInc=monthlyInc[i]>0?Math.max(Math.round((monthlyInc[i]/maxBar)*120),2):0;
-          return`<div class="bar-col">
-            <div class="bar-val">${val>0?fmtEur(val):''}</div>
-            <div style="display:flex;align-items:flex-end;gap:1px;height:120px">
-              <div class="bar" style="height:${hFatt}px;background:var(--navy);flex:1" title="Fatturato: ${fmtEur(val)}"></div>
-              <div class="bar" style="height:${hInc}px;background:var(--gold);flex:1" title="Incassato: ${fmtEur(monthlyInc[i])}"></div>
-            </div>
-            <div class="bar-label">${MONTHS_SHORT[i]}</div>
-          </div>`;
-        }).join('')}
-      </div>
-      <div style="display:flex;gap:16px;margin-top:8px">
-        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:var(--navy);border-radius:2px;display:inline-block"></span>Fatturato</span>
-        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:var(--gold);border-radius:2px;display:inline-block"></span>Incassato</span>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Stato fatturazione ${selYear}</div>
-      <div style="display:flex;gap:20px;align-items:center;margin-bottom:14px">
-        <div><div style="font-size:32px;font-weight:800;color:var(--success)">${countFatt}</div><div style="font-size:12px;color:var(--text3)">Fatturate</div></div>
-        <div><div style="font-size:32px;font-weight:800;color:var(--danger)">${countNF}</div><div style="font-size:12px;color:var(--text3)">Da fatturare</div></div>
-        <div><div style="font-size:32px;font-weight:800;color:var(--navy)">${bkYear.length}</div><div style="font-size:12px;color:var(--text3)">Prenotazioni tot.</div></div>
-      </div>
-      <div class="card-title">Origine lead</div>
-      ${Object.entries(byOrigine).sort((a,b)=>b[1]-a[1]).map(([k,val])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:0.5px solid var(--border);font-size:13px"><span>${k}</span><div style="display:flex;align-items:center;gap:8px"><div style="width:${Math.round(val/leads.length*120)}px;height:6px;background:var(--navy);border-radius:3px"></div><span style="font-weight:600;min-width:20px;text-align:right">${val}</span></div></div>`).join('')}
-    </div>
+    <div class="stat-card"><div class="stat-label">Da incassare</div><div class="stat-value" style="color:var(--danger)">${fmtEur(totFatt-totInc)}</div></div>
+    <div class="stat-card"><div class="stat-label">Prenotazioni</div><div class="stat-value">${bkYear.length}</div></div>
   </div>
   <div class="card">
-    <div class="card-title">Prenotazioni per imbarcazione (${selYear})</div>
-    <div style="display:flex;gap:16px;flex-wrap:wrap">
-      ${Object.entries(byBarca).map(([barca,cnt])=>{
-        const bkB=bkYear.filter(b=>b.barca===barca);
-        const totB=bkB.reduce((s,b)=>s+Number(b.importo||0),0);
-        return`<div style="flex:1;min-width:160px;background:var(--bg2);border-radius:var(--r);padding:12px 14px"><div style="font-weight:700;color:var(--navy);margin-bottom:4px">${barca}</div><div style="font-size:22px;font-weight:700">${cnt}</div><div style="font-size:12px;color:var(--text3)">prenotazioni</div><div style="font-size:14px;font-weight:600;color:var(--navy-light);margin-top:4px">${fmtEur(totB)}</div></div>`;
-      }).join('')||`<div style="color:var(--text3);font-size:13px">Nessuna prenotazione per l'anno selezionato</div>`}
+    <div class="card-title">Andamento mensile ${selYear}</div>
+    <div class="bar-wrap">
+      ${monthlyFatt.map((val,i)=>`<div class="bar-col"><div class="bar-val">${val>0?fmtEur(val):''}</div><div style="display:flex;align-items:flex-end;height:120px"><div class="bar" style="height:${val>0?Math.max(Math.round((val/maxBar)*120),4):0}px;flex:1"></div></div><div class="bar-label">${MONTHS_SHORT[i]}</div></div>`).join('')}
     </div>
   </div>
-  <div class="card">
-    <div class="card-title">Riepilogo IVA ${selYear}</div>
-    <table class="tbl" style="max-width:480px">
-      <thead><tr><th>Voce</th><th style="text-align:right">Importo</th></tr></thead>
-      <tbody>
-        <tr><td>Fatturato lordo</td><td style="text-align:right;font-weight:600">${fmtEur(totFatt)}</td></tr>
-        <tr><td>IVA a debito (22%)</td><td style="text-align:right;font-weight:600;color:var(--danger)">${fmtEur(Math.round(totIVA))}</td></tr>
-        <tr><td>Imponibile netto</td><td style="text-align:right;font-weight:700;color:var(--navy)">${fmtEur(Math.round(totImpon))}</td></tr>
-      </tbody>
-    </table>
-    <div style="font-size:11px;color:var(--text3);margin-top:8px">* Calcolo indicativo IVA 22% a stacco. Verifica con il tuo commercialista per il regime fiscale applicabile.</div>
-  </div>`;
+  <div class="card"><div class="card-title">Per imbarcazione</div><div style="display:flex;gap:12px;flex-wrap:wrap">${Object.entries(byBarca).map(([n,cnt])=>`<div style="flex:1;min-width:140px;background:var(--bg2);border-radius:var(--r);padding:12px"><div style="font-weight:700;color:var(--navy)">${n}</div><div style="font-size:22px;font-weight:700">${cnt}</div><div style="font-size:12px;color:var(--text3)">prenotazioni</div></div>`).join('')}</div></div>`;
 }
-
 
 // ==================== TASKS ====================
 function renderTasks(){
@@ -1832,53 +1469,32 @@ function renderTasks(){
   const counts={};TASK_STATI.forEach(s=>counts[s]=tasks.filter(t=>t.stato===s).length);
   const overdue=tasks.filter(t=>t.stato!=='Completato'&&t.scadenza&&t.scadenza<today()).length;
   document.getElementById('task-stats').innerHTML=[
-    {l:'Task aperti',v:counts['Aperto']||0,c:''},
-    {l:'In corso',v:counts['In corso']||0,c:'var(--warn)'},
-    {l:'Scaduti',v:overdue,c:'var(--danger)'},
-    {l:'Completati',v:counts['Completato']||0,c:'var(--success)'},
+    {l:'Aperti',v:counts['Aperto']||0},{l:'In corso',v:counts['In corso']||0,c:'var(--warn)'},
+    {l:'Scaduti',v:overdue,c:'var(--danger)'},{l:'Completati',v:counts['Completato']||0,c:'var(--success)'},
   ].map(x=>`<div class="stat-card"><div class="stat-label">${x.l}</div><div class="stat-value" style="font-size:18px;${x.c?'color:'+x.c:''}">${x.v}</div></div>`).join('');
-
-  document.getElementById('task-filters').innerHTML=[
-    {l:'Tutti',v:'Tutti'},
-    ...TASK_STATI.map(s=>({l:s+' ('+( counts[s]||0)+')',v:s})),
-    {l:'Scaduti',v:'Scaduti'},
-  ].map(x=>`<span class="pill${taskFilter===x.v?' active':''}" onclick="taskFilter='${x.v}';renderTasks()">${x.l}</span>`).join('');
-
+  document.getElementById('task-filters').innerHTML=[{l:'Tutti',v:'Tutti'},...TASK_STATI.map(s=>({l:s,v:s})),{l:'Scaduti',v:'Scaduti'}]
+    .map(x=>`<span class="pill${taskFilter===x.v?' active':''}" onclick="taskFilter='${x.v}';renderTasks()">${x.l}</span>`).join('');
   const filtered=tasks.filter(t=>{
     if(taskFilter==='Tutti')return true;
     if(taskFilter==='Scaduti')return t.stato!=='Completato'&&t.scadenza&&t.scadenza<today();
     return t.stato===taskFilter;
-  }).sort((a,b)=>{
-    const po={Alta:0,Media:1,Bassa:2};
-    return (po[a.priorita]||1)-(po[b.priorita]||1);
-  });
-
-  document.getElementById('task-board').innerHTML=filtered.length===0?`<div class="empty">Nessun task trovato</div>`:`
+  }).sort((a,b)=>({Alta:0,Media:1,Bassa:2}[a.priorita]||1)-({Alta:0,Media:1,Bassa:2}[b.priorita]||1));
+  document.getElementById('task-board').innerHTML=filtered.length===0?`<div class="empty">Nessun task</div>`:`
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">
     ${filtered.map(t=>{
-      const isOverdue=t.stato!=='Completato'&&t.scadenza&&t.scadenza<today();
-      const priColor={Alta:'var(--danger)',Media:'var(--warn)',Bassa:'var(--success)'}[t.priorita]||'var(--text3)';
-      const stato_bg={Aperto:'var(--bg2)',
-        'In corso':'var(--warn-bg)',
-        Completato:'var(--success-bg)'}[t.stato]||'var(--bg2)';
-      return`<div style="background:var(--white);border:1px solid ${isOverdue?'var(--danger)':'var(--border)'};border-left:4px solid ${priColor};border-radius:var(--r);padding:14px;cursor:pointer;transition:box-shadow .15s" onclick="openTaskDetail(${t.id})">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">
-          <div style="font-weight:600;font-size:14px;line-height:1.3;flex:1">${t.titolo}</div>
-          <select style="padding:2px 6px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid;background:${stato_bg};cursor:pointer;appearance:none;-webkit-appearance:none;min-width:80px;text-align:center" onclick="event.stopPropagation()" onchange="updateTaskStato(${t.id},this.value)">
+      const isOv=t.stato!=='Completato'&&t.scadenza&&t.scadenza<today();
+      const pc={Alta:'var(--danger)',Media:'var(--warn)',Bassa:'var(--success)'}[t.priorita]||'var(--text3)';
+      return`<div style="background:var(--white);border:1px solid ${isOv?'var(--danger)':'var(--border)'};border-left:4px solid ${pc};border-radius:var(--r);padding:14px">
+        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px">
+          <div style="font-weight:600;font-size:14px;flex:1">${t.titolo}</div>
+          <select style="padding:2px 6px;border-radius:20px;font-size:11px;border:1px solid var(--border2);background:var(--bg2)" onclick="event.stopPropagation()" onchange="updateTaskStato(${t.id},this.value)">
             ${TASK_STATI.map(s=>`<option${s===t.stato?' selected':''}>${s}</option>`).join('')}
           </select>
         </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-          <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--info-bg);color:var(--navy);font-weight:500">${t.categoria}</span>
-          ${t.barca?`<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--bg2);color:var(--text2)">${t.barca}</span>`:''}
-          ${isOverdue?`<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--danger-bg);color:var(--danger);font-weight:600">Scaduto</span>`:''}
-        </div>
+        <div style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--info-bg);color:var(--navy);display:inline-block;margin-bottom:8px">${t.categoria}</div>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="display:flex;flex-direction:column;gap:1px">
-            <span style="font-size:12px;color:${isOverdue?'var(--danger)':'var(--text3)'};font-weight:${isOverdue?'600':'400'}">${t.scadenza?'↗ '+t.scadenza:''}</span>
-            ${t.assegnatario?`<span style="font-size:11px;color:var(--text3)">👤 ${t.assegnatario}</span>`:''}
-          </div>
-          <button class="btn btn-xs" onclick="event.stopPropagation();openTaskForm(${t.id})" style="font-size:11px">✎</button>
+          <span style="font-size:12px;color:${isOv?'var(--danger)':'var(--text3)'};">${t.scadenza?'↗ '+t.scadenza:''}</span>
+          <button class="btn btn-xs" onclick="openTaskForm(${t.id})">✎</button>
         </div>
         ${t.note?`<div style="margin-top:8px;font-size:12px;color:var(--text2);border-top:0.5px solid var(--border);padding-top:6px">${t.note}</div>`:''}
       </div>`;
@@ -1890,43 +1506,18 @@ function updateTaskStato(id,val){
   const t=tasks.find(x=>x.id===id);if(t){t.stato=val;saveData();persistTask(id);renderTasks();}
 }
 
-function openTaskDetail(id){
-  const t=tasks.find(x=>x.id===id);if(!t)return;
-  const lead=t.leadId?leads.find(x=>x.id===t.leadId):null;
-  const cliente=t.clienteId?clients.find(x=>x.id===t.clienteId):null;
-  modal(`
-    <div class="modal-title">${t.titolo}<button class="modal-close" onclick="closeModal()">×</button></div>
-    <div class="g2" style="margin-bottom:12px">
-      <div><div class="stat-label">Categoria</div>${t.categoria}</div>
-      <div><div class="stat-label">Priorità</div><span style="font-weight:600;color:${{Alta:'var(--danger)',Media:'var(--warn)',Bassa:'var(--success)'}[t.priorita]}">${t.priorita}</span></div>
-      <div><div class="stat-label">Stato</div>${t.stato}</div>
-      <div><div class="stat-label">Scadenza</div>${t.scadenza||'—'}</div>
-      ${t.assegnatario?`<div><div class="stat-label">Assegnatario</div><div style="font-weight:600">👤 ${t.assegnatario}</div></div>`:''}
-      ${t.barca?`<div><div class="stat-label">Imbarcazione</div>${t.barca}</div>`:''}
-    </div>
-    ${t.note?`<div style="padding:10px;background:var(--bg2);border-radius:var(--r);font-size:13px;margin-bottom:12px">${t.note}</div>`:''}
-    ${lead?`<div style="padding:8px 10px;background:var(--info-bg);border-radius:var(--r);font-size:12px;margin-bottom:10px">Collegato a lead: <strong>${lead.nome}</strong></div>`:''}
-    ${cliente?`<div style="padding:8px 10px;background:var(--info-bg);border-radius:var(--r);font-size:12px;margin-bottom:10px">Collegato a cliente: <strong>${cliente.nome} ${cliente.cognome}</strong></div>`:''}
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
-      <button class="btn btn-sm btn-danger" onclick="deleteTask(${id})">Elimina</button>
-      <button class="btn btn-sm btn-navy" onclick="closeModal();openTaskForm(${id})">Modifica</button>
-    </div>`);
-}
-
 function openTaskForm(id){
-  const t=id?tasks.find(x=>x.id===id):{id:null,titolo:'',categoria:'Commerciale',priorita:'Media',stato:'Aperto',scadenza:'',barca:'',note:'',leadId:null,clienteId:null,creatoIl:today()};
+  const t=id?tasks.find(x=>x.id===id):{titolo:'',categoria:'Commerciale',priorita:'Media',stato:'Aperto',scadenza:'',barca:'',note:''};
   modal(`
     <div class="modal-title">${id?'Modifica task':'Nuovo task'}<button class="modal-close" onclick="closeModal()">×</button></div>
-    <div class="field"><label>Titolo</label><input id="tk-titolo" value="${t.titolo}" placeholder="Descrivi il task..."></div>
+    <div class="field"><label>Titolo</label><input id="tk-titolo" value="${t.titolo}"></div>
     <div class="g2">
       <div class="field"><label>Categoria</label><select id="tk-cat">${TASK_CAT.map(c=>`<option${c===t.categoria?' selected':''}>${c}</option>`).join('')}</select></div>
       <div class="field"><label>Priorità</label><select id="tk-pri">${TASK_PRI.map(p=>`<option${p===t.priorita?' selected':''}>${p}</option>`).join('')}</select></div>
       <div class="field"><label>Stato</label><select id="tk-stato">${TASK_STATI.map(s=>`<option${s===t.stato?' selected':''}>${s}</option>`).join('')}</select></div>
       <div class="field"><label>Scadenza</label><input id="tk-scad" type="date" value="${t.scadenza||''}"></div>
-      <div class="field"><label>Imbarcazione (opz.)</label><select id="tk-barca"><option value="">— nessuna —</option>${boats.map(b=>`<option${b.name===t.barca?' selected':''}>${b.name}</option>`).join('')}</select></div>
-      <div class="field"><label>Collega a lead (opz.)</label><select id="tk-lead"><option value="">— nessuno —</option>${leads.map(l=>`<option value="${l.id}"${l.id===t.leadId?' selected':''}>${l.nome}</option>`).join('')}</select></div>
+      <div class="field"><label>Barca</label><select id="tk-barca"><option value="">— nessuna —</option>${boats.map(b=>`<option${b.name===t.barca?' selected':''}>${b.name}</option>`).join('')}</select></div>
     </div>
-    <div class="field"><label>Assegnatario</label><input id="tk-assegnatario" value="${t.assegnatario||''}" placeholder="es. Mario Rossi"></div>
     <div class="field"><label>Note</label><textarea id="tk-note">${t.note||''}</textarea></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
       ${id?`<button class="btn btn-sm btn-danger" onclick="deleteTask(${id})">Elimina</button>`:''}
@@ -1936,141 +1527,70 @@ function openTaskForm(id){
 }
 
 function saveTask(id){
-  const leadVal=document.getElementById('tk-lead').value;
-  const d={titolo:v('tk-titolo'),categoria:v('tk-cat'),priorita:v('tk-pri'),stato:v('tk-stato'),scadenza:v('tk-scad'),barca:v('tk-barca'),note:v('tk-note'),assegnatario:v('tk-assegnatario')||'',leadId:leadVal?parseInt(leadVal):null};
+  const d={titolo:v('tk-titolo'),categoria:v('tk-cat'),priorita:v('tk-pri'),stato:v('tk-stato'),scadenza:v('tk-scad'),barca:v('tk-barca'),note:v('tk-note')};
   if(!d.titolo)return;
-  if(id){Object.assign(tasks.find(x=>x.id===id),d);rtdbWrite('tasks/'+id,tasks.find(x=>x.id===id));}
-  else{const _nt={id:nextTaskId++,...d,clienteId:null,creatoIl:today()};tasks.push(_nt);rtdbWrite('tasks/'+_nt.id,_nt);}
+  if(id){const t=tasks.find(x=>x.id===id);if(t)Object.assign(t,d);persistTask(id);}
+  else{const nt={id:nextTaskId++,...d,creatoIl:today()};tasks.push(nt);rtdbWrite('tasks/'+nt.id,nt);}
   saveData();closeModal();renderTasks();
 }
-function deleteTask(id){if(!confirm('Eliminare questo task?'))return;rtdbDelete('tasks/'+id);tasks=tasks.filter(x=>x.id!==id);saveData();closeModal();renderTasks();}
 
+function deleteTask(id){
+  if(!confirm('Eliminare questo task?'))return;
+  rtdbDelete('tasks/'+id);tasks=tasks.filter(x=>x.id!==id);saveData();closeModal();renderTasks();
+}
 
-// ==================== DAILY BAR (G) ====================
+// ==================== DAILY BAR ====================
 function renderDailyBar(){
   const el=document.getElementById('daily-bar');if(!el)return;
   const todayStr=today();
-  const todayBks=bookings.filter(function(b){
-    if(!b.data)return false;
-    const start=new Date(b.data);
-    const end=new Date(b.data);end.setDate(end.getDate()+(parseInt(b.giorni)||1)-1);
-    const t=new Date(todayStr);
-    return t>=start&&t<=end;
+  const todayBks=bookings.filter(b=>{
+    if(!b.data||b.status==='rejected')return false;
+    const start=new Date(b.data);const end=new Date(b.data);
+    end.setDate(end.getDate()+(parseInt(b.giorni)||1)-1);
+    const t=new Date(todayStr);return t>=start&&t<=end;
   });
-  // Tasks due today
-  const todayTasks=tasks.filter(function(t){return t.scadenza===todayStr&&t.stato!=='Completato';});
-  // Saldi this week
-  const weekEnd=new Date();weekEnd.setDate(weekEnd.getDate()+7);
-  const saldiWk=bookings.filter(function(b){if(b.statoPagamento==='Saldato'||!b.data)return false;const d=new Date(b.data);return d>=new Date(todayStr)&&d<=weekEnd;});
-  // Leads to follow
-  const leadsToFollow=safeArr(leads).map(normalizeLead).filter(function(l){return l.stato==='Nuovo'||l.stato==='Contattato'||l.stato==='Preventivo';}).length;
-
-  var parts=[];
+  const pending=bookings.filter(b=>b.status==='pending');
+  const parts=[];
   parts.push('<span style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;padding-right:12px;border-right:1px solid rgba(201,184,138,.2);margin-right:4px">Oggi</span>');
-
   if(todayBks.length>0){
-    parts.push('<div style="display:flex;align-items:center;gap:6px;padding:2px 10px;background:rgba(201,184,138,.12);border-radius:20px;white-space:nowrap">'+
-      '<span style="font-size:11px;font-weight:700;color:var(--gold)">'+todayBks.length+'</span>'+
-      '<span style="font-size:11px;color:rgba(255,255,255,.7)">uscit'+(todayBks.length===1?'a':'e')+' oggi</span>'+
-      '<span style="font-size:10px;color:rgba(255,255,255,.4)">'+todayBks.map(function(b){return b.barca.split(' ')[0]+' · '+b.clienteNome.split(' ')[0];}).join(' / ')+'</span>'+
-    '</div>');
-  } else {
-    parts.push('<div style="font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap;padding:2px 10px">Nessuna uscita oggi</div>');
+    parts.push(`<div style="display:flex;align-items:center;gap:6px;padding:2px 10px;background:rgba(201,184,138,.12);border-radius:20px;white-space:nowrap"><span style="font-size:11px;font-weight:700;color:var(--gold)">${todayBks.length}</span><span style="font-size:11px;color:rgba(255,255,255,.7)">uscit${todayBks.length===1?'a':'e'} oggi</span></div>`);
+  }else{
+    parts.push('<div style="font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap">Nessuna uscita oggi</div>');
   }
-
-  if(saldiWk.length>0){
-    const totDa=saldiWk.reduce(function(s,b){return s+Number(b.importo||0)-Number(b.acconto||0);},0);
-    parts.push('<div style="display:flex;align-items:center;gap:6px;padding:2px 10px;background:rgba(192,57,43,.15);border-radius:20px;white-space:nowrap;cursor:pointer" data-goto="bookings">'+
-      '<span style="font-size:11px;font-weight:700;color:#F5A89A">'+fmtEur(totDa)+'</span>'+
-      '<span style="font-size:11px;color:rgba(255,255,255,.6)">saldi questa settimana ('+saldiWk.length+')</span>'+
-    '</div>');
+  if(pending.length>0){
+    parts.push(`<div style="display:flex;align-items:center;gap:6px;padding:2px 10px;background:rgba(138,92,0,.25);border-radius:20px;white-space:nowrap;cursor:pointer" onclick="showPage('requests')"><span style="font-size:11px;font-weight:700;color:var(--gold)">${pending.length}</span><span style="font-size:11px;color:rgba(255,255,255,.7)">richiesta${pending.length===1?'':'e'} in attesa</span></div>`);
   }
-
-  if(todayTasks.length>0){
-    parts.push('<div style="display:flex;align-items:center;gap:6px;padding:2px 10px;background:rgba(201,184,138,.1);border-radius:20px;white-space:nowrap;cursor:pointer" data-goto="tasks">'+
-      '<span style="font-size:11px;font-weight:700;color:var(--gold)">'+todayTasks.length+'</span>'+
-      '<span style="font-size:11px;color:rgba(255,255,255,.6)">task in scadenza oggi</span>'+
-    '</div>');
-  }
-
-  if(leadsToFollow>0){
-    parts.push('<div style="display:flex;align-items:center;gap:6px;padding:2px 10px;background:rgba(30,58,110,.4);border-radius:20px;white-space:nowrap;cursor:pointer" data-goto="crm">'+
-      '<span style="font-size:11px;font-weight:700;color:#A8C4F0">'+leadsToFollow+'</span>'+
-      '<span style="font-size:11px;color:rgba(255,255,255,.6)">lead da seguire</span>'+
-    '</div>');
-  }
-
   el.innerHTML=parts.join('<span style="color:rgba(255,255,255,.1);padding:0 4px">·</span>');
-  el.querySelectorAll('[data-goto]').forEach(function(btn){
-    btn.addEventListener('click',function(){showPage(this.getAttribute('data-goto'));});
-  });
 }
 
-
-// ==================== BACKUP / RIPRISTINO ====================
+// ==================== BACKUP ====================
 function downloadBackup(){
-  const payload={version:'chartme_v3',exportedAt:new Date().toISOString(),leads,clients,bookings,boats,tasks,nextLeadId,nextClientId,nextBookingId,nextBoatId,nextTaskId};
+  const payload={version:'chartme_v4',exportedAt:new Date().toISOString(),leads,clients,bookings,boats,tasks};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='chartme_backup_'+today()+'.json';
-  a.click();
-  setTimeout(function(){URL.revokeObjectURL(a.href);},500);
+  a.download='chartme_backup_'+today()+'.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),500);
 }
 
 function restoreBackup(e){
   const file=e.target.files[0];if(!file)return;
-  if(!confirm('Ripristinare questo backup? I dati attuali verranno sostituiti localmente e su Firebase.')){e.target.value='';return;}
+  if(!confirm('Ripristinare questo backup? I dati attuali verranno sostituiti.'))return;
   const r=new FileReader();
-  r.onload=function(ev){
+  r.onload=ev=>{
     try{
       const p=JSON.parse(ev.target.result);
       leads=p.leads||[];clients=p.clients||[];bookings=p.bookings||[];boats=p.boats||[];tasks=p.tasks||[];
-      normalizeAllData(); sortClientsAZ();
-      nextLeadId=Math.max.apply(null,leads.map(function(x){return x.id||0;}).concat([0]))+1;
-      nextClientId=Math.max.apply(null,clients.map(function(x){return x.id||0;}).concat([0]))+1;
-      nextBookingId=Math.max.apply(null,bookings.map(function(x){return x.id||0;}).concat([0]))+1;
-      nextBoatId=Math.max.apply(null,boats.map(function(x){return x.id||0;}).concat([0]))+1;
-      nextTaskId=Math.max.apply(null,tasks.map(function(x){return x.id||0;}).concat([0]))+1;
-      saveData();rtdbPushAll().then(function(){alert('Backup ripristinato correttamente.');renderCRM();renderDailyBar();});
+      normalizeAllData();sortClientsAZ();
+      saveData();alert('Backup ripristinato. Ricarica la pagina.');
     }catch(err){alert('Backup non valido: '+err.message);}
     e.target.value='';
   };
   r.readAsText(file,'UTF-8');
 }
 
-// ==================== RTDB INIT ====================
-function rtdbInitAll() {
-  if(!confirm('Carica TUTTI i dati locali su Firebase Realtime Database?\nFallo solo la prima volta.')) return;
-  var btn = document.querySelector('[onclick="rtdbInitAll()"]');
-  if(btn) { btn.textContent = 'Caricamento...'; btn.disabled = true; }
-  rtdbPushAll().then(function() {
-    alert('✅ Dati caricati su Firebase! (' + (leads.length+clients.length+bookings.length+boats.length+tasks.length) + ' record)');
-    if(btn) { btn.textContent = '✓ Caricato'; }
-  }).catch(function(e) {
-    alert('Errore: ' + e.message);
-    if(btn) { btn.textContent = '↑ Carica su Firebase'; btn.disabled = false; }
-  });
-}
-
 // ==================== INIT ====================
-// Render immediato con i dati inclusi/locali, poi sincronizza Firebase.
-checkBoatDocs();
-checkLeadFollowups();
-checkPaymentAlerts();
-try { renderCRM(); renderDailyBar(); } catch(e) { console.warn('initial render error', e); }
-
-// Prima lettura Firebase dopo il render locale + polling ogni 20 secondi.
-rtdbRead().then(function(){
-  try { checkBoatDocs(); checkLeadFollowups(); checkPaymentAlerts(); renderCRM(); renderDailyBar(); } catch(e) {}
-});
-setInterval(rtdbRead, 20000);
-// Year selector
-const allYears=[...new Set([...bookings.map(b=>b.data?.slice(0,4)).filter(Boolean),String(new Date().getFullYear())])].sort();
-const yearSel=document.getElementById('stats-year');
-allYears.forEach(y=>{const o=document.createElement('option');o.textContent=y;yearSel.appendChild(o);});
-yearSel.value=allYears[allYears.length-1];
-saveData();
+try{renderCRM();renderDailyBar();}catch(e){}
 </script>
 </body>
 </html>
