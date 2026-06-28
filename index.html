@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ChartME — Gestionale interno v6.8</title>
+<title>ChartME — Gestionale interno v6.9</title>
 <style>
 :root {
   --gold: #C9B88A;
@@ -1104,33 +1104,57 @@ function updateEmailPreview(){
   const prev=document.getElementById('email-preview');
   if(prev) prev.innerHTML=emailPreviewHtml(body);
 }
+function emailCausaleDate(b){
+  const raw = b && (b.data || b.startDate || '');
+  if(!raw) return '[mese e giorno]';
+  const d = new Date(raw);
+  if(isNaN(d.getTime())) return raw;
+  const mesi = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+  return mesi[d.getMonth()]+' '+d.getDate();
+}
 function buildBookingStatusEmailDraft(b,status){
   const nome=emailClientName(b);
-  const barca=(b&&b.barca)||'imbarcazione selezionata';
+  const barca=(b&&b.barca)||'[Nome imbarcazione]';
   const periodo=emailPeriodLabel(b);
   const importo=emailPlainAmount(b);
   const passeggeri=(b&&b.passeggeri)?String(b.passeggeri):'—';
-  const ref=(b&&((b._key||b.id)))?String(b._key||b.id):'';
+  const ref=(b&&((b._key||b.id)))?String(b._key||b.id):'—';
+  const causaleData=emailCausaleDate(b);
   if(status==='confirmed'){
     return {
       subject:'Conferma prenotazione ChartME — '+barca,
       body:
-`Gentile ${nome},
+`Gentile Cliente,
 
-la sua richiesta di prenotazione è stata confermata.
+siamo lieti di confermarle che la sua richiesta di prenotazione è stata presa in carico e riservata nel nostro gestionale.
 
 Riepilogo prenotazione:
-• Imbarcazione: ${barca}
-• Periodo: ${periodo}
-• Passeggeri: ${passeggeri}
-• Importo totale: ${importo}${ref?`\n• Riferimento richiesta: ${ref}`:''}
+Imbarcazione: ${barca}
+Periodo/Data: ${periodo}
+Passeggeri: ${passeggeri}
+Importo totale: ${importo}
+Riferimento richiesta: ${ref}
 
-La prenotazione risulta ora riservata nel nostro gestionale.
-Il nostro team la contatterà per eventuali dettagli operativi, documentazione e modalità di saldo.
+A breve le invieremo tutti i dettagli relativi alla prenotazione e le informazioni utili per il noleggio. Per qualsiasi esigenza o chiarimento, rimaniamo a sua completa disposizione.
 
-Grazie per aver scelto ChartME.
+Orario di check-in/out: 9:30 / 18:30
 
-ChartME
+L’imbarcazione verrà consegnata con il pieno di carburante e dovrà essere riconsegnata con il pieno fatto.
+
+Per completare la procedura, è necessario effettuare il pagamento tramite bonifico bancario:
+
+IBAN: IT95I0503616500CC0651325718
+Intestatario: CHART ME S.R.L.
+Causale: ${nome} – Noleggio imbarcazione – ${causaleData}
+
+Una volta ricevuto il pagamento e la documentazione richiesta, vi invieremo la conferma definitiva.
+
+Si informa che, qualora il pagamento non venga effettuato entro 24 ore dalla prenotazione, la prenotazione verrà automaticamente cancellata.
+
+La ringraziamo per aver scelto i nostri servizi e non vediamo l’ora di accoglierla a bordo.
+
+Cordiali saluti,
+Il team di ChartME
 Messina · Sicilia
 info@chartme.it`
     };
@@ -1138,26 +1162,16 @@ info@chartme.it`
   return {
     subject:'Richiesta prenotazione ChartME — disponibilità non confermata',
     body:
-`Gentile ${nome},
+`Gentile Cliente,
 
-grazie per averci contattato.
+La ringraziamo per averci contattato e per l’interesse nei nostri servizi.
 
-Purtroppo al momento non possiamo confermare la richiesta per:
+Purtroppo, con dispiacere, dobbiamo comunicarle che non ci è possibile soddisfare la sua richiesta di prenotazione per il periodo indicato, in quanto non abbiamo disponibilità.
 
-• Imbarcazione: ${barca}
-• Periodo: ${periodo}
-• Passeggeri: ${passeggeri}${ref?`\n• Riferimento richiesta: ${ref}`:''}
-
-Motivo / nota:
-La data o l'imbarcazione richiesta non risulta disponibile.
-
-Restiamo a disposizione per proporle una soluzione alternativa, un'altra data o un'altra imbarcazione.
+Restiamo a disposizione per valutare insieme eventuali date alternative e speriamo di poterla accogliere in un’altra occasione.
 
 Cordiali saluti,
-
-ChartME
-Messina · Sicilia
-info@chartme.it`
+il team di ChartME.`
   };
 }
 function renderEmailEditorModal(id,status){
