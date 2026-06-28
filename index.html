@@ -164,6 +164,13 @@ body.employee-mode .admin-only{display:none!important}
 body.employee-mode .admin-only-cell{display:none!important}
 body.employee-mode .employee-only{display:block!important}
 .employee-only{display:none}
+.home-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.mini-list{display:flex;flex-direction:column;gap:8px}
+.mini-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 10px;background:var(--bg2);border-radius:var(--r);font-size:13px}
+.progress-track{height:8px;background:var(--bg3);border-radius:20px;overflow:hidden}
+.progress-fill{height:100%;background:var(--navy);border-radius:20px}
+@media(max-width:900px){.home-grid{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,1fr)}.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr}.g2{grid-template-columns:1fr}}
 
 /* PHOTO MANAGER */
 .photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
@@ -205,8 +212,11 @@ body.employee-mode .employee-only{display:block!important}
     </div>
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('crm')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>CRM Lead
+    <button class="nav-tab active" onclick="showPage('home')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 7.5L8 2l6 5.5"/><path d="M4 7v7h8V7"/></svg>Home
+    </button>
+    <button class="nav-tab" onclick="showPage('crm')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Lead
     </button>
     <button class="nav-tab" onclick="showPage('requests')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8h6M5 5h3M5 11h4"/></svg>Richieste
@@ -215,20 +225,20 @@ body.employee-mode .employee-only{display:block!important}
     <button class="nav-tab" onclick="showPage('bookings')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>Prenotazioni
     </button>
+    <button class="nav-tab" onclick="showPage('tasks')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8l2 2 4-4"/></svg>Task
+    </button>
+    <button class="nav-tab" onclick="showPage('clients')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-2.8 2.2-5 5-5s5 2.2 5 5"/><circle cx="12" cy="5" r="2"/><path d="M15 14c0-2.2-1.3-4-4.5"/></svg>Anagrafica
+    </button>
     <button class="nav-tab admin-only" onclick="showPage('fleet')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11l6-8 6 8"/><path d="M1 14l14-3"/></svg>Imbarcazioni
     </button>
     <button class="nav-tab admin-only" onclick="showPage('photos')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="6" cy="7" r="1.2"/><path d="M3.5 12l3.5-3 2.5 2 1.8-1.5 1.7 2.5"/></svg>Foto
     </button>
-    <button class="nav-tab" onclick="showPage('clients')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-2.8 2.2-5 5-5s5 2.2 5 5"/><circle cx="12" cy="5" r="2"/><path d="M15 14c0-2.2-1.3-4-4.5"/></svg>Anagrafica
-    </button>
     <button class="nav-tab admin-only" onclick="showPage('stats')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,12 5,6 9,9 15,2"/><path d="M1 15h14"/></svg>Statistiche
-    </button>
-    <button class="nav-tab" onclick="showPage('tasks')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8l2 2 4-4"/></svg>Task
     </button>
   </div>
   <div style="margin-left:auto;padding:0 12px;display:flex;align-items:center;gap:8px">
@@ -243,6 +253,16 @@ body.employee-mode .employee-only{display:block!important}
 </div>
 
 <div id="daily-bar" style="background:var(--navy-dark);border-bottom:1px solid rgba(201,184,138,.2);padding:7px 16px;display:flex;gap:16px;overflow-x:auto;flex-wrap:nowrap;align-items:center"></div>
+
+
+<!-- ===================== HOME ===================== -->
+<div id="page-home" class="page active">
+  <div class="section-header">
+    <h2>Home</h2>
+    <span style="font-size:13px;color:var(--text3)">Riepilogo operativo ChartME</span>
+  </div>
+  <div id="home-content"></div>
+</div>
 
 <!-- ===================== RICHIESTE (NUOVO) ===================== -->
 <div id="page-requests" class="page">
@@ -263,7 +283,7 @@ body.employee-mode .employee-only{display:block!important}
 </div>
 
 <!-- ===================== CRM ===================== -->
-<div id="page-crm" class="page active">
+<div id="page-crm" class="page">
   <div class="section-header">
     <h2>CRM Lead</h2>
     <button class="btn btn-navy" onclick="openLeadForm(null)">+ Nuovo lead</button>
@@ -496,7 +516,7 @@ function showApp(user) {
   // Start real-time listener
   startRealtimeListener();
   // Initial render
-  try { renderCRM(); renderDailyBar(); } catch(e) {}
+  try { renderHome(); renderCRM(); renderDailyBar(); } catch(e) {}
 }
 
 window._showUserMenu = function() {
@@ -535,7 +555,7 @@ function startRealtimeListener() {
 
     nextLeadId    = leads.length    ? Math.max(...leads.map(x=>x.id||0))+1    : 1;
     nextClientId  = clients.length  ? Math.max(...clients.map(x=>x.id||0))+1  : 1;
-    nextBookingId = bookings.length ? Math.max(...bookings.map(x=>x.id||0))+1 : 1;
+    nextBookingId = bookings.length ? Math.max(...bookings.map(x=>Number(x.id)||0))+1 : 1;
     nextBoatId    = boats.length    ? Math.max(...boats.map(x=>x.id||0))+1    : 1;
     nextTaskId    = tasks.length    ? Math.max(...tasks.map(x=>x.id||0))+1    : 1;
 
@@ -546,6 +566,7 @@ function startRealtimeListener() {
     const active = document.querySelector('.page.active');
     if(active) {
       const fn = {
+        'page-home': 'renderHome',
         'page-crm': 'renderCRM',
         'page-requests': 'renderRequests',
         'page-bookings': 'renderBookings',
@@ -602,7 +623,7 @@ const DEFAULT_BANDS=[
 function safeArr(x){
   if(!x) return [];
   if(Array.isArray(x)) return x.filter(v => v && typeof v === 'object');
-  if(typeof x === 'object') return Object.keys(x).map(k => x[k]).filter(v => v && typeof v === 'object');
+  if(typeof x === 'object') return Object.keys(x).map(k => { const v=x[k]; return (v && typeof v === 'object') ? {...v, _key:k, id:(v.id!==undefined?v.id:k)} : v; }).filter(v => v && typeof v === 'object');
   return [];
 }
 
@@ -675,29 +696,58 @@ function normalizeBoat(b){
 
 function normalizeBooking(b){
   b=b||{};
-  b.id=Number(b.id)||0;
+  b.id=(b.id!==undefined&&b.id!==null&&b.id!=='')?b.id:(b._key||String(Date.now()));
   b.clienteId=b.clienteId?Number(b.clienteId):null;
-  b.clienteNome=b.clienteNome||'';
-  b.barca=b.barca||'';
-  b.data=b.data||'';
-  b.giorni=Number(b.giorni)||1;
-  b.passeggeri=Number(b.passeggeri)||0;
-  b.importo=Number(b.importo)||0;
+
+  const fullName=(b.clienteNome||b.customerName||`${b.firstName||''} ${b.lastName||''}`).trim();
+  b.clienteNome=fullName||'';
+  b.firstName=b.firstName||b.nome||'';
+  b.lastName=b.lastName||b.cognome||'';
+  if((!b.firstName||!b.lastName)&&b.clienteNome){
+    const parts=b.clienteNome.split(' ');
+    b.firstName=b.firstName||parts.shift()||'';
+    b.lastName=b.lastName||parts.join(' ');
+  }
+
+  b.barca=b.barca||b.boatName||'';
+  b.boatName=b.boatName||b.barca||'';
+  b.data=b.data||b.date||'';
+  b.date=b.date||b.data||'';
+  b.endDate=b.endDate||'';
+  b.giorni=Number(b.giorni)||((b.endDate&&b.data)?Math.max(1,Math.round((new Date(b.endDate)-new Date(b.data))/86400000)):1);
+  b.passeggeri=Number(b.passeggeri||b.guests)||0;
+  b.guests=b.guests||b.passeggeri||0;
+  b.importo=Number(b.importo||b.price)||0;
+  b.price=b.price||b.importo||0;
   b.acconto=Number(b.acconto)||0;
   b.statoPagamento=b.statoPagamento||'Non pagato';
   b.statoFattura=b.statoFattura||'Non fatturato';
-  // NEW: booking status for website requests
   b.status=b.status||'manual'; // pending | confirmed | rejected | manual
-  // NEW: full client data from website form
+
   b.email=b.email||'';
-  b.telefono=b.telefono||'';
-  b.codiceFiscale=b.codiceFiscale||'';
-  b.residenza=b.residenza||'';
-  b.tipoDocumento=b.tipoDocumento||'';
-  b.numeroDocumento=b.numeroDocumento||'';
-  b.dataEmissione=b.dataEmissione||'';
-  b.dataScadenza=b.dataScadenza||'';
-  b.note=b.note||'';
+  b.telefono=b.telefono||b.phone||'';
+  b.phone=b.phone||b.telefono||'';
+
+  b.codiceFiscale=b.codiceFiscale||b.fiscalCode||'';
+  b.fiscalCode=b.fiscalCode||b.codiceFiscale||'';
+  b.partitaIva=b.partitaIva||b.vatNumber||'';
+  b.ragioneSociale=b.ragioneSociale||b.companyName||'';
+  b.pec=b.pec||'';
+  b.sdi=b.sdi||b.codiceDestinatario||'';
+
+  b.cittaResidenza=b.cittaResidenza||b.residenceCity||'';
+  b.indirizzoResidenza=b.indirizzoResidenza||b.residenceAddress||b.address||'';
+  b.cap=b.cap||b.zip||'';
+  b.provincia=b.provincia||b.province||'';
+  b.nazione=b.nazione||b.country||'Italia';
+  b.residenza=b.residenza||[b.indirizzoResidenza,b.cittaResidenza,b.cap,b.provincia].filter(Boolean).join(', ');
+
+  b.tipoDocumento=b.tipoDocumento||b.documentType||'';
+  b.numeroDocumento=b.numeroDocumento||b.documentNumber||'';
+  b.documentNumber=b.documentNumber||b.numeroDocumento||'';
+  b.dataEmissione=b.dataEmissione||b.documentIssueDate||'';
+  b.dataScadenza=b.dataScadenza||b.documentExpiryDate||'';
+  b.note=b.note||b.notes||'';
   return b;
 }
 
@@ -731,9 +781,39 @@ function normalizeLead(l){
   return l;
 }
 
+
+function normalizeClient(c){
+  c=c||{};
+  c.id=(c.id!==undefined&&c.id!==null&&c.id!=='')?Number(c.id):(Number(c._key)||nextClientId++);
+  c.nome=c.nome||c.firstName||'';
+  c.cognome=c.cognome||c.lastName||'';
+  c.email=c.email||'';
+  c.tel=c.tel||c.telefono||c.phone||'';
+  c.telefono=c.tel;
+  c.codiceFiscale=c.codiceFiscale||c.fiscalCode||'';
+  c.partitaIva=c.partitaIva||c.vatNumber||'';
+  c.ragioneSociale=c.ragioneSociale||c.companyName||'';
+  c.pec=c.pec||'';
+  c.sdi=c.sdi||c.codiceDestinatario||'';
+  c.indirizzoResidenza=c.indirizzoResidenza||c.residenceAddress||c.indirizzo||c.address||'';
+  c.cittaResidenza=c.cittaResidenza||c.residenceCity||'';
+  c.cap=c.cap||c.zip||'';
+  c.provincia=c.provincia||c.province||'';
+  c.nazione=c.nazione||c.country||'Italia';
+  c.indirizzo=c.indirizzoResidenza||c.indirizzo||'';
+  c.tipoDocumento=c.tipoDocumento||c.documentType||'';
+  c.numeroDocumento=c.numeroDocumento||c.documentNumber||'';
+  c.dataEmissione=c.dataEmissione||c.documentIssueDate||'';
+  c.dataScadenza=c.dataScadenza||c.documentExpiryDate||'';
+  c.tags=Array.isArray(c.tags)?c.tags:[];
+  c.note=c.note||'';
+  c.prenotazioni=Array.isArray(c.prenotazioni)?c.prenotazioni:[];
+  return c;
+}
+
 function normalizeAllData(){
   leads=safeArr(leads).map(normalizeLead).filter(x=>x&&x.id);
-  clients=safeArr(clients).filter(x=>x&&x.id);
+  clients=safeArr(clients).map(normalizeClient).filter(x=>x&&x.id);
   bookings=safeArr(bookings).map(normalizeBooking).filter(x=>x&&x.id);
   boats=safeArr(boats).map(normalizeBoat).filter(x=>x&&(x.id||x.name));
   tasks=safeArr(tasks).map(normalizeTask).filter(x=>x&&x.id);
@@ -768,6 +848,7 @@ function badgeLead(s){return{Nuovo:'badge-new',Contattato:'badge-contact',Preven
 function fmtEur(n){return'€'+Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:0})}
 function today(){return new Date().toISOString().slice(0,10)}
 function idEq(a,b){return String(a)===String(b)}
+function jsArg(x){return JSON.stringify(String(x))}
 function v(id){const el=document.getElementById(id);return el?el.value.trim():''}
 function clientSortKey(c){return((c.cognome||'')+' '+(c.nome||'')).trim().toLowerCase()}
 function sortClientsAZ(){
@@ -785,7 +866,7 @@ function loadData(){
       normalizeAllData();sortClientsAZ();
       nextLeadId=Math.max(...leads.map(x=>x.id||0).concat([0]))+1;
       nextClientId=Math.max(...clients.map(x=>x.id||0).concat([0]))+1;
-      nextBookingId=Math.max(...bookings.map(x=>x.id||0).concat([0]))+1;
+      nextBookingId=Math.max(...bookings.map(x=>Number(x.id)||0).concat([0]))+1;
       nextBoatId=Math.max(...boats.map(x=>x.id||0).concat([0]))+1;
       nextTaskId=Math.max(...tasks.map(x=>x.id||0).concat([0]))+1;
     }
@@ -831,7 +912,8 @@ function showPage(p){
   });
 
   closeModal();
-  if(p==='crm')renderCRM();
+  if(p==='home')renderHome();
+  else if(p==='crm')renderCRM();
   else if(p==='requests')renderRequests();
   else if(p==='bookings')renderBookings();
   else if(p==='fleet')renderFleet();
@@ -839,6 +921,105 @@ function showPage(p){
   else if(p==='clients')renderClients();
   else if(p==='stats')renderStats();
   else if(p==='tasks')renderTasks();
+}
+
+
+// ==================== HOME ====================
+function bookingDays(b){ return Math.max(1, Number(b.giorni)||((b.endDate&&b.data)?Math.round((new Date(b.endDate)-new Date(b.data))/86400000):1)); }
+function isConfirmedBooking(b){ return b && (b.status==='confirmed'||b.status==='manual'); }
+function confirmedBookings(){ return bookings.filter(isConfirmedBooking); }
+function yearOfDate(d){ return String(d||'').slice(0,4)||String(new Date().getFullYear()); }
+function pct(n,d){ return d?Math.round((n/d)*100):0; }
+function splitName(full){ const p=String(full||'').trim().split(/\s+/); return {nome:p.shift()||'', cognome:p.join(' ')}; }
+
+function upsertClientFromBooking(b){
+  if(!b) return null;
+  const cf=(b.codiceFiscale||'').trim().toLowerCase();
+  const email=(b.email||'').trim().toLowerCase();
+  const tel=(b.telefono||'').trim();
+  let c=clients.find(x=>(cf&&String(x.codiceFiscale||'').toLowerCase()===cf) || (email&&String(x.email||'').toLowerCase()===email) || (tel&&String(x.tel||'')===tel));
+  const nm=splitName(b.clienteNome);
+  const payload={
+    nome:b.firstName||nm.nome||'', cognome:b.lastName||nm.cognome||'', email:b.email||'', tel:b.telefono||'', telefono:b.telefono||'',
+    codiceFiscale:b.codiceFiscale||'', partitaIva:b.partitaIva||'', ragioneSociale:b.ragioneSociale||'', pec:b.pec||'', sdi:b.sdi||'',
+    indirizzoResidenza:b.indirizzoResidenza||'', cittaResidenza:b.cittaResidenza||'', cap:b.cap||'', provincia:b.provincia||'', nazione:b.nazione||'Italia',
+    indirizzo:b.indirizzoResidenza||'', tipoDocumento:b.tipoDocumento||'', numeroDocumento:b.numeroDocumento||'', dataEmissione:b.dataEmissione||'', dataScadenza:b.dataScadenza||'',
+    note:''
+  };
+  if(c){
+    Object.keys(payload).forEach(k=>{ if(payload[k] && !c[k]) c[k]=payload[k]; });
+    c.prenotazioni=Array.isArray(c.prenotazioni)?c.prenotazioni:[];
+    if(!c.prenotazioni.some(x=>idEq(x,b.id))) c.prenotazioni.push(b.id);
+    persistClient(c.id);
+  } else {
+    c=normalizeClient({id:nextClientId++,...payload,tags:[],prenotazioni:[b.id],note:''});
+    clients.push(c);
+    rtdbWrite('clients/'+c.id,c);
+  }
+  b.clienteId=c.id;
+  return c.id;
+}
+
+function renderHome(){
+  const el=document.getElementById('home-content'); if(!el) return;
+  normalizeAllData();
+  const y=String(new Date().getFullYear());
+  const confirmed=confirmedBookings();
+  const pending=bookings.filter(b=>b.status==='pending');
+  const todayStr=today();
+  const todayBks=confirmed.filter(b=>b.data===todayStr);
+  const upcoming=confirmed.filter(b=>b.data&&b.data>=todayStr).sort((a,b)=>new Date(a.data)-new Date(b.data)).slice(0,6);
+  const openTasks=tasks.filter(t=>t.stato!=='Completato');
+  const overdue=openTasks.filter(t=>t.scadenza&&t.scadenza<todayStr).length;
+  const openLeads=leads.filter(l=>l.stato!=='Perso'&&l.stato!=='Confermato');
+  const leadConf=leads.filter(l=>l.stato==='Confermato').length;
+  const conv=pct(leadConf,leads.length);
+  const revenueYear=confirmed.filter(b=>yearOfDate(b.data)===y).reduce((s,b)=>s+Number(b.importo||0),0);
+  const incassatoYear=confirmed.filter(b=>yearOfDate(b.data)===y).reduce((s,b)=>s+(b.statoPagamento==='Saldato'?Number(b.importo||0):Number(b.acconto||0)),0);
+  const monthCounts=Array(12).fill(0); confirmed.filter(b=>yearOfDate(b.data)===y).forEach(b=>{const m=Number((b.data||'').slice(5,7))-1;if(m>=0)monthCounts[m]++;});
+  const maxM=Math.max(...monthCounts,1);
+  const boatUse=boats.map(bt=>{
+    const days=confirmed.filter(b=>b.barca===bt.name&&yearOfDate(b.data)===y).reduce((s,b)=>s+bookingDays(b),0);
+    return {name:bt.name,days,rate:Math.min(100,pct(days,184))};
+  }).sort((a,b)=>b.rate-a.rate).slice(0,8);
+
+  el.innerHTML=`
+    <div class="metric-grid">
+      <div class="stat-card"><div class="stat-label">Richieste in attesa</div><div class="stat-value" style="${pending.length?'color:var(--warn)':''}">${pending.length}</div><div class="stat-sub">dal sito</div></div>
+      <div class="stat-card"><div class="stat-label">Prenotazioni oggi</div><div class="stat-value">${todayBks.length}</div><div class="stat-sub">uscite operative</div></div>
+      <div class="stat-card"><div class="stat-label">Lead aperti</div><div class="stat-value">${openLeads.length}</div><div class="stat-sub">da lavorare</div></div>
+      <div class="stat-card"><div class="stat-label">Task aperti</div><div class="stat-value" style="${overdue?'color:var(--danger)':''}">${openTasks.length}</div><div class="stat-sub">${overdue} scaduti</div></div>
+      <div class="stat-card admin-only"><div class="stat-label">Fatturato ${y}</div><div class="stat-value">${fmtEur(revenueYear)}</div><div class="stat-sub">prenotazioni confermate</div></div>
+      <div class="stat-card admin-only"><div class="stat-label">Incassato ${y}</div><div class="stat-value" style="color:var(--success)">${fmtEur(incassatoYear)}</div><div class="stat-sub">saldo + acconti</div></div>
+      <div class="stat-card admin-only"><div class="stat-label">Conversione lead</div><div class="stat-value">${conv}%</div><div class="stat-sub">${leadConf}/${leads.length} confermati</div></div>
+      <div class="stat-card admin-only"><div class="stat-label">Clienti</div><div class="stat-value">${clients.length}</div><div class="stat-sub">anagrafiche totali</div></div>
+    </div>
+    <div class="home-grid">
+      <div>
+        <div class="card">
+          <div class="card-title">Richieste da gestire</div>
+          <div class="mini-list">${pending.slice(0,6).map(b=>`<div class="mini-row"><div><strong>${b.clienteNome||'Cliente'}</strong><div style="font-size:12px;color:var(--text3)">${b.barca||'—'} · ${b.data||'—'}</div></div><button class="btn btn-xs btn-gold" onclick="showPage('requests')">Apri</button></div>`).join('')||'<div class="empty" style="padding:14px">Nessuna richiesta in attesa</div>'}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Prossime prenotazioni</div>
+          <div class="mini-list">${upcoming.map(b=>`<div class="mini-row"><div><strong>${b.data}</strong><div style="font-size:12px;color:var(--text3)">${b.barca} · ${b.clienteNome}</div></div><span class="badge badge-confirmed">Confermata</span></div>`).join('')||'<div class="empty" style="padding:14px">Nessuna prenotazione futura</div>'}</div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title">Lead pipeline</div>
+          <div class="mini-list">${STATI_LEAD.map(st=>{const n=leads.filter(l=>l.stato===st).length;return `<div><div class="mini-row"><span>${st}</span><strong>${n}</strong></div><div class="progress-track"><div class="progress-fill" style="width:${pct(n,Math.max(leads.length,1))}%"></div></div></div>`}).join('')}</div>
+        </div>
+        <div class="card admin-only">
+          <div class="card-title">Saturazione imbarcazioni ${y}</div>
+          <div class="mini-list">${boatUse.map(x=>`<div><div class="mini-row"><span>${x.name}</span><strong>${x.rate}%</strong></div><div class="progress-track"><div class="progress-fill" style="width:${x.rate}%"></div></div><div style="font-size:11px;color:var(--text3);margin-top:2px">${x.days} giorni occupati su stagione stimata</div></div>`).join('')||'<div class="empty" style="padding:14px">Nessun dato</div>'}</div>
+        </div>
+        <div class="card admin-only">
+          <div class="card-title">Prenotazioni per mese ${y}</div>
+          <div class="bar-wrap" style="height:110px">${monthCounts.map((val,i)=>`<div class="bar-col"><div class="bar-val">${val||''}</div><div style="display:flex;align-items:flex-end;height:88px;width:100%"><div class="bar" style="height:${val?Math.max((val/maxM)*88,4):0}px"></div></div><div class="bar-label">${MONTHS_SHORT[i]}</div></div>`).join('')}</div>
+        </div>
+      </div>
+    </div>`;
 }
 
 // ==================== REQUESTS (NUOVO) ====================
@@ -852,119 +1033,92 @@ function updateRequestsBadge(){
 }
 
 function renderRequests(){
-  const pending=bookings.filter(b=>b.status==='pending').sort((a,b)=>new Date(b.creatoIl||b.data)-new Date(a.creatoIl||a.data));
+  const pending=bookings.filter(b=>b.status==='pending').sort((a,b)=>new Date(b.creatoIl||b.createdAt||b.data)-new Date(a.creatoIl||a.createdAt||a.data));
   const listEl=document.getElementById('requests-list');
   const emptyEl=document.getElementById('requests-empty');
   const countEl=document.getElementById('requests-count-label');
   if(!listEl) return;
   countEl.textContent=pending.length>0?pending.length+' richiesta'+(pending.length===1?'':'e')+' in attesa':'';
-  if(pending.length===0){
-    emptyEl.style.display='block';
-    listEl.innerHTML='';
-    return;
-  }
+  if(pending.length===0){ emptyEl.style.display='block'; listEl.innerHTML=''; return; }
   emptyEl.style.display='none';
   listEl.innerHTML=pending.map(b=>`
-    <div class="request-card${b._new?' new':''}" id="req-${b.id}">
+    <div class="request-card${b._new?' new':''}" id="req-${String(b.id).replace(/[^a-zA-Z0-9_-]/g,'')}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div>
-          <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:2px">${b.clienteNome}</div>
+          <div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:2px">${b.clienteNome||'Cliente senza nome'}</div>
           <div style="font-size:12px;color:var(--text3)">${b.email||'—'} · ${b.telefono||'—'}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-weight:700;font-size:18px;color:var(--navy)">${fmtEur(b.importo)}</div>
-          <div style="font-size:11px;color:var(--text3)">${b.creatoIl||b.data}</div>
+          <div class="admin-only" style="font-weight:700;font-size:18px;color:var(--navy)">${b.publicPrice===false?'Su richiesta':fmtEur(b.importo)}</div>
+          <div style="font-size:11px;color:var(--text3)">${(b.creatoIl||b.createdAt||b.data||'').slice(0,19)}</div>
         </div>
       </div>
-      <div class="g3" style="gap:8px;margin-bottom:12px">
-        <div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px">
-          <div class="stat-label">Barca</div>
-          <div style="font-weight:600">${b.barca}</div>
-        </div>
-        <div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px">
-          <div class="stat-label">Data richiesta</div>
-          <div style="font-weight:600">${b.data}</div>
-        </div>
-        <div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px">
-          <div class="stat-label">Passeggeri</div>
-          <div style="font-weight:600">${b.passeggeri||'—'}</div>
-        </div>
+      <div class="g4" style="gap:8px;margin-bottom:12px">
+        <div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px"><div class="stat-label">Barca</div><div style="font-weight:600">${b.barca||'—'}</div></div>
+        <div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px"><div class="stat-label">Partenza</div><div style="font-weight:600">${b.data||'—'}</div></div>
+        <div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px"><div class="stat-label">Rientro</div><div style="font-weight:600">${b.endDate||'—'}</div></div>
+        <div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px"><div class="stat-label">Passeggeri</div><div style="font-weight:600">${b.passeggeri||'—'}</div></div>
       </div>
-      ${b.codiceFiscale||b.numeroDocumento?`
       <div style="background:var(--info-bg);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;font-size:12px">
-        <div style="font-weight:600;color:var(--navy);margin-bottom:6px">Dati cliente</div>
+        <div style="font-weight:600;color:var(--navy);margin-bottom:6px">Dati cliente / fatturazione</div>
         <div class="g2" style="gap:4px">
-          ${b.codiceFiscale?`<div><span style="color:var(--text3)">C.F.: </span><strong>${b.codiceFiscale}</strong></div>`:''}
-          ${b.residenza?`<div><span style="color:var(--text3)">Residenza: </span>${b.residenza}</div>`:''}
-          ${b.tipoDocumento?`<div><span style="color:var(--text3)">Documento: </span>${b.tipoDocumento} ${b.numeroDocumento}</div>`:''}
-          ${b.dataEmissione?`<div><span style="color:var(--text3)">Emissione: </span>${b.dataEmissione}</div>`:''}
-          ${b.dataScadenza?`<div><span style="color:var(--text3)">Scadenza doc.: </span>${b.dataScadenza}</div>`:''}
+          <div><span style="color:var(--text3)">C.F.: </span><strong>${b.codiceFiscale||'—'}</strong></div>
+          <div><span style="color:var(--text3)">P.IVA: </span>${b.partitaIva||'—'}</div>
+          <div><span style="color:var(--text3)">Ragione sociale: </span>${b.ragioneSociale||'—'}</div>
+          <div><span style="color:var(--text3)">PEC/SDI: </span>${[b.pec,b.sdi].filter(Boolean).join(' · ')||'—'}</div>
+          <div><span style="color:var(--text3)">Indirizzo: </span>${b.indirizzoResidenza||'—'}</div>
+          <div><span style="color:var(--text3)">Città/CAP/Prov.: </span>${[b.cittaResidenza,b.cap,b.provincia].filter(Boolean).join(' · ')||'—'}</div>
+          <div><span style="color:var(--text3)">Documento: </span>${[b.tipoDocumento,b.numeroDocumento].filter(Boolean).join(' ')||'—'}</div>
+          <div><span style="color:var(--text3)">Emissione/scadenza: </span>${[b.dataEmissione,b.dataScadenza].filter(Boolean).join(' → ')||'—'}</div>
         </div>
-      </div>`:''}
+      </div>
       ${b.note?`<div style="padding:8px 10px;background:var(--warn-bg);border-radius:var(--r);font-size:12px;margin-bottom:12px"><strong>Note:</strong> ${b.note}</div>`:''}
       <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button class="btn btn-sm btn-danger" onclick="rejectRequest(${b.id})" style="min-width:90px">
-          ✕ Rifiuta
-        </button>
-        <button class="btn btn-sm btn-success" onclick="acceptRequest(${b.id})" style="min-width:90px;background:var(--success);color:#fff;border-color:var(--success)">
-          ✓ Accetta
-        </button>
+        <button class="btn btn-sm btn-danger" onclick="rejectRequest(${jsArg(b.id)})" style="min-width:90px">✕ Rifiuta</button>
+        <button class="btn btn-sm btn-success" onclick="acceptRequest(${jsArg(b.id)})" style="min-width:90px;background:var(--success);color:#fff;border-color:var(--success)">✓ Accetta</button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 function acceptRequest(id){
-  if(!confirm('Confermi la prenotazione? Verrà inviata email di conferma al cliente.')) return;
-  const b=bookings.find(x=>x.id===id);
+  if(!confirm('Confermi la prenotazione? Verrà creata o aggiornata automaticamente l’anagrafica cliente.')) return;
+  const b=bookings.find(x=>x&&idEq(x.id,id));
   if(!b) return;
   b.status='confirmed';
-  b.statoPagamento='Non pagato';
+  b.statoPagamento=b.statoPagamento||'Non pagato';
+  const clientId=upsertClientFromBooking(b);
+  if(clientId) b.clienteId=clientId;
   saveData();
-  // Update in Firebase — Cloud Function will trigger the email
-  rtdbWrite('bookings/'+id, b);
-  renderRequests();
-  updateRequestsBadge();
-  renderBookings();
-  // Show confirmation
+  rtdbWrite('bookings/'+String(b.id), b);
+  renderRequests(); updateRequestsBadge(); renderBookings(); renderHome(); renderDailyBar();
   modal(`
     <div style="text-align:center;padding:16px 0">
       <div style="width:52px;height:52px;background:var(--success-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
-      <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px">Prenotazione confermata!</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:20px">Email di conferma con istruzioni pagamento inviata automaticamente a <strong>${b.email}</strong></div>
+      <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px">Prenotazione confermata</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px">Il cliente è stato creato o aggiornato in Anagrafica con i dati fiscali disponibili.</div>
       <button class="btn btn-navy" onclick="closeModal()">Chiudi</button>
-    </div>
-  `);
+    </div>`);
 }
 
 function rejectRequest(id){
   modal(`
     <div class="modal-title">Rifiuta richiesta<button class="modal-close" onclick="closeModal()">×</button></div>
-    <div class="field">
-      <label>Motivo (opzionale, verrà incluso nell'email)</label>
-      <textarea id="reject-reason" placeholder="es. La data selezionata non è disponibile. Ti invitiamo a contattarci per trovare un'alternativa." style="min-height:80px"></textarea>
-    </div>
+    <div class="field"><label>Motivo interno / email futura</label><textarea id="reject-reason" placeholder="es. Data non disponibile" style="min-height:80px"></textarea></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
-      <button class="btn btn-sm btn-danger" onclick="confirmReject(${id})">Rifiuta e invia email</button>
-    </div>
-  `);
+      <button class="btn btn-sm btn-danger" onclick="confirmReject(${jsArg(id)})">Rifiuta</button>
+    </div>`);
 }
 
 function confirmReject(id){
   const reason=document.getElementById('reject-reason')?.value.trim()||'';
-  const b=bookings.find(x=>x.id===id);
+  const b=bookings.find(x=>x&&idEq(x.id,id));
   if(!b) return;
-  b.status='rejected';
-  b.rejectReason=reason;
-  saveData();
-  rtdbWrite('bookings/'+id, b);
-  closeModal();
-  renderRequests();
-  updateRequestsBadge();
-  renderBookings();
+  b.status='rejected'; b.rejectReason=reason;
+  saveData(); rtdbWrite('bookings/'+String(b.id), b);
+  closeModal(); renderRequests(); updateRequestsBadge(); renderBookings(); renderHome(); renderDailyBar();
 }
 
 // ==================== CRM ====================
@@ -1061,13 +1215,13 @@ function saveLead(id){
   saveData();
   const l=id?leads.find(x=>x&&idEq(x.id,id)):leads[leads.length-1];
   if(l)rtdbWrite('leads/'+l.id,l);
-  crmFilter='Tutti';closeModal();renderCRM();renderDailyBar();
+  crmFilter='Tutti';closeModal();renderCRM();renderHome();renderDailyBar();
 }
 
 function deleteLead(id){
   if(!confirm('Eliminare questo lead?'))return;
   leads=safeArr(leads).filter(x=>x&&!idEq(x.id,id));
-  saveData();rtdbDelete('leads/'+id);closeModal();renderCRM();renderDailyBar();
+  saveData();rtdbDelete('leads/'+id);closeModal();renderCRM();renderHome();renderDailyBar();
 }
 
 // ==================== BOOKINGS ====================
@@ -1170,33 +1324,21 @@ function renderBookings(){
     : [{l:'Confermate',v:confirmed.length},{l:'In attesa',v:pending.length,danger:pending.length>0}];
   document.getElementById('bk-stats').innerHTML=bkStatsItems.map(x=>`<div class="stat-card"><div class="stat-label">${x.l}</div><div class="stat-value" style="font-size:18px;${x.danger?'color:var(--warn)':''}">${x.v}</div></div>`).join('');
   const filtered=bookings.filter(b=>
-    (b.clienteNome+b.barca).toLowerCase().includes(q.toLowerCase())&&
-    (!payF||b.statoPagamento===payF)&&
-    (!statusF||b.status===statusF)
-  ).sort((a,b)=>new Date(b.data)-new Date(a.data));
+    ((b.clienteNome||'')+(b.barca||'')+(b.email||'')).toLowerCase().includes(q.toLowerCase())&&
+    (!payF||b.statoPagamento===payF)&&(!statusF||b.status===statusF)
+  ).sort((a,b)=>new Date(b.data||0)-new Date(a.data||0));
   document.getElementById('bk-table').innerHTML=filtered.length===0?`<div class="empty">Nessuna prenotazione</div>`:`
-  <table class="tbl">
-    <thead><tr><th>Cliente</th><th>Barca</th><th>Data</th><th>Stato</th><th class="admin-only-cell">Importo</th><th class="admin-only-cell">Pagamento</th><th></th></tr></thead>
-    <tbody>${filtered.map(b=>`
-      <tr style="cursor:pointer" onclick="openBookingDetail(${b.id})">
-        <td><div style="font-weight:600">${b.clienteNome}</div><div style="font-size:11px;color:var(--text3)">${b.email||''}</div></td>
-        <td style="font-size:13px">${b.barca}</td>
-        <td style="font-size:12px;color:var(--text3)">${b.data}</td>
-        <td><span class="badge badge-${b.status==='pending'?'pending':b.status==='rejected'?'rejected':b.status==='confirmed'||b.status==='manual'?'confirmed':'new'}">${
-          {pending:'In attesa',confirmed:'Confermata',rejected:'Rifiutata',manual:'Manuale'}[b.status]||b.status
-        }</span></td>
-        <td class="admin-only-cell" style="font-weight:600">${fmtEur(b.importo)}</td>
-        <td class="admin-only-cell">
-          <select class="status-select" style="${payStyle(b.statoPagamento)}" onclick="event.stopPropagation()" onchange="updateBkField(${b.id},'statoPagamento',this.value)">
-            ${['Non pagato','Parziale','Saldato'].map(s=>`<option${s===b.statoPagamento?' selected':''}>${s}</option>`).join('')}
-          </select>
-        </td>
-        <td>
-          ${b.status==='pending'?`<button class="btn btn-xs btn-gold" onclick="event.stopPropagation();showPage('requests')">Gestisci</button>`:`<button class="btn btn-xs" onclick="event.stopPropagation();openBookingForm(${b.id})">✎</button>`}
-        </td>
-      </tr>`).join('')}
-    </tbody>
-  </table>`;
+  <table class="tbl"><thead><tr><th>Cliente</th><th>Barca</th><th>Data</th><th>Stato</th><th class="admin-only-cell">Importo</th><th class="admin-only-cell">Pagamento</th><th></th></tr></thead>
+  <tbody>${filtered.map(b=>`
+    <tr style="cursor:pointer" onclick="openBookingDetail(${jsArg(b.id)})">
+      <td><div style="font-weight:600">${b.clienteNome||'—'}</div><div style="font-size:11px;color:var(--text3)">${b.email||''}</div></td>
+      <td style="font-size:13px">${b.barca||'—'}</td>
+      <td style="font-size:12px;color:var(--text3)">${b.data||'—'}${b.endDate?' → '+b.endDate:''}</td>
+      <td><span class="badge badge-${b.status==='pending'?'pending':b.status==='rejected'?'rejected':b.status==='confirmed'||b.status==='manual'?'confirmed':'new'}">${{pending:'In attesa',confirmed:'Confermata',rejected:'Rifiutata',manual:'Manuale'}[b.status]||b.status}</span></td>
+      <td class="admin-only-cell" style="font-weight:600">${b.publicPrice===false?'Su richiesta':fmtEur(b.importo)}</td>
+      <td class="admin-only-cell"><select class="status-select" style="${payStyle(b.statoPagamento)}" onclick="event.stopPropagation()" onchange="updateBkField(${jsArg(b.id)},'statoPagamento',this.value)">${['Non pagato','Parziale','Saldato'].map(s=>`<option${s===b.statoPagamento?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td>${b.status==='pending'?`<button class="btn btn-xs btn-gold" onclick="event.stopPropagation();showPage('requests')">Gestisci</button>`:`<button class="btn btn-xs" onclick="event.stopPropagation();openBookingForm(${jsArg(b.id)})">✎</button>`}</td>
+    </tr>`).join('')}</tbody></table>`;
 }
 
 function payStyle(s){
@@ -1207,7 +1349,7 @@ function payStyle(s){
 
 function updateBkField(id,field,val){
   const b=bookings.find(x=>x&&idEq(x.id,id));if(!b)return;
-  b[field]=val;saveData();persistBooking(id);renderBookings();
+  b[field]=val;saveData();persistBooking(b.id);renderBookings();renderHome();
 }
 
 function openBookingDetail(id){
@@ -1215,59 +1357,55 @@ function openBookingDetail(id){
   modal(`
     <div class="modal-title">Prenotazione #${b.id}<button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="g2" style="margin-bottom:12px">
-      <div><div class="stat-label">Cliente</div><div style="font-weight:600">${b.clienteNome}</div></div>
+      <div><div class="stat-label">Cliente</div><div style="font-weight:600">${b.clienteNome||'—'}</div></div>
       <div><div class="stat-label">Stato</div><span class="badge badge-${b.status==='pending'?'pending':b.status==='rejected'?'rejected':'confirmed'}">${{pending:'In attesa',confirmed:'Confermata',rejected:'Rifiutata',manual:'Manuale'}[b.status]||b.status}</span></div>
-      <div><div class="stat-label">Barca</div><div>${b.barca}</div></div>
-      <div><div class="stat-label">Data</div><div>${b.data}</div></div>
+      <div><div class="stat-label">Barca</div><div>${b.barca||'—'}</div></div>
+      <div><div class="stat-label">Data</div><div>${b.data||'—'}${b.endDate?' → '+b.endDate:''}</div></div>
       <div><div class="stat-label">Email</div><div style="font-size:12px">${b.email||'—'}</div></div>
       <div><div class="stat-label">Telefono</div><div style="font-size:12px">${b.telefono||'—'}</div></div>
     </div>
-    ${b.codiceFiscale?`<div style="background:var(--info-bg);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;font-size:12px"><div style="font-weight:600;color:var(--navy);margin-bottom:6px">Dati legali</div><div class="g2"><div>C.F.: <strong>${b.codiceFiscale}</strong></div><div>Residenza: ${b.residenza||'—'}</div><div>Documento: ${b.tipoDocumento} ${b.numeroDocumento}</div><div>Scadenza: ${b.dataScadenza||'—'}</div></div></div>`:''}
-    <div class="admin-only" style="background:var(--bg2);border-radius:var(--r);padding:12px;margin-bottom:12px">
-      <div class="g3">
-        <div><div class="stat-label">Totale</div><div style="font-size:18px;font-weight:700;color:var(--navy)">${fmtEur(b.importo)}</div></div>
-        <div><div class="stat-label">Acconto</div><div style="font-size:16px;font-weight:600;color:var(--success)">${fmtEur(b.acconto)}</div></div>
-        <div><div class="stat-label">Saldo</div><div style="font-size:16px;font-weight:600;color:var(--danger)">${fmtEur(Number(b.importo)-Number(b.acconto))}</div></div>
-      </div>
+    <div style="background:var(--info-bg);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;font-size:12px">
+      <div style="font-weight:600;color:var(--navy);margin-bottom:6px">Dati fiscali / documento</div>
+      <div class="g2"><div>C.F.: <strong>${b.codiceFiscale||'—'}</strong></div><div>P.IVA: ${b.partitaIva||'—'}</div><div>Ragione sociale: ${b.ragioneSociale||'—'}</div><div>PEC/SDI: ${[b.pec,b.sdi].filter(Boolean).join(' · ')||'—'}</div><div>Residenza: ${b.residenza||'—'}</div><div>Documento: ${[b.tipoDocumento,b.numeroDocumento].filter(Boolean).join(' ')||'—'}</div><div>Emissione: ${b.dataEmissione||'—'}</div><div>Scadenza: ${b.dataScadenza||'—'}</div></div>
     </div>
-    ${b.status==='pending'?`<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn btn-danger" onclick="closeModal();rejectRequest(${id})" style="flex:1">✕ Rifiuta</button><button class="btn btn-success" onclick="closeModal();acceptRequest(${id})" style="flex:1;background:var(--success);color:#fff;border-color:var(--success)">✓ Accetta</button></div>`:''}
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn btn-sm" onclick="closeModal();openBookingForm(${b.id})">Modifica</button>
-    </div>`);
+    <div class="admin-only" style="background:var(--bg2);border-radius:var(--r);padding:12px;margin-bottom:12px"><div class="g3"><div><div class="stat-label">Totale</div><div style="font-size:18px;font-weight:700;color:var(--navy)">${b.publicPrice===false?'Su richiesta':fmtEur(b.importo)}</div></div><div><div class="stat-label">Acconto</div><div style="font-size:16px;font-weight:600;color:var(--success)">${fmtEur(b.acconto)}</div></div><div><div class="stat-label">Saldo</div><div style="font-size:16px;font-weight:600;color:var(--danger)">${fmtEur(Number(b.importo)-Number(b.acconto))}</div></div></div></div>
+    ${b.status==='pending'?`<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn btn-danger" onclick="closeModal();rejectRequest(${jsArg(id)})" style="flex:1">✕ Rifiuta</button><button class="btn btn-success" onclick="closeModal();acceptRequest(${jsArg(id)})" style="flex:1;background:var(--success);color:#fff;border-color:var(--success)">✓ Accetta</button></div>`:''}
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-sm" onclick="closeModal();openBookingForm(${jsArg(b.id)})">Modifica</button></div>`);
 }
 
 function openBookingForm(id){
   const b=id?bookings.find(x=>x&&idEq(x.id,id)):{id:null,clienteNome:'',barca:boats[0]?.name||'',data:today(),giorni:1,passeggeri:2,importo:0,acconto:0,statoPagamento:'Non pagato',statoFattura:'Non fatturato',note:'',status:'manual',email:'',telefono:''};
+  if(!b)return;
   modal(`
     <div class="modal-title">${id?'Modifica prenotazione':'Nuova prenotazione manuale'}<button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="g2">
-      <div class="field"><label>Nome cliente</label><input id="bk-cnome" value="${b.clienteNome}"></div>
+      <div class="field"><label>Nome cliente</label><input id="bk-cnome" value="${b.clienteNome||''}"></div>
       <div class="field"><label>Email</label><input id="bk-email" type="email" value="${b.email||''}"></div>
       <div class="field"><label>Telefono</label><input id="bk-tel" value="${b.telefono||''}"></div>
       <div class="field"><label>Barca</label><select id="bk-barca">${boats.map(bt=>`<option${bt.name===b.barca?' selected':''}>${bt.name}</option>`).join('')}</select></div>
-      <div class="field"><label>Data</label><input id="bk-data" type="date" value="${b.data}"></div>
+      <div class="field"><label>Data</label><input id="bk-data" type="date" value="${b.data||today()}"></div>
       <div class="field"><label>N. giorni</label><input id="bk-giorni" type="number" min="1" value="${b.giorni||1}"></div>
       <div class="field"><label>Passeggeri</label><input id="bk-pass" type="number" min="1" value="${b.passeggeri||2}"></div>
-      <div class="field"><label>Importo €</label><input id="bk-imp" type="number" value="${b.importo||0}"></div>
-      <div class="field"><label>Acconto €</label><input id="bk-acc" type="number" value="${b.acconto||0}"></div>
-      <div class="field"><label>Pagamento</label><select id="bk-pay">${['Non pagato','Parziale','Saldato'].map(s=>`<option${s===b.statoPagamento?' selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="field admin-only"><label>Importo €</label><input id="bk-imp" type="number" value="${b.importo||0}"></div>
+      <div class="field admin-only"><label>Acconto €</label><input id="bk-acc" type="number" value="${b.acconto||0}"></div>
+      <div class="field admin-only"><label>Pagamento</label><select id="bk-pay">${['Non pagato','Parziale','Saldato'].map(s=>`<option${s===b.statoPagamento?' selected':''}>${s}</option>`).join('')}</select></div>
     </div>
     <div class="field"><label>Note</label><textarea id="bk-note">${b.note||''}</textarea></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
-      ${id?`<button class="btn btn-sm btn-danger" onclick="deleteBooking(${id})">Elimina</button>`:''}
+      ${id?`<button class="btn btn-sm btn-danger" onclick="deleteBooking(${jsArg(id)})">Elimina</button>`:''}
       <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
-      <button class="btn btn-sm btn-navy" onclick="saveBooking(${id||'null'})">Salva</button>
+      <button class="btn btn-sm btn-navy" onclick="saveBooking(${id?jsArg(id):'null'})">Salva</button>
     </div>`);
 }
 
 function saveBooking(id){
-  const d={clienteNome:v('bk-cnome'),email:v('bk-email'),telefono:v('bk-tel'),barca:v('bk-barca'),data:v('bk-data'),giorni:parseInt(v('bk-giorni'))||1,passeggeri:parseInt(v('bk-pass'))||0,importo:parseFloat(v('bk-imp'))||0,acconto:parseFloat(v('bk-acc'))||0,statoPagamento:v('bk-pay'),statoFattura:'Non fatturato',note:v('bk-note'),status:'manual'};
+  const d={clienteNome:v('bk-cnome'),email:v('bk-email'),telefono:v('bk-tel'),barca:v('bk-barca'),data:v('bk-data'),giorni:parseInt(v('bk-giorni'))||1,passeggeri:parseInt(v('bk-pass'))||0,importo:window._isAdmin?(parseFloat(v('bk-imp'))||0):0,acconto:window._isAdmin?(parseFloat(v('bk-acc'))||0):0,statoPagamento:window._isAdmin?v('bk-pay'):'Non pagato',statoFattura:'Non fatturato',note:v('bk-note'),status:'manual'};
   if(!d.clienteNome)return;
   let bid;
-  if(id){const b=bookings.find(x=>x&&idEq(x.id,id));if(b){syncBoatCalendar(b,false);Object.assign(b,d);bid=id;syncBoatCalendar(b,true);}}
+  if(id){const b=bookings.find(x=>x&&idEq(x.id,id));if(b){syncBoatCalendar(b,false);Object.assign(b,d);bid=b.id;syncBoatCalendar(b,true);}}
   else{bid=nextBookingId++;const nb={id:bid,...d,creatoIl:today()};bookings.push(nb);syncBoatCalendar(nb,true);}
   saveData();persistBooking(bid);persistBoatByName(d.barca);
-  closeModal();renderBookings();renderDailyBar();
+  closeModal();renderBookings();renderHome();renderDailyBar();
 }
 
 function syncBoatCalendar(bk,add){
@@ -1277,8 +1415,7 @@ function syncBoatCalendar(bk,add){
   for(let g=0;g<(parseInt(bk.giorni)||1);g++){
     const d=new Date(start);d.setDate(d.getDate()+g);
     const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    if(add)boat.bookings[key]={bookingId:bk.id,clienteNome:bk.clienteNome,status:bk.status};
-    else delete boat.bookings[key];
+    if(add)boat.bookings[key]={bookingId:bk.id,clienteNome:bk.clienteNome,status:bk.status}; else delete boat.bookings[key];
   }
 }
 
@@ -1287,7 +1424,7 @@ function deleteBooking(id){
   const bk=bookings.find(x=>x&&idEq(x.id,id));
   if(bk){syncBoatCalendar(bk,false);persistBoatByName(bk.barca);}
   bookings=bookings.filter(x=>x&&!idEq(x.id,id));
-  saveData();rtdbDelete('bookings/'+id);closeModal();renderBookings();renderDailyBar();
+  saveData();rtdbDelete('bookings/'+String(id));closeModal();renderBookings();renderHome();renderDailyBar();
 }
 
 // ==================== FLEET ====================
@@ -1533,114 +1670,86 @@ function copyPhotoUrl(boatId,index){
 }
 
 // ==================== CLIENTS ====================
+function clientFullName(c){ return ((c.nome||'')+' '+(c.cognome||'')).trim() || c.ragioneSociale || 'Cliente'; }
 function renderClients(){
+  clients=safeArr(clients).map(normalizeClient).filter(c=>c&&c.id); sortClientsAZ();
   const q=(document.getElementById('cli-search')||{}).value||'';
-  const filtered=clients.filter(c=>(c.nome+' '+c.cognome+(c.email||'')+(c.tags||[]).join(' ')).toLowerCase().includes(q.toLowerCase()));
+  const filtered=clients.filter(c=>(clientFullName(c)+' '+(c.email||'')+' '+(c.tel||'')+' '+(c.codiceFiscale||'')+' '+(c.ragioneSociale||'')+' '+(c.cittaResidenza||'')+' '+(c.numeroDocumento||'')+' '+(c.tags||[]).join(' ')).toLowerCase().includes(q.toLowerCase()));
   document.getElementById('cli-stats').innerHTML=[
     {l:'Clienti totali',v:clients.length},
-    {l:'Con prenotazioni',v:clients.filter(c=>(c.prenotazioni||[]).length>0).length},
-    {l:'Con documento',v:clients.filter(c=>c.docName).length},
+    {l:'Con dati fiscali',v:clients.filter(c=>c.codiceFiscale||c.partitaIva).length},
+    {l:'Con documento',v:clients.filter(c=>c.numeroDocumento).length},
   ].map(x=>`<div class="stat-card"><div class="stat-label">${x.l}</div><div class="stat-value" style="font-size:18px">${x.v}</div></div>`).join('');
   document.getElementById('cli-table').innerHTML=filtered.length===0?`<div class="empty">Nessun cliente</div>`:`
-  <table class="tbl"><thead><tr><th>Cliente</th><th>Email</th><th>Telefono</th><th>Tag</th><th>Pren.</th><th></th></tr></thead>
-  <tbody>${filtered.map(c=>`<tr style="cursor:pointer" onclick="openClientDetail(${c.id})">
-    <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${initials(c.nome+' '+c.cognome)}</div><div style="font-weight:600">${c.nome} ${c.cognome}</div></div></td>
-    <td style="font-size:12px">${c.email||'—'}</td>
-    <td style="font-size:12px">${c.tel||'—'}</td>
-    <td>${(c.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</td>
-    <td style="font-weight:600">${(c.prenotazioni||[]).length}</td>
-    <td><button class="btn btn-xs" onclick="event.stopPropagation();openClientEdit(${c.id})">✎</button></td>
+  <table class="tbl"><thead><tr><th>Cliente</th><th>Contatti</th><th>Dati fiscali</th><th>Residenza</th><th>Documento</th><th>Pren.</th><th></th></tr></thead>
+  <tbody>${filtered.map(c=>`<tr style="cursor:pointer" onclick="openClientDetail(${jsArg(c.id)})">
+    <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${initials(clientFullName(c))}</div><div><div style="font-weight:600">${clientFullName(c)}</div>${c.ragioneSociale?`<div style="font-size:11px;color:var(--text3)">${c.ragioneSociale}</div>`:''}</div></div></td>
+    <td style="font-size:12px"><div>${c.email||'—'}</div><div style="color:var(--text3)">${c.tel||'—'}</div></td>
+    <td style="font-size:12px"><div>C.F. ${c.codiceFiscale||'—'}</div><div style="color:var(--text3)">P.IVA ${c.partitaIva||'—'}</div></td>
+    <td style="font-size:12px"><div>${c.cittaResidenza||'—'}</div><div style="color:var(--text3)">${c.indirizzoResidenza||'—'}</div></td>
+    <td style="font-size:12px"><div>${[c.tipoDocumento,c.numeroDocumento].filter(Boolean).join(' ')||'—'}</div><div style="color:var(--text3)">${c.dataScadenza?'Scad. '+c.dataScadenza:''}</div></td>
+    <td style="font-weight:600">${bookings.filter(b=>idEq(b.clienteId,c.id)||(b.email&&c.email&&b.email===c.email)).length}</td>
+    <td><button class="btn btn-xs" onclick="event.stopPropagation();openClientEdit(${jsArg(c.id)})">✎</button></td>
   </tr>`).join('')}</tbody></table>`;
 }
 
 function openClientDetail(id){
-  const c=clients.find(x=>x.id===id);if(!c)return;
-  const cBks=bookings.filter(b=>b.clienteId===c.id);
-  const totale=cBks.reduce((s,b)=>s+Number(b.importo||0),0);
+  const c=clients.find(x=>idEq(x.id,id));if(!c)return;
+  const cBks=bookings.filter(b=>idEq(b.clienteId,c.id)||(b.email&&c.email&&b.email===c.email));
+  const totale=cBks.filter(isConfirmedBooking).reduce((s,b)=>s+Number(b.importo||0),0);
   modal(`
-    <div class="modal-title"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="width:40px;height:40px;font-size:14px">${initials(c.nome+' '+c.cognome)}</div><div><div>${c.nome} ${c.cognome}</div><div style="font-size:12px;font-weight:400;color:var(--text3)">${c.email||'—'}</div></div></div><button class="modal-close" onclick="closeModal()">×</button></div>
-    <div class="g2" style="font-size:13px;margin-bottom:10px">
-      <div><span style="color:var(--text3)">Tel: </span>${c.tel||'—'}</div>
-      <div><span style="color:var(--text3)">Residenza: </span>${c.indirizzo||'—'}</div>
-    </div>
-    <div class="admin-only" style="background:var(--bg2);border-radius:var(--r);padding:10px;margin-bottom:10px">
-      <div class="g2">
-        <div><div class="stat-label">Fatturato totale</div><div style="font-size:16px;font-weight:700;color:var(--navy)">${fmtEur(totale)}</div></div>
-        <div><div class="stat-label">Prenotazioni</div><div style="font-size:16px;font-weight:700;color:var(--navy)">${cBks.length}</div></div>
-      </div>
-    </div>
-    <div class="employee-only" style="background:var(--bg2);border-radius:var(--r);padding:10px;margin-bottom:10px">
-      <div><div class="stat-label">Prenotazioni</div><div style="font-size:16px;font-weight:700;color:var(--navy)">${cBks.length}</div></div>
-    </div>
-    ${c.note?`<div style="padding:8px 10px;background:var(--bg2);border-radius:var(--r);font-size:13px;margin-bottom:10px">${c.note}</div>`:''}
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
-      <button class="btn btn-sm btn-danger" onclick="deleteClient(${id})">Elimina</button>
-      <button class="btn btn-sm btn-navy" onclick="closeModal();openClientEdit(${id})">Modifica</button>
-    </div>`);
+    <div class="modal-title"><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="width:40px;height:40px;font-size:14px">${initials(clientFullName(c))}</div><div><div>${clientFullName(c)}</div><div style="font-size:12px;font-weight:400;color:var(--text3)">${c.email||'—'} · ${c.tel||'—'}</div></div></div><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="card" style="background:var(--bg2);margin-bottom:10px"><div class="card-title">Dati fiscali</div><div class="g2" style="font-size:13px"><div><span style="color:var(--text3)">Codice fiscale: </span>${c.codiceFiscale||'—'}</div><div><span style="color:var(--text3)">Partita IVA: </span>${c.partitaIva||'—'}</div><div><span style="color:var(--text3)">Ragione sociale: </span>${c.ragioneSociale||'—'}</div><div><span style="color:var(--text3)">PEC: </span>${c.pec||'—'}</div><div><span style="color:var(--text3)">SDI: </span>${c.sdi||'—'}</div></div></div>
+    <div class="card" style="background:var(--bg2);margin-bottom:10px"><div class="card-title">Residenza</div><div class="g2" style="font-size:13px"><div><span style="color:var(--text3)">Indirizzo: </span>${c.indirizzoResidenza||'—'}</div><div><span style="color:var(--text3)">Città: </span>${c.cittaResidenza||'—'}</div><div><span style="color:var(--text3)">CAP: </span>${c.cap||'—'}</div><div><span style="color:var(--text3)">Provincia: </span>${c.provincia||'—'}</div><div><span style="color:var(--text3)">Nazione: </span>${c.nazione||'—'}</div></div></div>
+    <div class="card" style="background:var(--bg2);margin-bottom:10px"><div class="card-title">Documento</div><div class="g2" style="font-size:13px"><div><span style="color:var(--text3)">Tipo: </span>${c.tipoDocumento||'—'}</div><div><span style="color:var(--text3)">Numero: </span>${c.numeroDocumento||'—'}</div><div><span style="color:var(--text3)">Emissione: </span>${c.dataEmissione||'—'}</div><div><span style="color:var(--text3)">Scadenza: </span>${c.dataScadenza||'—'}</div></div></div>
+    <div class="admin-only" style="background:var(--bg2);border-radius:var(--r);padding:10px;margin-bottom:10px"><div class="g2"><div><div class="stat-label">Fatturato totale</div><div style="font-size:16px;font-weight:700;color:var(--navy)">${fmtEur(totale)}</div></div><div><div class="stat-label">Prenotazioni</div><div style="font-size:16px;font-weight:700;color:var(--navy)">${cBks.length}</div></div></div></div>
+    ${c.note?`<div style="padding:8px 10px;background:var(--warn-bg);border-radius:var(--r);font-size:13px;margin-bottom:10px">${c.note}</div>`:''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn btn-sm btn-danger" onclick="deleteClient(${jsArg(c.id)})">Elimina</button><button class="btn btn-sm btn-navy" onclick="closeModal();openClientEdit(${jsArg(c.id)})">Modifica</button></div>`);
 }
 
 function openClientEdit(id){
-  const c=id?clients.find(x=>x.id===id):{};
-  const p=c||{};
+  const c=id?clients.find(x=>idEq(x.id,id)):{}; const p=normalizeClient(c||{});
   modal(`
     <div class="modal-title">${id?'Modifica cliente':'Nuovo cliente'}<button class="modal-close" onclick="closeModal()">×</button></div>
-    <div class="g2">
-      <div class="field"><label>Nome</label><input id="nc-nome" value="${p.nome||''}"></div>
-      <div class="field"><label>Cognome</label><input id="nc-cogn" value="${p.cognome||''}"></div>
-      <div class="field"><label>Email</label><input id="nc-email" value="${p.email||''}"></div>
-      <div class="field"><label>Telefono</label><input id="nc-tel" value="${p.tel||''}"></div>
-    </div>
-    <div class="field"><label>Indirizzo di residenza</label><input id="nc-addr" value="${p.indirizzo||''}"></div>
+    <div class="card" style="background:var(--bg);margin-bottom:10px"><div class="card-title">Dati base</div><div class="g2"><div class="field"><label>Nome</label><input id="nc-nome" value="${p.nome||''}"></div><div class="field"><label>Cognome</label><input id="nc-cogn" value="${p.cognome||''}"></div><div class="field"><label>Email</label><input id="nc-email" value="${p.email||''}"></div><div class="field"><label>Telefono</label><input id="nc-tel" value="${p.tel||''}"></div></div></div>
+    <div class="card" style="background:var(--bg);margin-bottom:10px"><div class="card-title">Dati fiscali</div><div class="g2"><div class="field"><label>Codice fiscale</label><input id="nc-cf" value="${p.codiceFiscale||''}"></div><div class="field"><label>Partita IVA</label><input id="nc-piva" value="${p.partitaIva||''}"></div><div class="field"><label>Ragione sociale</label><input id="nc-ragsoc" value="${p.ragioneSociale||''}"></div><div class="field"><label>PEC</label><input id="nc-pec" value="${p.pec||''}"></div><div class="field"><label>Codice destinatario / SDI</label><input id="nc-sdi" value="${p.sdi||''}"></div></div></div>
+    <div class="card" style="background:var(--bg);margin-bottom:10px"><div class="card-title">Residenza</div><div class="g2"><div class="field"><label>Indirizzo di residenza</label><input id="nc-indres" value="${p.indirizzoResidenza||''}"></div><div class="field"><label>Città di residenza</label><input id="nc-citres" value="${p.cittaResidenza||''}"></div><div class="field"><label>CAP</label><input id="nc-cap" value="${p.cap||''}"></div><div class="field"><label>Provincia</label><input id="nc-prov" value="${p.provincia||''}"></div><div class="field"><label>Nazione</label><input id="nc-naz" value="${p.nazione||'Italia'}"></div></div></div>
+    <div class="card" style="background:var(--bg);margin-bottom:10px"><div class="card-title">Documento</div><div class="g2"><div class="field"><label>Tipo documento</label><input id="nc-doctipo" value="${p.tipoDocumento||''}" placeholder="Carta identità, Patente, Passaporto"></div><div class="field"><label>Numero documento</label><input id="nc-docnum" value="${p.numeroDocumento||''}"></div><div class="field"><label>Data emissione</label><input id="nc-docemi" type="date" value="${p.dataEmissione||''}"></div><div class="field"><label>Data scadenza</label><input id="nc-docsca" type="date" value="${p.dataScadenza||''}"></div></div></div>
     <div class="field"><label>Note</label><textarea id="nc-note">${p.note||''}</textarea></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
-      <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
-      <button class="btn btn-sm btn-navy" onclick="saveClientForm(${id||'null'})">Salva</button>
-    </div>`);
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px"><button class="btn btn-sm" onclick="closeModal()">Annulla</button><button class="btn btn-sm btn-navy" onclick="saveClientForm(${id?jsArg(id):'null'})">Salva</button></div>`);
 }
 function openClientForm(id){openClientEdit(id);}
 
 function saveClientForm(id){
-  const nome=v('nc-nome');if(!nome)return;
-  if(id){
-    const c=clients.find(x=>x.id===id);
-    Object.assign(c,{nome,cognome:v('nc-cogn'),email:v('nc-email'),tel:v('nc-tel'),indirizzo:v('nc-addr'),note:v('nc-note')});
-    persistClient(id);
-  }else{
-    const nc={id:nextClientId++,nome,cognome:v('nc-cogn'),email:v('nc-email'),tel:v('nc-tel'),indirizzo:v('nc-addr'),docData:null,docName:null,docType:null,tags:[],note:v('nc-note'),prenotazioni:[]};
-    clients.push(nc);
-    rtdbWrite('clients/'+nc.id,nc);
-  }
-  saveData();closeModal();renderClients();
+  const nome=v('nc-nome'); if(!nome && !v('nc-ragsoc')) return;
+  const payload={nome,cognome:v('nc-cogn'),email:v('nc-email'),tel:v('nc-tel'),telefono:v('nc-tel'),codiceFiscale:v('nc-cf'),partitaIva:v('nc-piva'),ragioneSociale:v('nc-ragsoc'),pec:v('nc-pec'),sdi:v('nc-sdi'),indirizzoResidenza:v('nc-indres'),cittaResidenza:v('nc-citres'),cap:v('nc-cap'),provincia:v('nc-prov'),nazione:v('nc-naz')||'Italia',indirizzo:v('nc-indres'),tipoDocumento:v('nc-doctipo'),numeroDocumento:v('nc-docnum'),dataEmissione:v('nc-docemi'),dataScadenza:v('nc-docsca'),note:v('nc-note')};
+  if(id){ const c=clients.find(x=>idEq(x.id,id)); Object.assign(c,payload); persistClient(c.id); }
+  else{ const nc=normalizeClient({id:nextClientId++,...payload,tags:[],prenotazioni:[]}); clients.push(nc); rtdbWrite('clients/'+nc.id,nc); }
+  saveData();closeModal();renderClients();renderHome();
 }
 
 function deleteClient(id){
   if(!confirm('Eliminare questo cliente?'))return;
-  clients=clients.filter(x=>x.id!==id);
-  saveData();rtdbDelete('clients/'+id);closeModal();renderClients();
+  clients=clients.filter(x=>!idEq(x.id,id));
+  saveData();rtdbDelete('clients/'+String(id));closeModal();renderClients();renderHome();
 }
 
 function exportCSV(){
-  const rows=[['Nome','Cognome','Email','Telefono','Indirizzo','Note']];
-  clients.forEach(c=>rows.push([c.nome,c.cognome,c.email,c.tel,c.indirizzo,c.note]));
+  const rows=[['Nome','Cognome','Email','Telefono','Codice fiscale','Partita IVA','Ragione sociale','PEC','SDI','Indirizzo residenza','Città residenza','CAP','Provincia','Nazione','Tipo documento','Numero documento','Data emissione','Data scadenza','Note']];
+  clients.forEach(c=>rows.push([c.nome,c.cognome,c.email,c.tel,c.codiceFiscale,c.partitaIva,c.ragioneSociale,c.pec,c.sdi,c.indirizzoResidenza,c.cittaResidenza,c.cap,c.provincia,c.nazione,c.tipoDocumento,c.numeroDocumento,c.dataEmissione,c.dataScadenza,c.note]));
   const csv=rows.map(r=>r.map(x=>'"'+(String(x||'')).replace(/"/g,'""')+'"').join(',')).join('\r\n');
-  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='clienti_chartme.csv';a.click();
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='clienti_chartme_completo.csv';a.click();
 }
 
 function importCSV(e){
   const file=e.target.files[0];if(!file)return;
   const r=new FileReader();
   r.onload=ev=>{
-    const lines=ev.target.result.split(/\r?\n/).slice(1);let added=0;
-    lines.forEach(line=>{
-      if(!line.trim())return;
-      const cols=[];let cur='',inQ=false;
-      for(let i=0;i<line.length;i++){if(line[i]==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else{inQ=!inQ;}}else if(line[i]===','&&!inQ){cols.push(cur.trim());cur='';}else{cur+=line[i];}}
-      cols.push(cur.trim());
-      if(!cols[0])return;
-      const nc={id:nextClientId++,nome:cols[0]||'',cognome:cols[1]||'',email:cols[2]||'',tel:cols[3]||'',indirizzo:cols[4]||'',docData:null,docName:null,docType:null,tags:[],note:cols[5]||'',prenotazioni:[]};
-      clients.push(nc);rtdbWrite('clients/'+nc.id,nc);added++;
-    });
-    saveData();renderClients();alert(added+' clienti importati');
+    const lines=ev.target.result.split(/\r?\n/).filter(Boolean); if(lines.length<2)return;
+    const headers=lines[0].split(',').map(h=>h.replace(/"/g,'').trim().toLowerCase()); let added=0;
+    function parse(line){ const cols=[];let cur='',inQ=false; for(let i=0;i<line.length;i++){if(line[i]==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(line[i]===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=line[i];} cols.push(cur.trim()); return cols.map(x=>x.replace(/^"|"$/g,'')); }
+    lines.slice(1).forEach(line=>{ const cols=parse(line); if(!cols[0])return; const get=n=>cols[headers.indexOf(n)]||''; const nc=normalizeClient({id:nextClientId++,nome:get('nome')||cols[0],cognome:get('cognome')||cols[1]||'',email:get('email')||cols[2]||'',tel:get('telefono')||cols[3]||'',codiceFiscale:get('codice fiscale'),partitaIva:get('partita iva'),ragioneSociale:get('ragione sociale'),pec:get('pec'),sdi:get('sdi'),indirizzoResidenza:get('indirizzo residenza'),cittaResidenza:get('città residenza'),cap:get('cap'),provincia:get('provincia'),nazione:get('nazione')||'Italia',tipoDocumento:get('tipo documento'),numeroDocumento:get('numero documento'),dataEmissione:get('data emissione'),dataScadenza:get('data scadenza'),note:get('note'),tags:[],prenotazioni:[]}); clients.push(nc); rtdbWrite('clients/'+nc.id,nc); added++; });
+    saveData();renderClients();renderHome();alert(added+' clienti importati');
   };
   r.readAsText(file,'UTF-8');e.target.value='';
 }
@@ -1649,32 +1758,51 @@ function importCSV(e){
 function renderStats(){
   if(!window._isAdmin) return;
   const yearSel=document.getElementById('stats-year');
-  const years=[...new Set(bookings.filter(b=>b.status!=='pending'&&b.status!=='rejected').map(b=>b.data?b.data.slice(0,4):'2025'))].sort();
+  const years=[...new Set(bookings.filter(b=>isConfirmedBooking(b)&&b.data).map(b=>b.data.slice(0,4)))].sort();
   if(!years.length)years.push(String(new Date().getFullYear()));
   yearSel.innerHTML=years.map(y=>`<option>${y}</option>`).join('');
-  const selYear=yearSel.value||years[years.length-1];
-  yearSel.value=selYear;
-  const bkYear=bookings.filter(b=>b.data&&b.data.startsWith(selYear)&&b.status!=='pending'&&b.status!=='rejected');
+  const selYear=yearSel.value||years[years.length-1]; yearSel.value=selYear;
+  const bkYear=bookings.filter(b=>isConfirmedBooking(b)&&b.data&&b.data.startsWith(selYear));
+  const leadYear=leads.filter(l=>(l.data||'').startsWith(selYear));
+  const reqYear=bookings.filter(b=>b.source==='website'&&b.data&&b.data.startsWith(selYear));
   const totFatt=bkYear.reduce((s,b)=>s+Number(b.importo||0),0);
   const totInc=bkYear.reduce((s,b)=>s+(b.statoPagamento==='Saldato'?Number(b.importo||0):Number(b.acconto||0)),0);
-  const monthlyFatt=Array(12).fill(0);
-  bkYear.forEach(b=>{const m=parseInt((b.data||'').slice(5,7))-1;if(m>=0&&m<12)monthlyFatt[m]+=Number(b.importo||0);});
-  const maxBar=Math.max(...monthlyFatt,1);
-  const byBarca={};bkYear.forEach(b=>{byBarca[b.barca]=(byBarca[b.barca]||0)+1;});
+  const avgTicket=bkYear.length?Math.round(totFatt/bkYear.length):0;
+  const monthlyFatt=Array(12).fill(0), monthlyCount=Array(12).fill(0), monthlyLeads=Array(12).fill(0);
+  bkYear.forEach(b=>{const m=parseInt((b.data||'').slice(5,7))-1;if(m>=0&&m<12){monthlyFatt[m]+=Number(b.importo||0);monthlyCount[m]++;}});
+  leadYear.forEach(l=>{const m=parseInt((l.data||'').slice(5,7))-1;if(m>=0&&m<12)monthlyLeads[m]++;});
+  const maxF=Math.max(...monthlyFatt,1), maxC=Math.max(...monthlyCount,monthlyLeads,1);
+  const byBoat={}; bkYear.forEach(b=>{ if(!byBoat[b.barca])byBoat[b.barca]={count:0,days:0,revenue:0}; byBoat[b.barca].count++; byBoat[b.barca].days+=bookingDays(b); byBoat[b.barca].revenue+=Number(b.importo||0); });
+  const boatRows=boats.map(bt=>{const x=byBoat[bt.name]||{count:0,days:0,revenue:0}; return {name:bt.name,...x,rate:Math.min(100,pct(x.days,184))};}).sort((a,b)=>b.revenue-a.revenue||b.rate-a.rate);
+  const leadConf=leadYear.filter(l=>l.stato==='Confermato').length;
+  const leadConv=pct(leadConf,leadYear.length);
+  const reqConf=reqYear.filter(b=>b.status==='confirmed').length;
+  const reqRejected=reqYear.filter(b=>b.status==='rejected').length;
+  const reqPending=reqYear.filter(b=>b.status==='pending').length;
+  const reqConv=pct(reqConf,reqYear.length);
+  const payCounts=['Non pagato','Parziale','Saldato'].map(s=>({s,n:bkYear.filter(b=>b.statoPagamento===s).length}));
+  const origins={}; leadYear.forEach(l=>{origins[l.origine||'Altro']=(origins[l.origine||'Altro']||0)+1;});
   document.getElementById('stats-content').innerHTML=`
   <div class="g4" style="margin-bottom:16px">
     <div class="stat-card"><div class="stat-label">Fatturato ${selYear}</div><div class="stat-value">${fmtEur(totFatt)}</div></div>
     <div class="stat-card"><div class="stat-label">Incassato</div><div class="stat-value" style="color:var(--success)">${fmtEur(totInc)}</div></div>
     <div class="stat-card"><div class="stat-label">Da incassare</div><div class="stat-value" style="color:var(--danger)">${fmtEur(totFatt-totInc)}</div></div>
+    <div class="stat-card"><div class="stat-label">Ticket medio</div><div class="stat-value">${fmtEur(avgTicket)}</div></div>
     <div class="stat-card"><div class="stat-label">Prenotazioni</div><div class="stat-value">${bkYear.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Lead conversion</div><div class="stat-value">${leadConv}%</div><div class="stat-sub">${leadConf}/${leadYear.length} lead confermati</div></div>
+    <div class="stat-card"><div class="stat-label">Richieste sito</div><div class="stat-value">${reqYear.length}</div><div class="stat-sub">${reqConv}% convertite</div></div>
+    <div class="stat-card"><div class="stat-label">Richieste aperte</div><div class="stat-value" style="${reqPending?'color:var(--warn)':''}">${reqPending}</div><div class="stat-sub">${reqRejected} rifiutate</div></div>
   </div>
-  <div class="card">
-    <div class="card-title">Andamento mensile ${selYear}</div>
-    <div class="bar-wrap">
-      ${monthlyFatt.map((val,i)=>`<div class="bar-col"><div class="bar-val">${val>0?fmtEur(val):''}</div><div style="display:flex;align-items:flex-end;height:120px"><div class="bar" style="height:${val>0?Math.max(Math.round((val/maxBar)*120),4):0}px;flex:1"></div></div><div class="bar-label">${MONTHS_SHORT[i]}</div></div>`).join('')}
-    </div>
+  <div class="card"><div class="card-title">Fatturato mensile ${selYear}</div><div class="bar-wrap">${monthlyFatt.map((val,i)=>`<div class="bar-col"><div class="bar-val">${val>0?fmtEur(val):''}</div><div style="display:flex;align-items:flex-end;height:120px;width:100%"><div class="bar" style="height:${val>0?Math.max(Math.round((val/maxF)*120),4):0}px;flex:1"></div></div><div class="bar-label">${MONTHS_SHORT[i]}</div></div>`).join('')}</div></div>
+  <div class="g2">
+    <div class="card"><div class="card-title">Prenotazioni vs Lead per mese</div><div class="bar-wrap" style="height:140px">${monthlyCount.map((val,i)=>`<div class="bar-col"><div class="bar-val">${val||''}/${monthlyLeads[i]||''}</div><div style="display:flex;align-items:flex-end;height:110px;width:100%;gap:2px"><div class="bar" title="Prenotazioni" style="height:${val?Math.max((val/maxC)*110,4):0}px;background:var(--navy)"></div><div class="bar" title="Lead" style="height:${monthlyLeads[i]?Math.max((monthlyLeads[i]/maxC)*110,4):0}px;background:var(--gold)"></div></div><div class="bar-label">${MONTHS_SHORT[i]}</div></div>`).join('')}</div><div style="font-size:11px;color:var(--text3);margin-top:8px">Blu = prenotazioni, oro = lead</div></div>
+    <div class="card"><div class="card-title">Stato pagamenti</div><div class="mini-list">${payCounts.map(x=>`<div><div class="mini-row"><span>${x.s}</span><strong>${x.n}</strong></div><div class="progress-track"><div class="progress-fill" style="width:${pct(x.n,Math.max(bkYear.length,1))}%"></div></div></div>`).join('')}</div></div>
   </div>
-  <div class="card"><div class="card-title">Per imbarcazione</div><div style="display:flex;gap:12px;flex-wrap:wrap">${Object.entries(byBarca).map(([n,cnt])=>`<div style="flex:1;min-width:140px;background:var(--bg2);border-radius:var(--r);padding:12px"><div style="font-weight:700;color:var(--navy)">${n}</div><div style="font-size:22px;font-weight:700">${cnt}</div><div style="font-size:12px;color:var(--text3)">prenotazioni</div></div>`).join('')}</div></div>`;
+  <div class="card"><div class="card-title">Saturazione e resa per imbarcazione</div><table class="tbl"><thead><tr><th>Imbarcazione</th><th>Pren.</th><th>Giorni occupati</th><th>Saturazione stimata</th><th>Fatturato</th></tr></thead><tbody>${boatRows.map(x=>`<tr><td style="font-weight:600">${x.name}</td><td>${x.count}</td><td>${x.days}</td><td><div style="display:flex;align-items:center;gap:8px"><div class="progress-track" style="flex:1"><div class="progress-fill" style="width:${x.rate}%"></div></div><strong>${x.rate}%</strong></div></td><td style="font-weight:700">${fmtEur(x.revenue)}</td></tr>`).join('')}</tbody></table><div style="font-size:11px;color:var(--text3);margin-top:8px">Saturazione stimata su stagione operativa di 184 giorni, da usare come indicatore gestionale.</div></div>
+  <div class="g2">
+    <div class="card"><div class="card-title">Origine lead</div><div class="mini-list">${Object.entries(origins).sort((a,b)=>b[1]-a[1]).map(([name,n])=>`<div><div class="mini-row"><span>${name}</span><strong>${n}</strong></div><div class="progress-track"><div class="progress-fill" style="width:${pct(n,Math.max(leadYear.length,1))}%"></div></div></div>`).join('')||'<div class="empty">Nessun lead</div>'}</div></div>
+    <div class="card"><div class="card-title">Funnel richieste sito</div><div class="mini-list"><div><div class="mini-row"><span>In attesa</span><strong>${reqPending}</strong></div><div class="progress-track"><div class="progress-fill" style="width:${pct(reqPending,Math.max(reqYear.length,1))}%"></div></div></div><div><div class="mini-row"><span>Confermate</span><strong>${reqConf}</strong></div><div class="progress-track"><div class="progress-fill" style="width:${pct(reqConf,Math.max(reqYear.length,1))}%"></div></div></div><div><div class="mini-row"><span>Rifiutate</span><strong>${reqRejected}</strong></div><div class="progress-track"><div class="progress-fill" style="width:${pct(reqRejected,Math.max(reqYear.length,1))}%"></div></div></div></div></div>
+  </div>`;
 }
 
 // ==================== TASKS ====================
@@ -1745,12 +1873,12 @@ function saveTask(id){
   if(!d.titolo)return;
   if(id){const t=tasks.find(x=>x.id===id);if(t)Object.assign(t,d);persistTask(id);}
   else{const nt={id:nextTaskId++,...d,creatoIl:today()};tasks.push(nt);rtdbWrite('tasks/'+nt.id,nt);}
-  saveData();closeModal();renderTasks();
+  saveData();closeModal();renderTasks();renderHome();
 }
 
 function deleteTask(id){
   if(!confirm('Eliminare questo task?'))return;
-  rtdbDelete('tasks/'+id);tasks=tasks.filter(x=>x.id!==id);saveData();closeModal();renderTasks();
+  rtdbDelete('tasks/'+id);tasks=tasks.filter(x=>x.id!==id);saveData();closeModal();renderTasks();renderHome();
 }
 
 // ==================== DAILY BAR ====================
@@ -1804,7 +1932,7 @@ function restoreBackup(e){
 }
 
 // ==================== INIT ====================
-try{showPage('crm');renderCRM();renderDailyBar();}catch(e){}
+try{showPage('home');renderHome();renderCRM();renderDailyBar();}catch(e){}
 </script>
 </body>
 </html>
