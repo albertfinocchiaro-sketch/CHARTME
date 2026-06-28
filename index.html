@@ -579,6 +579,10 @@ function normalizeBoat(b){
   b.homeport=b.homeport||'';
   b.priceFullDay=Number(b.priceFullDay)||0;
   b.visible=b.visible!==false;
+  b.modello=b.modello||'';
+  b.velocita=b.velocita||'';
+  b.patente=b.patente||'';
+  b.rentalType=b.rentalType||'daily';
   b.bands=safeArr(b.bands).length ? safeArr(b.bands).map(x=>{x.months=Array.isArray(x.months)?x.months:[];x.price=Number(x.price)||0;return x;}) : DEFAULT_BANDS.map(x=>JSON.parse(JSON.stringify(x)));
   function normDateKey(k){
     var raw=String(k||'');
@@ -665,9 +669,14 @@ function normalizeAllData(){
   tasks=safeArr(tasks).map(normalizeTask).filter(x=>x&&x.id);
   if(!boats.length){
     boats=[
-      {id:1,name:'Poseidon I',type:'Catamarano',length:'14m',passengers:'12',engine:'2x Volvo 40cv',homeport:'Messina',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
-      {id:2,name:'Artemide',type:'Barca a vela',length:'11m',passengers:'8',engine:'Volvo 30cv',homeport:'Messina',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
-      {id:3,name:'Helios',type:'Motobarca',length:'9m',passengers:'10',engine:'Mercury 150cv',homeport:'Milazzo',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}}
+      {id:1,name:'Nibert 1',type:'Gommone',modello:'Trimarchi Top 65 · 2024',length:'6.5m',passengers:'7',engine:'Mercury 40cv',velocita:'27 nodi',patente:'No',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:2,name:'Nibert 2',type:'Gommone',modello:'Trimarchi Top 65 · 2024',length:'6.5m',passengers:'7',engine:'Mercury 40cv',velocita:'27 nodi',patente:'No',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:3,name:'Qmax 26',type:'Gommone',modello:'Qmax Max 26 · 2025',length:'8.1m',passengers:'11',engine:'Suzuki 250cv',velocita:'40+ nodi',patente:'Sì',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:4,name:'Magazzù MX 11 Spider',type:'Luxury',modello:'Magazzù MX 11 · 2023',length:'11m',passengers:'15',engine:'2x 320cv',velocita:'50+ nodi',patente:'Sì',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:5,name:'Fiart Seawalker 35',type:'Barca a Motore',modello:'Fiart Seawalker 35 · 2023',length:'10.5m',passengers:'10',engine:'2x 300cv',velocita:'35+ nodi',patente:'Sì',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:6,name:'Lagoon 46',type:'Catamarano',modello:'Lagoon 46 · 2021',length:'14m',passengers:'12',engine:'2x 45cv',velocita:'10 nodi',patente:'Sì',homeport:'Messina',rentalType:'weekly',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:7,name:'Lagoon 56',type:'Catamarano Luxury',modello:'Lagoon 56 · 2022',length:'17m',passengers:'12',engine:'2x 57cv',velocita:'12 nodi',patente:'Sì',homeport:'Messina',rentalType:'weekly',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:8,name:'Oceanis 50',type:'Barca a Vela',modello:'Bénéteau Oceanis 50 · 2020',length:'15m',passengers:'10',engine:'75cv + vela',velocita:'8 nodi',patente:'Sì',homeport:'Messina',rentalType:'weekly',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}}
     ];
   }
   if(activeBoat<0||activeBoat>=boats.length) activeBoat=0;
@@ -731,15 +740,17 @@ function modal(content){
 function showPage(p){
   // Redirect employee away from admin-only pages
   const adminPages=['fleet','stats'];
-  if(!window._isAdmin && adminPages.includes(p)){ showPage('crm'); return; }
+  if(!window._isAdmin && adminPages.includes(p)){ p='crm'; }
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
   const pageEl=document.getElementById('page-'+p);
   if(!pageEl) return;
   pageEl.classList.add('active');
-  const tabMap={crm:0,requests:1,bookings:2,fleet:3,clients:4,stats:5,tasks:6};
-  const tabs=document.querySelectorAll('.nav-tab');
-  if(tabs[tabMap[p]]) tabs[tabMap[p]].classList.add('active');
+  // Mark the active tab by matching its onclick attribute (robust, not index-based)
+  document.querySelectorAll('.nav-tab').forEach(function(tab){
+    const oc=tab.getAttribute('onclick')||'';
+    if(oc.indexOf("showPage('"+p+"')")>=0) tab.classList.add('active');
+  });
   closeModal();
   if(p==='crm')renderCRM();
   else if(p==='requests')renderRequests();
@@ -1252,6 +1263,20 @@ function renderFleet(){
         <div class="field" style="margin:0"><label>Passeggeri max</label><input value="${boat.passengers}" onchange="boats[${activeBoat}].passengers=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
         <div class="field" style="margin:0"><label>Motore</label><input value="${boat.engine}" onchange="boats[${activeBoat}].engine=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
         <div class="field" style="margin:0"><label>Porto base</label><input value="${boat.homeport}" onchange="boats[${activeBoat}].homeport=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
+        <div class="field" style="margin:0"><label>Modello</label><input value="${boat.modello||''}" onchange="boats[${activeBoat}].modello=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
+        <div class="field" style="margin:0"><label>Velocità</label><input value="${boat.velocita||''}" onchange="boats[${activeBoat}].velocita=this.value;saveData();persistBoat(boats[${activeBoat}].id)"></div>
+        <div class="field" style="margin:0"><label>Patente richiesta</label>
+          <select onchange="boats[${activeBoat}].patente=this.value;saveData();persistBoat(boats[${activeBoat}].id)">
+            <option value="No" ${boat.patente==='No'?'selected':''}>No</option>
+            <option value="Sì" ${boat.patente==='Sì'?'selected':''}>Sì</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0"><label>Tipo noleggio</label>
+          <select onchange="boats[${activeBoat}].rentalType=this.value;saveData();persistBoat(boats[${activeBoat}].id);renderFleet()">
+            <option value="daily" ${boat.rentalType!=='weekly'?'selected':''}>Giornaliero</option>
+            <option value="weekly" ${boat.rentalType==='weekly'?'selected':''}>Settimanale (Sab–Sab)</option>
+          </select>
+        </div>
         <div class="field" style="margin:0"><label>Visibile sul sito</label>
           <select onchange="boats[${activeBoat}].visible=this.value==='true';saveData();persistBoat(boats[${activeBoat}].id)">
             <option value="true" ${boat.visible!==false?'selected':''}>Sì — visibile sul sito</option>
