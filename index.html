@@ -227,8 +227,8 @@ body.employee-mode .employee-only{display:block!important}
       <span style="font-size:12px;color:rgba(255,255,255,.7)" id="user-email-short"></span>
       <span class="user-role-badge role-admin" id="user-role-badge">ADMIN</span>
     </button>
-    <button onclick="downloadBackup()" style="padding:4px 10px;background:transparent;border:1px solid rgba(201,184,138,.45);border-radius:6px;color:var(--gold);font-size:11px;font-weight:700;cursor:pointer">↓ Backup</button>
-    <label style="padding:4px 10px;background:transparent;border:1px solid rgba(201,184,138,.45);border-radius:6px;color:var(--gold);font-size:11px;font-weight:700;cursor:pointer">↑ Ripristina<input type="file" accept="application/json,.json" style="display:none" onchange="restoreBackup(event)"></label>
+    <button class="admin-only" onclick="downloadBackup()" style="padding:4px 10px;background:transparent;border:1px solid rgba(201,184,138,.45);border-radius:6px;color:var(--gold);font-size:11px;font-weight:700;cursor:pointer">↓ Backup</button>
+    <label class="admin-only" style="padding:4px 10px;background:transparent;border:1px solid rgba(201,184,138,.45);border-radius:6px;color:var(--gold);font-size:11px;font-weight:700;cursor:pointer">↑ Ripristina<input type="file" accept="application/json,.json" style="display:none" onchange="restoreBackup(event)"></label>
   </div>
 </div>
 
@@ -494,11 +494,12 @@ function startRealtimeListener() {
     boats    = safeArr(data.boats).map(normalizeBoat);
     tasks    = safeArr(data.tasks).map(normalizeTask);
     normalizeAllData();
+    ensureTop65PricesOnFirebase();
     sortClientsAZ();
 
     nextLeadId    = leads.length    ? Math.max(...leads.map(x=>x.id||0))+1    : 1;
     nextClientId  = clients.length  ? Math.max(...clients.map(x=>x.id||0))+1  : 1;
-    nextBookingId = bookings.length ? Math.max(...bookings.map(x=>x.id||0))+1 : 1;
+    nextBookingId = Math.max(0,...bookings.map(x=>Number(x.id)||0))+1;
     nextBoatId    = boats.length    ? Math.max(...boats.map(x=>x.id||0))+1    : 1;
     nextTaskId    = tasks.length    ? Math.max(...tasks.map(x=>x.id||0))+1    : 1;
 
@@ -560,11 +561,23 @@ const DEFAULT_BANDS=[
   {label:'Alta (Lug–Ago)',months:[6,7],price:650},
   {label:'Sett–Ott',months:[8,9],price:450}
 ];
+const TOP65_DAILY_PRICES_2026={
+  '2026-06-01':200,'2026-06-02':200,'2026-06-03':200,'2026-06-04':200,'2026-06-05':200,'2026-06-06':220,'2026-06-07':220,'2026-06-08':200,'2026-06-09':200,'2026-06-10':200,'2026-06-11':200,'2026-06-12':200,'2026-06-13':220,'2026-06-14':220,'2026-06-15':200,'2026-06-16':200,'2026-06-17':200,'2026-06-18':200,'2026-06-19':200,'2026-06-20':220,'2026-06-21':220,'2026-06-22':200,'2026-06-23':200,'2026-06-24':200,'2026-06-25':200,'2026-06-26':200,'2026-06-27':220,'2026-06-28':220,'2026-06-29':200,'2026-06-30':200,
+  '2026-07-01':250,'2026-07-02':250,'2026-07-03':250,'2026-07-04':270,'2026-07-05':270,'2026-07-06':250,'2026-07-07':250,'2026-07-08':250,'2026-07-09':250,'2026-07-10':250,'2026-07-11':270,'2026-07-12':270,'2026-07-13':250,'2026-07-14':250,'2026-07-15':250,'2026-07-16':250,'2026-07-17':250,'2026-07-18':280,'2026-07-19':280,'2026-07-20':250,'2026-07-21':250,'2026-07-22':250,'2026-07-23':250,'2026-07-24':250,'2026-07-25':280,'2026-07-26':280,'2026-07-27':250,'2026-07-28':250,'2026-07-29':250,'2026-07-30':250,'2026-07-31':250,
+  '2026-08-01':320,'2026-08-02':320,'2026-08-03':300,'2026-08-04':300,'2026-08-05':300,'2026-08-06':300,'2026-08-07':320,'2026-08-08':320,'2026-08-09':320,'2026-08-10':300,'2026-08-11':300,'2026-08-12':300,'2026-08-13':350,'2026-08-14':350,'2026-08-15':350,'2026-08-16':350,'2026-08-17':300,'2026-08-18':300,'2026-08-19':300,'2026-08-20':300,'2026-08-21':320,'2026-08-22':320,'2026-08-23':320,'2026-08-24':300,'2026-08-25':330,'2026-08-26':330,'2026-08-27':330,'2026-08-28':330,'2026-08-29':350,'2026-08-30':350,'2026-08-31':330,
+  '2026-09-01':200,'2026-09-02':200,'2026-09-03':200,'2026-09-04':200,'2026-09-05':250,'2026-09-06':250,'2026-09-07':200,'2026-09-08':200,'2026-09-09':200,'2026-09-10':200,'2026-09-11':200,'2026-09-12':250,'2026-09-13':250,'2026-09-14':200,'2026-09-15':220,'2026-09-16':220,'2026-09-17':220,'2026-09-18':220,'2026-09-19':270,'2026-09-20':270,'2026-09-21':220,'2026-09-22':200,'2026-09-23':200,'2026-09-24':200,'2026-09-25':200,'2026-09-26':250,'2026-09-27':250,'2026-09-28':200,'2026-09-29':200,'2026-09-30':200
+};
+function isTop65Boat(boat){return /nibert\s*[12]/i.test(String(boat?.name||'')) || /top\s*65/i.test(String(boat?.modello||''));}
+function jsArg(x){return JSON.stringify(String(x));}
+
 
 function safeArr(x){
   if(!x) return [];
   if(Array.isArray(x)) return x.filter(v => v && typeof v === 'object');
-  if(typeof x === 'object') return Object.keys(x).map(k => x[k]).filter(v => v && typeof v === 'object');
+  if(typeof x === 'object') return Object.keys(x).map(k => {
+    const v=x[k];
+    return (v && typeof v === 'object') ? {_fbKey:k,...v} : null;
+  }).filter(v => v && typeof v === 'object');
   return [];
 }
 
@@ -598,6 +611,8 @@ function normalizeBoat(b){
     Object.keys(obj).forEach(k=>{out[normDateKey(k)]=obj[k];});
     return out;
   }
+  b.dailyPrices=normalizeMapKeys(b.dailyPrices);
+  if(isTop65Boat(b)) b.dailyPrices={...TOP65_DAILY_PRICES_2026,...b.dailyPrices};
   b.overrides=normalizeMapKeys(b.overrides);
   b.bookings=normalizeMapKeys(b.bookings);
   return b;
@@ -605,29 +620,32 @@ function normalizeBoat(b){
 
 function normalizeBooking(b){
   b=b||{};
-  b.id=Number(b.id)||0;
+  // Accetta sia le prenotazioni manuali numeriche sia le richieste sito create con push key Firebase.
+  b.id=(b.id!==undefined&&b.id!==null&&b.id!=='') ? b.id : (b._fbKey||('bk_'+Date.now()));
   b.clienteId=b.clienteId?Number(b.clienteId):null;
-  b.clienteNome=b.clienteNome||'';
-  b.barca=b.barca||'';
-  b.data=b.data||'';
+  const fullName=[b.firstName||b.nome||'',b.lastName||b.cognome||''].join(' ').trim();
+  b.clienteNome=b.clienteNome||b.clientName||fullName||'';
+  b.barca=b.barca||b.boatName||'';
+  b.boatId=b.boatId||b.idBarca||'';
+  b.data=b.data||b.date||'';
   b.giorni=Number(b.giorni)||1;
-  b.passeggeri=Number(b.passeggeri)||0;
-  b.importo=Number(b.importo)||0;
+  b.passeggeri=Number(b.passeggeri||b.guests||b.passengers)||0;
+  b.importo=Number(b.importo||b.price)||0;
   b.acconto=Number(b.acconto)||0;
   b.statoPagamento=b.statoPagamento||'Non pagato';
   b.statoFattura=b.statoFattura||'Non fatturato';
-  // NEW: booking status for website requests
   b.status=b.status||'manual'; // pending | confirmed | rejected | manual
-  // NEW: full client data from website form
-  b.email=b.email||'';
-  b.telefono=b.telefono||'';
-  b.codiceFiscale=b.codiceFiscale||'';
-  b.residenza=b.residenza||'';
-  b.tipoDocumento=b.tipoDocumento||'';
-  b.numeroDocumento=b.numeroDocumento||'';
-  b.dataEmissione=b.dataEmissione||'';
-  b.dataScadenza=b.dataScadenza||'';
-  b.note=b.note||'';
+  b.source=b.source||'manual';
+  b.email=b.email||b.clientEmail||'';
+  b.telefono=b.telefono||b.phone||b.clientPhone||'';
+  b.codiceFiscale=b.codiceFiscale||b.fiscalCode||'';
+  b.residenza=b.residenza||b.address||'';
+  b.tipoDocumento=b.tipoDocumento||b.documentType||'';
+  b.numeroDocumento=b.numeroDocumento||b.documentNumber||b.docNumber||'';
+  b.dataEmissione=b.dataEmissione||b.documentIssueDate||b.docIssueDate||'';
+  b.dataScadenza=b.dataScadenza||b.documentExpiryDate||b.docExpiry||'';
+  b.note=b.note||b.notes||'';
+  b.creatoIl=b.creatoIl||b.createdAt||today();
   return b;
 }
 
@@ -669,14 +687,14 @@ function normalizeAllData(){
   tasks=safeArr(tasks).map(normalizeTask).filter(x=>x&&x.id);
   if(!boats.length){
     boats=[
-      {id:1,name:'Nibert 1',type:'Gommone',modello:'Trimarchi Top 65 · 2024',length:'6.5m',passengers:'7',engine:'Mercury 40cv',velocita:'27 nodi',patente:'No',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
-      {id:2,name:'Nibert 2',type:'Gommone',modello:'Trimarchi Top 65 · 2024',length:'6.5m',passengers:'7',engine:'Mercury 40cv',velocita:'27 nodi',patente:'No',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
-      {id:3,name:'Qmax 26',type:'Gommone',modello:'Qmax Max 26 · 2025',length:'8.1m',passengers:'11',engine:'Suzuki 250cv',velocita:'40+ nodi',patente:'Sì',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
-      {id:4,name:'Magazzù MX 11 Spider',type:'Luxury',modello:'Magazzù MX 11 · 2023',length:'11m',passengers:'15',engine:'2x 320cv',velocita:'50+ nodi',patente:'Sì',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
-      {id:5,name:'Fiart Seawalker 35',type:'Barca a Motore',modello:'Fiart Seawalker 35 · 2023',length:'10.5m',passengers:'10',engine:'2x 300cv',velocita:'35+ nodi',patente:'Sì',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
-      {id:6,name:'Lagoon 46',type:'Catamarano',modello:'Lagoon 46 · 2021',length:'14m',passengers:'12',engine:'2x 45cv',velocita:'10 nodi',patente:'Sì',homeport:'Messina',rentalType:'weekly',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
-      {id:7,name:'Lagoon 56',type:'Catamarano Luxury',modello:'Lagoon 56 · 2022',length:'17m',passengers:'12',engine:'2x 57cv',velocita:'12 nodi',patente:'Sì',homeport:'Messina',rentalType:'weekly',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
-      {id:8,name:'Oceanis 50',type:'Barca a Vela',modello:'Bénéteau Oceanis 50 · 2020',length:'15m',passengers:'10',engine:'75cv + vela',velocita:'8 nodi',patente:'Sì',homeport:'Messina',rentalType:'weekly',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}}
+      {id:1,name:'Nibert 1',type:'Gommone',modello:'Trimarchi Top 65 · 2024',length:'6.5m',passengers:'7',engine:'Mercury 40cv',velocita:'27 nodi',patente:'No',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,dailyPrices:{},bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:2,name:'Nibert 2',type:'Gommone',modello:'Trimarchi Top 65 · 2024',length:'6.5m',passengers:'7',engine:'Mercury 40cv',velocita:'27 nodi',patente:'No',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,dailyPrices:{},bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:3,name:'Qmax 26',type:'Gommone',modello:'Qmax Max 26 · 2025',length:'8.1m',passengers:'11',engine:'Suzuki 250cv',velocita:'40+ nodi',patente:'Sì',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,dailyPrices:{},bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:4,name:'Magazzù MX 11 Spider',type:'Luxury',modello:'Magazzù MX 11 · 2023',length:'11m',passengers:'15',engine:'2x 320cv',velocita:'50+ nodi',patente:'Sì',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,dailyPrices:{},bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:5,name:'Fiart Seawalker 35',type:'Barca a Motore',modello:'Fiart Seawalker 35 · 2023',length:'10.5m',passengers:'10',engine:'2x 300cv',velocita:'35+ nodi',patente:'Sì',homeport:'Messina',rentalType:'daily',photo:null,priceFullDay:0,visible:true,dailyPrices:{},bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:6,name:'Lagoon 46',type:'Catamarano',modello:'Lagoon 46 · 2021',length:'14m',passengers:'12',engine:'2x 45cv',velocita:'10 nodi',patente:'Sì',homeport:'Messina',rentalType:'weekly',photo:null,priceFullDay:0,visible:true,dailyPrices:{},bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:7,name:'Lagoon 56',type:'Catamarano Luxury',modello:'Lagoon 56 · 2022',length:'17m',passengers:'12',engine:'2x 57cv',velocita:'12 nodi',patente:'Sì',homeport:'Messina',rentalType:'weekly',photo:null,priceFullDay:0,visible:true,dailyPrices:{},bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}},
+      {id:8,name:'Oceanis 50',type:'Barca a Vela',modello:'Bénéteau Oceanis 50 · 2020',length:'15m',passengers:'10',engine:'75cv + vela',velocita:'8 nodi',patente:'Sì',homeport:'Messina',rentalType:'weekly',photo:null,priceFullDay:0,visible:true,dailyPrices:{},bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}}
     ];
   }
   if(activeBoat<0||activeBoat>=boats.length) activeBoat=0;
@@ -715,7 +733,7 @@ function loadData(){
       normalizeAllData();sortClientsAZ();
       nextLeadId=Math.max(...leads.map(x=>x.id||0).concat([0]))+1;
       nextClientId=Math.max(...clients.map(x=>x.id||0).concat([0]))+1;
-      nextBookingId=Math.max(...bookings.map(x=>x.id||0).concat([0]))+1;
+      nextBookingId=Math.max(0,...bookings.map(x=>Number(x.id)||0))+1;
       nextBoatId=Math.max(...boats.map(x=>x.id||0).concat([0]))+1;
       nextTaskId=Math.max(...tasks.map(x=>x.id||0).concat([0]))+1;
     }
@@ -729,6 +747,18 @@ function persistBoatByName(name){const b=boats.find(x=>x&&x.name===name);if(b)rt
 function persistClient(id){const c=clients.find(x=>x&&x.id===id);if(c)rtdbWrite('clients/'+id,c);}
 function persistTask(id){const t=tasks.find(x=>x&&x.id===id);if(t)rtdbWrite('tasks/'+id,t);}
 function persistLead(id){const l=leads.find(x=>x&&x.id===id);if(l)rtdbWrite('leads/'+id,l);}
+
+let _seededTop65Prices=false;
+function ensureTop65PricesOnFirebase(){
+  if(_seededTop65Prices) return;
+  _seededTop65Prices=true;
+  try{
+    boats.filter(isTop65Boat).forEach(b=>{
+      b.dailyPrices={...TOP65_DAILY_PRICES_2026,...(b.dailyPrices||{})};
+      persistBoat(b.id);
+    });
+  }catch(e){console.warn('Seed prezzi TOP-65 non completato',e);}
+}
 
 // ==================== MODAL ====================
 function closeModal(){document.getElementById('modal-root').innerHTML=''}
@@ -792,7 +822,7 @@ function renderRequests(){
           <div style="font-size:12px;color:var(--text3)">${b.email||'—'} · ${b.telefono||'—'}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-weight:700;font-size:18px;color:var(--navy)">${fmtEur(b.importo)}</div>
+          <div class="admin-only" style="font-weight:700;font-size:18px;color:var(--navy)">${fmtEur(b.importo)}</div>
           <div style="font-size:11px;color:var(--text3)">${b.creatoIl||b.data}</div>
         </div>
       </div>
@@ -823,10 +853,10 @@ function renderRequests(){
       </div>`:''}
       ${b.note?`<div style="padding:8px 10px;background:var(--warn-bg);border-radius:var(--r);font-size:12px;margin-bottom:12px"><strong>Note:</strong> ${b.note}</div>`:''}
       <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button class="btn btn-sm btn-danger" onclick="rejectRequest(${b.id})" style="min-width:90px">
+        <button class="btn btn-sm btn-danger" onclick="rejectRequest(${jsArg(b.id)})" style="min-width:90px">
           ✕ Rifiuta
         </button>
-        <button class="btn btn-sm btn-success" onclick="acceptRequest(${b.id})" style="min-width:90px;background:var(--success);color:#fff;border-color:var(--success)">
+        <button class="btn btn-sm btn-success" onclick="acceptRequest(${jsArg(b.id)})" style="min-width:90px;background:var(--success);color:#fff;border-color:var(--success)">
           ✓ Accetta
         </button>
       </div>
@@ -836,13 +866,13 @@ function renderRequests(){
 
 function acceptRequest(id){
   if(!confirm('Confermi la prenotazione? Verrà inviata email di conferma al cliente.')) return;
-  const b=bookings.find(x=>x.id===id);
+  const b=bookings.find(x=>x&&idEq(x.id,id));
   if(!b) return;
   b.status='confirmed';
   b.statoPagamento='Non pagato';
   saveData();
   // Update in Firebase — Cloud Function will trigger the email
-  rtdbWrite('bookings/'+id, b);
+  rtdbWrite('bookings/'+String(id), b);
   renderRequests();
   updateRequestsBadge();
   renderBookings();
@@ -875,12 +905,12 @@ function rejectRequest(id){
 
 function confirmReject(id){
   const reason=document.getElementById('reject-reason')?.value.trim()||'';
-  const b=bookings.find(x=>x.id===id);
+  const b=bookings.find(x=>x&&idEq(x.id,id));
   if(!b) return;
   b.status='rejected';
   b.rejectReason=reason;
   saveData();
-  rtdbWrite('bookings/'+id, b);
+  rtdbWrite('bookings/'+String(id), b);
   closeModal();
   renderRequests();
   updateRequestsBadge();
@@ -1067,7 +1097,7 @@ function openDayBookings(dateStr){
   modal(`
     <div class="modal-title">${label}<button class="modal-close" onclick="closeModal()">×</button></div>
     ${matching.map(bk=>`
-      <div style="border:1px solid var(--border);border-left:4px solid ${bk.status==='pending'?'var(--warn)':'var(--navy)'};border-radius:var(--r);padding:10px 12px;margin-bottom:8px;cursor:pointer" onclick="closeModal();openBookingDetail(${bk.id})">
+      <div style="border:1px solid var(--border);border-left:4px solid ${bk.status==='pending'?'var(--warn)':'var(--navy)'};border-radius:var(--r);padding:10px 12px;margin-bottom:8px;cursor:pointer" onclick="closeModal();openBookingDetail(${jsArg(bk.id)})">
         <div style="display:flex;justify-content:space-between">
           <div><div style="font-weight:600">${bk.clienteNome}</div><div style="font-size:12px;color:var(--text2)">${bk.barca}</div></div>
           <div><span class="badge badge-${bk.status==='pending'?'pending':bk.status==='confirmed'?'confirmed':'new'}">${bk.status==='pending'?'In attesa':'Confermata'}</span></div>
@@ -1090,7 +1120,7 @@ function renderBookings(){
     : [{l:'Confermate',v:confirmed.length},{l:'In attesa',v:pending.length,danger:pending.length>0}];
   document.getElementById('bk-stats').innerHTML=bkStatsItems.map(x=>`<div class="stat-card"><div class="stat-label">${x.l}</div><div class="stat-value" style="font-size:18px;${x.danger?'color:var(--warn)':''}">${x.v}</div></div>`).join('');
   const filtered=bookings.filter(b=>
-    (b.clienteNome+b.barca).toLowerCase().includes(q.toLowerCase())&&
+    ((b.clienteNome||'')+(b.barca||'')+(b.email||'')).toLowerCase().includes(q.toLowerCase())&&
     (!payF||b.statoPagamento===payF)&&
     (!statusF||b.status===statusF)
   ).sort((a,b)=>new Date(b.data)-new Date(a.data));
@@ -1098,7 +1128,7 @@ function renderBookings(){
   <table class="tbl">
     <thead><tr><th>Cliente</th><th>Barca</th><th>Data</th><th>Stato</th><th class="admin-only-cell">Importo</th><th class="admin-only-cell">Pagamento</th><th></th></tr></thead>
     <tbody>${filtered.map(b=>`
-      <tr style="cursor:pointer" onclick="openBookingDetail(${b.id})">
+      <tr style="cursor:pointer" onclick="openBookingDetail(${jsArg(b.id)})">
         <td><div style="font-weight:600">${b.clienteNome}</div><div style="font-size:11px;color:var(--text3)">${b.email||''}</div></td>
         <td style="font-size:13px">${b.barca}</td>
         <td style="font-size:12px;color:var(--text3)">${b.data}</td>
@@ -1107,12 +1137,12 @@ function renderBookings(){
         }</span></td>
         <td class="admin-only-cell" style="font-weight:600">${fmtEur(b.importo)}</td>
         <td class="admin-only-cell">
-          <select class="status-select" style="${payStyle(b.statoPagamento)}" onclick="event.stopPropagation()" onchange="updateBkField(${b.id},'statoPagamento',this.value)">
+          <select class="status-select" style="${payStyle(b.statoPagamento)}" onclick="event.stopPropagation()" onchange="updateBkField(${jsArg(b.id)},'statoPagamento',this.value)">
             ${['Non pagato','Parziale','Saldato'].map(s=>`<option${s===b.statoPagamento?' selected':''}>${s}</option>`).join('')}
           </select>
         </td>
         <td>
-          ${b.status==='pending'?`<button class="btn btn-xs btn-gold" onclick="event.stopPropagation();showPage('requests')">Gestisci</button>`:`<button class="btn btn-xs" onclick="event.stopPropagation();openBookingForm(${b.id})">✎</button>`}
+          ${b.status==='pending'?`<button class="btn btn-xs btn-gold" onclick="event.stopPropagation();showPage('requests')">Gestisci</button>`:`<button class="btn btn-xs" onclick="event.stopPropagation();openBookingForm(${jsArg(b.id)})">✎</button>`}
         </td>
       </tr>`).join('')}
     </tbody>
@@ -1150,9 +1180,9 @@ function openBookingDetail(id){
         <div><div class="stat-label">Saldo</div><div style="font-size:16px;font-weight:600;color:var(--danger)">${fmtEur(Number(b.importo)-Number(b.acconto))}</div></div>
       </div>
     </div>
-    ${b.status==='pending'?`<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn btn-danger" onclick="closeModal();rejectRequest(${id})" style="flex:1">✕ Rifiuta</button><button class="btn btn-success" onclick="closeModal();acceptRequest(${id})" style="flex:1;background:var(--success);color:#fff;border-color:var(--success)">✓ Accetta</button></div>`:''}
+    ${b.status==='pending'?`<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn btn-danger" onclick="closeModal();rejectRequest(${jsArg(id)})" style="flex:1">✕ Rifiuta</button><button class="btn btn-success" onclick="closeModal();acceptRequest(${jsArg(id)})" style="flex:1;background:var(--success);color:#fff;border-color:var(--success)">✓ Accetta</button></div>`:''}
     <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn btn-sm" onclick="closeModal();openBookingForm(${b.id})">Modifica</button>
+      <button class="btn btn-sm" onclick="closeModal();openBookingForm(${jsArg(b.id)})">Modifica</button>
     </div>`);
 }
 
@@ -1168,20 +1198,21 @@ function openBookingForm(id){
       <div class="field"><label>Data</label><input id="bk-data" type="date" value="${b.data}"></div>
       <div class="field"><label>N. giorni</label><input id="bk-giorni" type="number" min="1" value="${b.giorni||1}"></div>
       <div class="field"><label>Passeggeri</label><input id="bk-pass" type="number" min="1" value="${b.passeggeri||2}"></div>
-      <div class="field"><label>Importo €</label><input id="bk-imp" type="number" value="${b.importo||0}"></div>
-      <div class="field"><label>Acconto €</label><input id="bk-acc" type="number" value="${b.acconto||0}"></div>
-      <div class="field"><label>Pagamento</label><select id="bk-pay">${['Non pagato','Parziale','Saldato'].map(s=>`<option${s===b.statoPagamento?' selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="field admin-only"><label>Importo €</label><input id="bk-imp" type="number" value="${b.importo||0}"></div>
+      <div class="field admin-only"><label>Acconto €</label><input id="bk-acc" type="number" value="${b.acconto||0}"></div>
+      <div class="field admin-only"><label>Pagamento</label><select id="bk-pay">${['Non pagato','Parziale','Saldato'].map(s=>`<option${s===b.statoPagamento?' selected':''}>${s}</option>`).join('')}</select></div>
     </div>
     <div class="field"><label>Note</label><textarea id="bk-note">${b.note||''}</textarea></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
-      ${id?`<button class="btn btn-sm btn-danger" onclick="deleteBooking(${id})">Elimina</button>`:''}
+      ${id?`<button class="btn btn-sm btn-danger" onclick="deleteBooking(${jsArg(id)})">Elimina</button>`:''}
       <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
-      <button class="btn btn-sm btn-navy" onclick="saveBooking(${id||'null'})">Salva</button>
+      <button class="btn btn-sm btn-navy" onclick="saveBooking(${id?jsArg(id):'null'})">Salva</button>
     </div>`);
 }
 
 function saveBooking(id){
-  const d={clienteNome:v('bk-cnome'),email:v('bk-email'),telefono:v('bk-tel'),barca:v('bk-barca'),data:v('bk-data'),giorni:parseInt(v('bk-giorni'))||1,passeggeri:parseInt(v('bk-pass'))||0,importo:parseFloat(v('bk-imp'))||0,acconto:parseFloat(v('bk-acc'))||0,statoPagamento:v('bk-pay'),statoFattura:'Non fatturato',note:v('bk-note'),status:'manual'};
+  const existing=id?bookings.find(x=>x&&idEq(x.id,id)):null;
+  const d={clienteNome:v('bk-cnome'),email:v('bk-email'),telefono:v('bk-tel'),barca:v('bk-barca'),data:v('bk-data'),giorni:parseInt(v('bk-giorni'))||1,passeggeri:parseInt(v('bk-pass'))||0,importo:window._isAdmin?(parseFloat(v('bk-imp'))||0):(existing?.importo||0),acconto:window._isAdmin?(parseFloat(v('bk-acc'))||0):(existing?.acconto||0),statoPagamento:window._isAdmin?v('bk-pay'):(existing?.statoPagamento||'Non pagato'),statoFattura:'Non fatturato',note:v('bk-note'),status:existing?.status||'manual'};
   if(!d.clienteNome)return;
   let bid;
   if(id){const b=bookings.find(x=>x&&idEq(x.id,id));if(b){syncBoatCalendar(b,false);Object.assign(b,d);bid=id;syncBoatCalendar(b,true);}}
@@ -1192,7 +1223,7 @@ function saveBooking(id){
 
 function syncBoatCalendar(bk,add){
   if(!bk||!bk.data||!bk.barca)return;
-  const boat=boats.find(b=>b.name===bk.barca);if(!boat)return;normalizeBoat(boat);
+  const boat=boats.find(b=>String(b.id)===String(bk.boatId)||b.name===bk.barca);if(!boat)return;normalizeBoat(boat);
   const start=new Date(bk.data);
   for(let g=0;g<(parseInt(bk.giorni)||1);g++){
     const d=new Date(start);d.setDate(d.getDate()+g);
@@ -1220,8 +1251,9 @@ function getDayInfo(boat,key){
   boat=normalizeBoat(boat);
   const parts=String(key).split('-').map(Number);
   const monthIndex=(parts[1]||1)-1;
-  if(boat.overrides&&boat.overrides[key]!==undefined)return{price:Number(boat.overrides[key])||0,over:true};
-  return{price:getBandPrice(boat,monthIndex),over:false};
+  if(boat.overrides&&boat.overrides[key]!==undefined)return{price:Number(boat.overrides[key])||0,over:true,source:'custom'};
+  if(boat.dailyPrices&&boat.dailyPrices[key]!==undefined)return{price:Number(boat.dailyPrices[key])||0,over:false,source:'daily'};
+  return{price:getBandPrice(boat,monthIndex),over:false,source:'band'};
 }
 
 function renderFleet(){
@@ -1285,8 +1317,9 @@ function renderFleet(){
         </div>
       </div>
     </div>
-    <div class="card-title">Fasce prezzo</div>
+    <div class="card-title">Prezzi</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:16px">
+      ${Object.keys(boat.dailyPrices||{}).length?`<div style="grid-column:1/-1;background:var(--info-bg);color:var(--navy);border-radius:var(--r);padding:10px 12px;font-size:12px"><strong>Listino giornaliero attivo</strong>: il calendario usa i prezzi specifici per data. Clicca un giorno per modificarlo.</div>`:''}
       ${boat.bands.map((b,bi)=>`<div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">${b.label}</div><div style="display:flex;align-items:center;gap:4px"><span style="color:var(--text3);font-size:13px">€</span><input type="number" value="${b.price}" onchange="boats[${activeBoat}].bands[${bi}].price=parseInt(this.value)||0;saveData();persistBoat(boats[${activeBoat}].id);renderFleet()" style="width:72px;padding:5px 7px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--white);color:var(--text)"><span style="font-size:11px;color:var(--text3)">/g</span></div></div>`).join('')}
     </div>
     <div class="card-title">Calendario ${MONTHS[calMonth]} ${calYear}</div>
@@ -1312,12 +1345,13 @@ function openFleetDay(key){
   const parts=String(key).split('-').map(Number);
   const y=parts[0],monthIndex=(parts[1]||1)-1,d=parts[2];
   const band=getBandPrice(boat,monthIndex);
+  const dayInfo=getDayInfo(boat,key);
   const over=boat.overrides?boat.overrides[key]:undefined;
   const booked=boat.bookings?boat.bookings[key]:false;
   modal(`
     <div class="modal-title">${d} ${MONTHS[monthIndex]} ${y} — ${boat.name}<button class="modal-close" onclick="closeModal()">×</button></div>
-    <div class="field"><label>Prezzo fascia stagionale</label><input value="€${band}" readonly style="background:var(--bg2);color:var(--text3)"></div>
-    <div class="field"><label>Prezzo personalizzato (solo questo giorno)</label><input type="number" id="day-ov" value="${over!==undefined?over:''}" placeholder="Lascia vuoto per usare la fascia"></div>
+    <div class="field"><label>Prezzo attuale usato dal sito</label><input value="€${dayInfo.price}" readonly style="background:var(--bg2);color:var(--text3)"></div>
+    <div class="field"><label>Prezzo personalizzato (solo questo giorno)</label><input type="number" id="day-ov" value="${over!==undefined?over:''}" placeholder="Lascia vuoto per usare il listino"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       ${over!==undefined?`<button class="btn btn-sm btn-danger" onclick="removeOverride('${key}')">Rimuovi custom</button>`:''}
       <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
@@ -1350,7 +1384,7 @@ function openAddBoatModal(){
 }
 
 function saveNewBoat(){
-  const nb={id:nextBoatId++,name:v('nb-nome')||'Nuova barca',type:v('nb-tipo'),length:v('nb-len'),passengers:v('nb-pass'),engine:'',homeport:v('nb-porto')||'Messina',photo:null,priceFullDay:0,visible:true,bands:DEFAULT_BANDS.map(b=>({...b})),overrides:{},bookings:{}};
+  const nb={id:nextBoatId++,name:v('nb-nome')||'Nuova barca',type:v('nb-tipo'),length:v('nb-len'),passengers:v('nb-pass'),engine:'',homeport:v('nb-porto')||'Messina',photo:null,priceFullDay:0,visible:true,dailyPrices:{},bands:DEFAULT_BANDS.map(b=>({...b})),dailyPrices:{},overrides:{},bookings:{}};
   boats.push(nb);
   rtdbWrite('boats/'+nb.id,nb);
   activeBoat=boats.length-1;saveData();closeModal();renderFleet();
