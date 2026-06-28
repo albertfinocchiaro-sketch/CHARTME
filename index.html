@@ -696,55 +696,40 @@ function normalizeBoat(b){
 
 function normalizeBooking(b){
   b=b||{};
-  b.id=(b.id!==undefined&&b.id!==null&&b.id!=='')?b.id:(b._key||String(Date.now()));
+  // IMPORTANTE: le richieste dal sito arrivano in Firebase con chiavi testuali
+  // tipo -Oabc123. Non bisogna convertirle in numero, altrimenti Accetta/Rifiuta
+  // scrivono nel percorso sbagliato e sembra che i pulsanti non funzionino.
+  const rawId = (b.id!==undefined && b.id!==null && String(b.id)!=='') ? b.id : (b._key || '');
+  b._key = b._key || String(rawId || '');
+  b.id = rawId || b._key || ('booking_'+Date.now());
   b.clienteId=b.clienteId?Number(b.clienteId):null;
-
-  const fullName=(b.clienteNome||b.customerName||`${b.firstName||''} ${b.lastName||''}`).trim();
-  b.clienteNome=fullName||'';
-  b.firstName=b.firstName||b.nome||'';
-  b.lastName=b.lastName||b.cognome||'';
-  if((!b.firstName||!b.lastName)&&b.clienteNome){
-    const parts=b.clienteNome.split(' ');
-    b.firstName=b.firstName||parts.shift()||'';
-    b.lastName=b.lastName||parts.join(' ');
-  }
-
+  b.clienteNome=b.clienteNome||[b.firstName,b.lastName].filter(Boolean).join(' ')||'';
   b.barca=b.barca||b.boatName||'';
-  b.boatName=b.boatName||b.barca||'';
   b.data=b.data||b.date||'';
   b.date=b.date||b.data||'';
   b.endDate=b.endDate||'';
   b.giorni=Number(b.giorni)||((b.endDate&&b.data)?Math.max(1,Math.round((new Date(b.endDate)-new Date(b.data))/86400000)):1);
   b.passeggeri=Number(b.passeggeri||b.guests)||0;
-  b.guests=b.guests||b.passeggeri||0;
   b.importo=Number(b.importo||b.price)||0;
-  b.price=b.price||b.importo||0;
   b.acconto=Number(b.acconto)||0;
   b.statoPagamento=b.statoPagamento||'Non pagato';
   b.statoFattura=b.statoFattura||'Non fatturato';
-  b.status=b.status||'manual'; // pending | confirmed | rejected | manual
-
+  b.status=b.status||'manual';
+  b.rentalType=b.rentalType||'';
+  b.publicPrice=b.publicPrice!==false;
   b.email=b.email||'';
   b.telefono=b.telefono||b.phone||'';
-  b.phone=b.phone||b.telefono||'';
-
+  b.firstName=b.firstName||''; b.lastName=b.lastName||'';
   b.codiceFiscale=b.codiceFiscale||b.fiscalCode||'';
-  b.fiscalCode=b.fiscalCode||b.codiceFiscale||'';
   b.partitaIva=b.partitaIva||b.vatNumber||'';
   b.ragioneSociale=b.ragioneSociale||b.companyName||'';
-  b.pec=b.pec||'';
-  b.sdi=b.sdi||b.codiceDestinatario||'';
-
+  b.pec=b.pec||''; b.sdi=b.sdi||b.codiceDestinatario||'';
+  b.indirizzoResidenza=b.indirizzoResidenza||b.residenceAddress||'';
   b.cittaResidenza=b.cittaResidenza||b.residenceCity||'';
-  b.indirizzoResidenza=b.indirizzoResidenza||b.residenceAddress||b.address||'';
-  b.cap=b.cap||b.zip||'';
-  b.provincia=b.provincia||b.province||'';
-  b.nazione=b.nazione||b.country||'Italia';
-  b.residenza=b.residenza||[b.indirizzoResidenza,b.cittaResidenza,b.cap,b.provincia].filter(Boolean).join(', ');
-
+  b.cap=b.cap||''; b.provincia=b.provincia||''; b.nazione=b.nazione||'Italia';
+  b.residenza=b.residenza||b.address||[b.indirizzoResidenza,b.cittaResidenza,b.cap,b.provincia].filter(Boolean).join(', ');
   b.tipoDocumento=b.tipoDocumento||b.documentType||'';
   b.numeroDocumento=b.numeroDocumento||b.documentNumber||'';
-  b.documentNumber=b.documentNumber||b.numeroDocumento||'';
   b.dataEmissione=b.dataEmissione||b.documentIssueDate||'';
   b.dataScadenza=b.dataScadenza||b.documentExpiryDate||'';
   b.note=b.note||b.notes||'';
@@ -848,7 +833,7 @@ function badgeLead(s){return{Nuovo:'badge-new',Contattato:'badge-contact',Preven
 function fmtEur(n){return'€'+Number(n||0).toLocaleString('it-IT',{minimumFractionDigits:0})}
 function today(){return new Date().toISOString().slice(0,10)}
 function idEq(a,b){return String(a)===String(b)}
-function jsArg(x){return JSON.stringify(String(x))}
+function jsArg(x){return "'" + String(x).replace(/\\/g,'\\\\').replace(/'/g,"\\'") + "'"}
 function v(id){const el=document.getElementById(id);return el?el.value.trim():''}
 function clientSortKey(c){return((c.cognome||'')+' '+(c.nome||'')).trim().toLowerCase()}
 function sortClientsAZ(){
@@ -874,7 +859,8 @@ function loadData(){
 }
 loadData();normalizeAllData();sortClientsAZ();
 
-function persistBooking(id){const b=bookings.find(x=>x&&idEq(x.id,id));if(b)rtdbWrite('bookings/'+String(id),b);}
+function bookingPath(b){return String((b&&b._key)||((b&&b.id)!=null?b.id:''));}
+function persistBooking(id){const b=bookings.find(x=>x&&idEq(x.id,id));if(b)rtdbWrite('bookings/'+bookingPath(b),b);}
 function persistBoat(id){const b=boats.find(x=>x&&idEq(x.id,id));if(b)rtdbWrite('boats/'+String(b.id),b);}
 function persistBoatByName(name){const b=boats.find(x=>x&&x.name===name);if(b)rtdbWrite('boats/'+b.id,b);}
 function persistClient(id){const c=clients.find(x=>x&&x.id===id);if(c)rtdbWrite('clients/'+id,c);}
@@ -1089,7 +1075,7 @@ function acceptRequest(id){
   const clientId=upsertClientFromBooking(b);
   if(clientId) b.clienteId=clientId;
   saveData();
-  rtdbWrite('bookings/'+String(b.id), b);
+  rtdbWrite('bookings/'+bookingPath(b), b);
   renderRequests(); updateRequestsBadge(); renderBookings(); renderHome(); renderDailyBar();
   modal(`
     <div style="text-align:center;padding:16px 0">
@@ -1117,7 +1103,7 @@ function confirmReject(id){
   const b=bookings.find(x=>x&&idEq(x.id,id));
   if(!b) return;
   b.status='rejected'; b.rejectReason=reason;
-  saveData(); rtdbWrite('bookings/'+String(b.id), b);
+  saveData(); rtdbWrite('bookings/'+bookingPath(b), b);
   closeModal(); renderRequests(); updateRequestsBadge(); renderBookings(); renderHome(); renderDailyBar();
 }
 
@@ -1424,7 +1410,7 @@ function deleteBooking(id){
   const bk=bookings.find(x=>x&&idEq(x.id,id));
   if(bk){syncBoatCalendar(bk,false);persistBoatByName(bk.barca);}
   bookings=bookings.filter(x=>x&&!idEq(x.id,id));
-  saveData();rtdbDelete('bookings/'+String(id));closeModal();renderBookings();renderHome();renderDailyBar();
+  saveData();if(bk)rtdbDelete('bookings/'+bookingPath(bk));closeModal();renderBookings();renderHome();renderDailyBar();
 }
 
 // ==================== FLEET ====================
@@ -1930,6 +1916,16 @@ function restoreBackup(e){
   };
   r.readAsText(file,'UTF-8');
 }
+
+
+// Espone esplicitamente le azioni usate dai pulsanti inline, così su GitHub Pages
+// Accetta/Rifiuta/Modifica funzionano anche dopo minificazione/cache del browser.
+Object.assign(window, {
+  showPage, closeModal, modal,
+  acceptRequest, rejectRequest, confirmReject,
+  openBookingDetail, openBookingForm, saveBooking, deleteBooking, updateBkField,
+  renderHome, renderRequests, renderBookings, renderCRM, renderClients, renderTasks, renderStats, renderFleet, renderPhotos
+});
 
 // ==================== INIT ====================
 try{showPage('home');renderHome();renderCRM();renderDailyBar();}catch(e){}
