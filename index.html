@@ -835,6 +835,20 @@ function today(){return new Date().toISOString().slice(0,10)}
 function idEq(a,b){return String(a)===String(b)}
 function jsArg(x){return "'" + String(x).replace(/\\/g,'\\\\').replace(/'/g,"\\'") + "'"}
 function htmlAttr(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/\"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function htmlText(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function bookingDisplayLabel(b){
+  b=b||{};
+  const client=(b.clienteNome||[b.firstName,b.lastName].filter(Boolean).join(' ')||'Cliente senza nome').trim();
+  const boat=(b.barca||b.boatName||'Barca non indicata').trim();
+  return client + ' - ' + boat;
+}
+function bookingDisplayShort(b){
+  b=b||{};
+  const client=(b.clienteNome||[b.firstName,b.lastName].filter(Boolean).join(' ')||'Cliente').trim();
+  const firstName=client.split(' ')[0]||client;
+  const boat=(b.barca||b.boatName||'Barca').trim();
+  return firstName + ' - ' + boat;
+}
 function v(id){const el=document.getElementById(id);return el?el.value.trim():''}
 function clientSortKey(c){return((c.cognome||'')+' '+(c.nome||'')).trim().toLowerCase()}
 function sortClientsAZ(){
@@ -1307,7 +1321,7 @@ function renderBkCalendar(){
     cell+=`<div style="font-size:11px;font-weight:${isToday?'700':'400'};color:${isToday?'var(--navy)':'var(--text3)'};">${d}</div>`;
     entries.slice(0,3).forEach(e=>{
       const opacity=e.isPending?'0.6':'1';
-      cell+=`<div style="font-size:10px;font-weight:600;color:#fff;background:${e.color};border-radius:3px;padding:1px 4px;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:${opacity}">${e.isPending?'⏳ ':''} ${e.bk.barca.split(' ')[0]}</div>`;
+      cell+=`<div title="${htmlAttr(bookingDisplayLabel(e.bk))}" style="font-size:10px;font-weight:600;color:#fff;background:${e.color};border-radius:3px;padding:1px 4px;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:${opacity}">${e.isPending?'⏳ ':''}${htmlText(bookingDisplayShort(e.bk))}</div>`;
     });
     if(entries.length>3)cell+=`<div style="font-size:10px;color:var(--text3)">+${entries.length-3}</div>`;
     cell+='</div>';
@@ -1338,9 +1352,9 @@ function openDayBookings(dateStr){
   modal(`
     <div class="modal-title">${label}<button class="modal-close" onclick="closeModal()">×</button></div>
     ${matching.map(bk=>`
-      <div style="border:1px solid var(--border);border-left:4px solid ${bk.status==='pending'?'var(--warn)':'var(--navy)'};border-radius:var(--r);padding:10px 12px;margin-bottom:8px;cursor:pointer" onclick="closeModal();openBookingDetail(${bk.id})">
+      <div style="border:1px solid var(--border);border-left:4px solid ${bk.status==='pending'?'var(--warn)':'var(--navy)'};border-radius:var(--r);padding:10px 12px;margin-bottom:8px;cursor:pointer" onclick="closeModal();openBookingDetail(${jsArg(bk.id)})">
         <div style="display:flex;justify-content:space-between">
-          <div><div style="font-weight:600">${bk.clienteNome}</div><div style="font-size:12px;color:var(--text2)">${bk.barca}</div></div>
+          <div><div style="font-weight:600">${htmlText(bookingDisplayLabel(bk))}</div><div style="font-size:12px;color:var(--text2)">${bk.email||bk.telefono||''}</div></div>
           <div><span class="badge badge-${bk.status==='pending'?'pending':bk.status==='confirmed'?'confirmed':'new'}">${bk.status==='pending'?'In attesa':'Confermata'}</span></div>
         </div>
       </div>`).join('')}
@@ -1365,10 +1379,10 @@ function renderBookings(){
     (!payF||b.statoPagamento===payF)&&(!statusF||b.status===statusF)
   ).sort((a,b)=>new Date(b.data||0)-new Date(a.data||0));
   document.getElementById('bk-table').innerHTML=filtered.length===0?`<div class="empty">Nessuna prenotazione</div>`:`
-  <table class="tbl"><thead><tr><th>Cliente</th><th>Barca</th><th>Data</th><th>Stato</th><th class="admin-only-cell">Importo</th><th class="admin-only-cell">Pagamento</th><th></th></tr></thead>
+  <table class="tbl"><thead><tr><th>Cliente / Imbarcazione</th><th>Barca</th><th>Data</th><th>Stato</th><th class="admin-only-cell">Importo</th><th class="admin-only-cell">Pagamento</th><th></th></tr></thead>
   <tbody>${filtered.map(b=>`
     <tr style="cursor:pointer" onclick="openBookingDetail(${jsArg(b.id)})">
-      <td><div style="font-weight:600">${b.clienteNome||'—'}</div><div style="font-size:11px;color:var(--text3)">${b.email||''}</div></td>
+      <td><div style="font-weight:600">${htmlText(bookingDisplayLabel(b))}</div><div style="font-size:11px;color:var(--text3)">${b.email||''}</div></td>
       <td style="font-size:13px">${b.barca||'—'}</td>
       <td style="font-size:12px;color:var(--text3)">${b.data||'—'}${b.endDate?' → '+b.endDate:''}</td>
       <td><span class="badge badge-${b.status==='pending'?'pending':b.status==='rejected'?'rejected':b.status==='confirmed'||b.status==='manual'?'confirmed':'new'}">${{pending:'In attesa',confirmed:'Confermata',rejected:'Rifiutata',manual:'Manuale'}[b.status]||b.status}</span></td>
@@ -1392,7 +1406,7 @@ function updateBkField(id,field,val){
 function openBookingDetail(id){
   const b=bookings.find(x=>x&&idEq(x.id,id));if(!b)return;
   modal(`
-    <div class="modal-title">Prenotazione #${b.id}<button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-title">${htmlText(bookingDisplayLabel(b))}<button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="g2" style="margin-bottom:12px">
       <div><div class="stat-label">Cliente</div><div style="font-weight:600">${b.clienteNome||'—'}</div></div>
       <div><div class="stat-label">Stato</div><span class="badge badge-${b.status==='pending'?'pending':b.status==='rejected'?'rejected':'confirmed'}">${{pending:'In attesa',confirmed:'Confermata',rejected:'Rifiutata',manual:'Manuale'}[b.status]||b.status}</span></div>
