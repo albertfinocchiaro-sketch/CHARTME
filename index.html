@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ChartME — Gestionale interno</title>
+<title>ChartME — Gestionale interno v6.3</title>
 <style>
 :root {
   --gold: #C9B88A;
@@ -834,6 +834,7 @@ function fmtEur(n){return'€'+Number(n||0).toLocaleString('it-IT',{minimumFract
 function today(){return new Date().toISOString().slice(0,10)}
 function idEq(a,b){return String(a)===String(b)}
 function jsArg(x){return "'" + String(x).replace(/\\/g,'\\\\').replace(/'/g,"\\'") + "'"}
+function htmlAttr(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/\"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function v(id){const el=document.getElementById(id);return el?el.value.trim():''}
 function clientSortKey(c){return((c.cognome||'')+' '+(c.nome||'')).trim().toLowerCase()}
 function sortClientsAZ(){
@@ -1060,32 +1061,57 @@ function renderRequests(){
       </div>
       ${b.note?`<div style="padding:8px 10px;background:var(--warn-bg);border-radius:var(--r);font-size:12px;margin-bottom:12px"><strong>Note:</strong> ${b.note}</div>`:''}
       <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button class="btn btn-sm btn-danger" onclick="rejectRequest(${jsArg(b.id)})" style="min-width:90px">✕ Rifiuta</button>
-        <button class="btn btn-sm btn-success" onclick="acceptRequest(${jsArg(b.id)})" style="min-width:90px;background:var(--success);color:#fff;border-color:var(--success)">✓ Accetta</button>
+        <button type="button" class="btn btn-sm btn-danger js-reject-request" data-request-id="${htmlAttr(b._key||b.id)}" style="min-width:90px">✕ Rifiuta</button>
+        <button type="button" class="btn btn-sm btn-success js-accept-request" data-request-id="${htmlAttr(b._key||b.id)}" style="min-width:90px;background:var(--success);color:#fff;border-color:var(--success)">✓ Accetta</button>
       </div>
     </div>`).join('');
 }
 
 function acceptRequest(id){
-  if(!confirm('Confermi la prenotazione? Verrà creata o aggiornata automaticamente l’anagrafica cliente.')) return;
   const b=bookings.find(x=>x&&idEq(x.id,id));
-  if(!b) return;
+  if(!b){
+    alert('Richiesta non trovata. Prova a ricaricare la pagina.');
+    return;
+  }
+  modal(`
+    <div class="modal-title">Conferma richiesta<button class="modal-close" onclick="closeModal()">×</button></div>
+    <div style="padding:10px 0 14px;font-size:13px;line-height:1.5;color:var(--text2)">
+      Vuoi confermare la richiesta di <strong>${b.clienteNome||'cliente'}</strong> per <strong>${b.barca||'imbarcazione'}</strong> del <strong>${b.data||'—'}</strong>?<br>
+      Il cliente verrà creato o aggiornato automaticamente in Anagrafica.
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button type="button" class="btn btn-sm" onclick="closeModal()">Annulla</button>
+      <button type="button" class="btn btn-sm btn-success" style="background:var(--success);color:#fff;border-color:var(--success)" onclick="confirmAcceptRequest(${jsArg(id)})">Conferma prenotazione</button>
+    </div>`);
+}
+
+function confirmAcceptRequest(id){
+  const b=bookings.find(x=>x&&idEq(x.id,id));
+  if(!b){
+    alert('Richiesta non trovata. Prova a ricaricare la pagina.');
+    return;
+  }
   b.status='confirmed';
   b.statoPagamento=b.statoPagamento||'Non pagato';
   const clientId=upsertClientFromBooking(b);
   if(clientId) b.clienteId=clientId;
   saveData();
-  rtdbWrite('bookings/'+bookingPath(b), b);
-  renderRequests(); updateRequestsBadge(); renderBookings(); renderHome(); renderDailyBar();
-  modal(`
-    <div style="text-align:center;padding:16px 0">
-      <div style="width:52px;height:52px;background:var(--success-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px">Prenotazione confermata</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:20px">Il cliente è stato creato o aggiornato in Anagrafica con i dati fiscali disponibili.</div>
-      <button class="btn btn-navy" onclick="closeModal()">Chiudi</button>
-    </div>`);
+  rtdbWrite('bookings/'+bookingPath(b), b).then(()=>{
+    closeModal();
+    renderRequests(); updateRequestsBadge(); renderBookings(); renderHome(); renderDailyBar();
+    modal(`
+      <div style="text-align:center;padding:16px 0">
+        <div style="width:52px;height:52px;background:var(--success-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px">Prenotazione confermata</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:20px">Il cliente è stato creato o aggiornato in Anagrafica con i dati fiscali disponibili.</div>
+        <button type="button" class="btn btn-navy" onclick="closeModal()">Chiudi</button>
+      </div>`);
+  }).catch((err)=>{
+    console.error('Errore conferma richiesta:', err);
+    alert('Errore durante il salvataggio su Firebase. Controlla la console o ricarica la pagina.');
+  });
 }
 
 function rejectRequest(id){
@@ -1093,19 +1119,44 @@ function rejectRequest(id){
     <div class="modal-title">Rifiuta richiesta<button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="field"><label>Motivo interno / email futura</label><textarea id="reject-reason" placeholder="es. Data non disponibile" style="min-height:80px"></textarea></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
-      <button class="btn btn-sm btn-danger" onclick="confirmReject(${jsArg(id)})">Rifiuta</button>
+      <button type="button" class="btn btn-sm" onclick="closeModal()">Annulla</button>
+      <button type="button" class="btn btn-sm btn-danger" onclick="confirmReject(${jsArg(id)})">Rifiuta</button>
     </div>`);
 }
 
 function confirmReject(id){
   const reason=document.getElementById('reject-reason')?.value.trim()||'';
   const b=bookings.find(x=>x&&idEq(x.id,id));
-  if(!b) return;
+  if(!b){
+    alert('Richiesta non trovata. Prova a ricaricare la pagina.');
+    return;
+  }
   b.status='rejected'; b.rejectReason=reason;
-  saveData(); rtdbWrite('bookings/'+bookingPath(b), b);
-  closeModal(); renderRequests(); updateRequestsBadge(); renderBookings(); renderHome(); renderDailyBar();
+  saveData();
+  rtdbWrite('bookings/'+bookingPath(b), b).then(()=>{
+    closeModal(); renderRequests(); updateRequestsBadge(); renderBookings(); renderHome(); renderDailyBar();
+  }).catch((err)=>{
+    console.error('Errore rifiuto richiesta:', err);
+    alert('Errore durante il salvataggio su Firebase. Controlla la console o ricarica la pagina.');
+  });
 }
+
+// Gestione click robusta: niente onclick generati nel bottone, così funziona anche con ID Firebase testuali.
+document.addEventListener('click', function(e){
+  const acceptBtn = e.target.closest && e.target.closest('.js-accept-request');
+  if(acceptBtn){
+    e.preventDefault();
+    e.stopPropagation();
+    acceptRequest(acceptBtn.getAttribute('data-request-id'));
+    return;
+  }
+  const rejectBtn = e.target.closest && e.target.closest('.js-reject-request');
+  if(rejectBtn){
+    e.preventDefault();
+    e.stopPropagation();
+    rejectRequest(rejectBtn.getAttribute('data-request-id'));
+  }
+});
 
 // ==================== CRM ====================
 function renderCRM(){
@@ -1188,7 +1239,7 @@ function openLeadForm(id){
     <div class="field"><label>Note</label><textarea id="l-note">${l.note}</textarea></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
       ${id?`<button class="btn btn-sm btn-danger" onclick="deleteLead(${id})">Elimina</button>`:''}
-      <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
+      <button type="button" class="btn btn-sm" onclick="closeModal()">Annulla</button>
       <button class="btn btn-sm btn-navy" onclick="saveLead(${id||'null'})">Salva</button>
     </div>`);
 }
@@ -1379,7 +1430,7 @@ function openBookingForm(id){
     <div class="field"><label>Note</label><textarea id="bk-note">${b.note||''}</textarea></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
       ${id?`<button class="btn btn-sm btn-danger" onclick="deleteBooking(${jsArg(id)})">Elimina</button>`:''}
-      <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
+      <button type="button" class="btn btn-sm" onclick="closeModal()">Annulla</button>
       <button class="btn btn-sm btn-navy" onclick="saveBooking(${id?jsArg(id):'null'})">Salva</button>
     </div>`);
 }
@@ -1545,7 +1596,7 @@ function openFleetDay(key){
     `}
     <div style="display:flex;gap:8px;justify-content:flex-end">
       ${over!==undefined&&boat.pricePublic!==false?`<button class="btn btn-sm btn-danger" onclick="removeOverride('${key}')">Rimuovi custom</button>`:''}
-      <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
+      <button type="button" class="btn btn-sm" onclick="closeModal()">Annulla</button>
       ${boat.pricePublic===false?`<button class="btn btn-sm btn-navy" onclick="closeModal()">OK</button>`:`<button class="btn btn-sm btn-navy" onclick="saveFleetDay('${key}')">Salva</button>`}
     </div>`);
 }
@@ -1569,7 +1620,7 @@ function openAddBoatModal(){
       <div class="field"><label>Lunghezza</label><input id="nb-len" placeholder="es. 8m"></div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
-      <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
+      <button type="button" class="btn btn-sm" onclick="closeModal()">Annulla</button>
       <button class="btn btn-sm btn-navy" onclick="saveNewBoat()">Aggiungi</button>
     </div>`);
 }
@@ -1702,7 +1753,7 @@ function openClientEdit(id){
     <div class="card" style="background:var(--bg);margin-bottom:10px"><div class="card-title">Residenza</div><div class="g2"><div class="field"><label>Indirizzo di residenza</label><input id="nc-indres" value="${p.indirizzoResidenza||''}"></div><div class="field"><label>Città di residenza</label><input id="nc-citres" value="${p.cittaResidenza||''}"></div><div class="field"><label>CAP</label><input id="nc-cap" value="${p.cap||''}"></div><div class="field"><label>Provincia</label><input id="nc-prov" value="${p.provincia||''}"></div><div class="field"><label>Nazione</label><input id="nc-naz" value="${p.nazione||'Italia'}"></div></div></div>
     <div class="card" style="background:var(--bg);margin-bottom:10px"><div class="card-title">Documento</div><div class="g2"><div class="field"><label>Tipo documento</label><input id="nc-doctipo" value="${p.tipoDocumento||''}" placeholder="Carta identità, Patente, Passaporto"></div><div class="field"><label>Numero documento</label><input id="nc-docnum" value="${p.numeroDocumento||''}"></div><div class="field"><label>Data emissione</label><input id="nc-docemi" type="date" value="${p.dataEmissione||''}"></div><div class="field"><label>Data scadenza</label><input id="nc-docsca" type="date" value="${p.dataScadenza||''}"></div></div></div>
     <div class="field"><label>Note</label><textarea id="nc-note">${p.note||''}</textarea></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px"><button class="btn btn-sm" onclick="closeModal()">Annulla</button><button class="btn btn-sm btn-navy" onclick="saveClientForm(${id?jsArg(id):'null'})">Salva</button></div>`);
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px"><button type="button" class="btn btn-sm" onclick="closeModal()">Annulla</button><button class="btn btn-sm btn-navy" onclick="saveClientForm(${id?jsArg(id):'null'})">Salva</button></div>`);
 }
 function openClientForm(id){openClientEdit(id);}
 
@@ -1849,7 +1900,7 @@ function openTaskForm(id){
     <div class="field"><label>Note</label><textarea id="tk-note">${t.note||''}</textarea></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
       ${id?`<button class="btn btn-sm btn-danger" onclick="deleteTask(${id})">Elimina</button>`:''}
-      <button class="btn btn-sm" onclick="closeModal()">Annulla</button>
+      <button type="button" class="btn btn-sm" onclick="closeModal()">Annulla</button>
       <button class="btn btn-sm btn-navy" onclick="saveTask(${id||'null'})">Salva</button>
     </div>`);
 }
