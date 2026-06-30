@@ -240,6 +240,9 @@ body.employee-mode .employee-only{display:block!important}
     <button class="nav-tab admin-only" onclick="showPage('stats')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,12 5,6 9,9 15,2"/><path d="M1 15h14"/></svg>Statistiche
     </button>
+    <button class="nav-tab admin-only" onclick="showPage('accounting')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M2 6h12M6 6v8"/></svg>Contabilità
+    </button>
   </div>
   <div style="margin-left:auto;padding:0 12px;display:flex;align-items:center;gap:8px">
     <button id="user-chip" class="user-chip" onclick="showUserMenu()">
@@ -405,6 +408,25 @@ body.employee-mode .employee-only{display:block!important}
   <div id="stats-content"></div>
 </div>
 
+<!-- ===================== CONTABILITÀ ===================== -->
+<div id="page-accounting" class="page admin-only">
+  <div class="section-header"><h2>Contabilità</h2>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="acc-year" onchange="renderAccounting()" style="padding:7px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--white);font-weight:600;color:var(--navy)"></select>
+      <select id="acc-period" onchange="renderAccounting()" style="padding:7px 12px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;background:var(--white);font-weight:600;color:var(--navy)">
+        <option value="year">Anno intero</option>
+        <option value="T1">1° Trimestre (Gen-Mar)</option>
+        <option value="T2">2° Trimestre (Apr-Giu)</option>
+        <option value="T3">3° Trimestre (Lug-Set)</option>
+        <option value="T4">4° Trimestre (Ott-Dic)</option>
+      </select>
+      <button class="btn btn-navy" onclick="openMovimentoForm(null)">+ Movimento</button>
+      <button class="btn btn-sm" style="background:#1D6F42;color:#fff;border-color:#1D6F42" onclick="exportContabilitaCSV()">↓ Esporta Excel</button>
+    </div>
+  </div>
+  <div id="acc-content"></div>
+</div>
+
 <!-- ===================== TASKS ===================== -->
 <div id="page-tasks" class="page">
   <div class="section-header">
@@ -550,6 +572,7 @@ function startRealtimeListener() {
     bookings = safeArr(data.bookings).map(normalizeBooking);
     boats    = safeArr(data.boats).map(normalizeBoat);
     tasks    = safeArr(data.tasks).map(normalizeTask);
+    movimenti = safeArr(data.movimenti).map(normalizeMovimento);
     normalizeAllData();
     sortClientsAZ();
 
@@ -558,6 +581,7 @@ function startRealtimeListener() {
     nextBookingId = bookings.length ? Math.max(...bookings.map(x=>Number(x.id)||0))+1 : 1;
     nextBoatId    = boats.length    ? Math.max(...boats.map(x=>x.id||0))+1    : 1;
     nextTaskId    = tasks.length    ? Math.max(...tasks.map(x=>x.id||0))+1    : 1;
+    nextMovId     = movimenti.length? Math.max(...movimenti.map(x=>x.id||0))+1: 1;
 
     saveData();
     updateRequestsBadge();
@@ -574,6 +598,7 @@ function startRealtimeListener() {
         'page-photos': 'renderPhotos',
         'page-clients': 'renderClients',
         'page-stats': 'renderStats',
+        'page-accounting': 'renderAccounting',
         'page-tasks': 'renderTasks'
       }[active.id];
       if(fn && window[fn]) try { window[fn](); } catch(e) {}
@@ -749,6 +774,329 @@ function normalizeTask(t){
   return t;
 }
 
+// ==================== CONTABILITÀ ====================
+function normalizeMovimento(m){
+  m=m||{};
+  m.id=Number(m.id)||0;
+  m.tipo=m.tipo||'spesa';                 // 'ricavo' | 'spesa'
+  m.data=m.data||today();
+  m.descrizione=m.descrizione||'';
+  m.categoria=m.categoria||(m.tipo==='ricavo'?'Altro ricavo':'Altro costo');
+  m.imponibile=Number(m.imponibile)||0;
+  m.aliquota=(m.aliquota!=null?Number(m.aliquota):22);
+  m.iva=Number(m.iva)|| Math.round(m.imponibile*m.aliquota)/100;
+  m.totale=Number(m.totale)|| (m.imponibile + m.iva);
+  m.scadenza=m.scadenza||'';
+  m.statoPag=m.statoPag||(m.tipo==='ricavo'?'Da incassare':'Da pagare');
+  m.fonte=m.fonte||'manuale';             // 'manuale' | 'noleggio'
+  m.bookingId=m.bookingId||'';
+  m.note=m.note||'';
+  return m;
+}
+
+// Scorpora l'IVA da un totale lordo (per i noleggi che hanno il prezzo IVA inclusa)
+function scorporaIva(lordo, aliquota){
+  const imp = lordo / (1 + aliquota/100);
+  const iva = lordo - imp;
+  return { imponibile: Math.round(imp*100)/100, iva: Math.round(iva*100)/100 };
+}
+
+// Costruisce i ricavi automatici dai noleggi confermati (non li salva, li calcola al volo)
+function ricaviDaNoleggi(year){
+  const out=[];
+  bookings.filter(b=>b && (b.status==='confirmed'||b.status==='manual')).forEach(b=>{
+    const dataRif = b.data || b.date || b.confirmedAt || '';
+    const d = String(dataRif).slice(0,10);
+    if(!d || Number(d.slice(0,4))!==year) return;
+    const lordo = Number(b.importo||b.price||0);
+    if(!lordo) return;
+    const {imponibile, iva} = scorporaIva(lordo, 22);
+    const incassato = b.statoPagamento==='Saldato' ? lordo : (Number(b.acconto)||0);
+    const statoP = b.statoPagamento==='Saldato' ? 'Incassato' : (incassato>0?'Parziale':'Da incassare');
+    out.push({
+      id:'NOL-'+(b._key||b.id),
+      tipo:'ricavo', data:d,
+      descrizione:'Noleggio '+(b.barca||b.boatName||'')+' — '+(b.clienteNome||''),
+      categoria:'Noleggio',
+      barca:(b.barca||b.boatName||'Altra'),
+      imponibile, aliquota:22, iva, totale:lordo,
+      incassato:incassato,
+      scadenza:d, statoPag:statoP,
+      fonte:'noleggio', bookingId:(b._key||b.id), note:'(automatico da prenotazione)'
+    });
+  });
+  return out;
+}
+
+function accPeriodMatch(dateStr, period){
+  if(period==='year') return true;
+  const m = Number(String(dateStr).slice(5,7));
+  if(period==='T1') return m>=1&&m<=3;
+  if(period==='T2') return m>=4&&m<=6;
+  if(period==='T3') return m>=7&&m<=9;
+  if(period==='T4') return m>=10&&m<=12;
+  return true;
+}
+
+function getAccountingRows(){
+  const year = accYear;
+  const period = document.getElementById('acc-period')?.value || 'year';
+  const auto = ricaviDaNoleggi(year);
+  const manual = movimenti.filter(m=>Number(String(m.data).slice(0,4))===year);
+  const all = [...auto, ...manual].filter(m=>accPeriodMatch(m.data, period));
+  all.sort((a,b)=> String(b.data).localeCompare(String(a.data)));
+  return all;
+}
+
+function renderAccounting(){
+  // Year selector
+  const sel=document.getElementById('acc-year');
+  if(sel && !sel.dataset.filled){
+    const years=[];const cy=new Date().getFullYear();
+    for(let y=cy+1;y>=cy-4;y--)years.push(y);
+    sel.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join('');
+    sel.value=accYear; sel.dataset.filled='1';
+  }
+  accYear=Number(document.getElementById('acc-year')?.value||accYear);
+
+  const rows=getAccountingRows();
+  const ricavi=rows.filter(r=>r.tipo==='ricavo');
+  const spese=rows.filter(r=>r.tipo==='spesa');
+
+  // ── MACRO TOTALS ──
+  const fatturato=ricavi.reduce((s,r)=>s+r.totale,0);              // lordo confermato
+  const impRic=ricavi.reduce((s,r)=>s+r.imponibile,0);
+  const ivaRic=ricavi.reduce((s,r)=>s+r.iva,0);
+  const incassato=ricavi.reduce((s,r)=>s+(r.incassato!=null?r.incassato:(r.statoPag==='Incassato'?r.totale:0)),0);
+  const daIncassare=fatturato-incassato;
+
+  const totSpese=spese.reduce((s,r)=>s+r.totale,0);
+  const impSpe=spese.reduce((s,r)=>s+r.imponibile,0);
+  const ivaSpe=spese.reduce((s,r)=>s+r.iva,0);
+  const pagato=spese.reduce((s,r)=>s+((r.statoPag==='Pagato')?r.totale:0),0);
+  const daPagare=totSpese-pagato;
+
+  const ivaDebito=ivaRic, ivaCredito=ivaSpe, ivaSaldo=ivaDebito-ivaCredito;
+  const utile=impRic-impSpe;
+
+  // ── GROUP BY BOAT (ricavi) ──
+  const perBarca={};
+  ricavi.forEach(r=>{
+    const k=r.barca||'Altri ricavi';
+    if(!perBarca[k])perBarca[k]={lordo:0,imp:0,iva:0,inc:0,n:0};
+    perBarca[k].lordo+=r.totale; perBarca[k].imp+=r.imponibile; perBarca[k].iva+=r.iva;
+    perBarca[k].inc+=(r.incassato!=null?r.incassato:0); perBarca[k].n++;
+  });
+  // ── GROUP BY CATEGORY (spese) ──
+  const perCat={};
+  spese.forEach(r=>{
+    const k=r.categoria||'Altro';
+    if(!perCat[k])perCat[k]={lordo:0,imp:0,iva:0,n:0};
+    perCat[k].lordo+=r.totale; perCat[k].imp+=r.imponibile; perCat[k].iva+=r.iva; perCat[k].n++;
+  });
+
+  const periodLabel = (document.getElementById('acc-period')?.value==='year') ? ('Anno '+accYear) : (document.getElementById('acc-period')?.value+' '+accYear);
+
+  const c=document.getElementById('acc-content');
+  c.innerHTML=`
+    <!-- MACRO STATS -->
+    <div class="g4" style="margin-bottom:12px">
+      <div class="stat-card"><div class="stat-label">Fatturato (lordo)</div><div class="stat-value">${fmtEur(fatturato)}</div><div class="stat-sub">imp. ${fmtEur(impRic)} + IVA ${fmtEur(ivaRic)}</div></div>
+      <div class="stat-card"><div class="stat-label">Incassato reale</div><div class="stat-value" style="color:var(--success)">${fmtEur(incassato)}</div><div class="stat-sub">da incassare ${fmtEur(daIncassare)}</div></div>
+      <div class="stat-card"><div class="stat-label">Totale uscite</div><div class="stat-value" style="color:var(--danger)">${fmtEur(totSpese)}</div><div class="stat-sub">imp. ${fmtEur(impSpe)} + IVA ${fmtEur(ivaSpe)}</div></div>
+      <div class="stat-card"><div class="stat-label">Utile lordo</div><div class="stat-value" style="color:${utile>=0?'var(--success)':'var(--danger)'}">${fmtEur(utile)}</div><div class="stat-sub">ricavi − spese (no IVA)</div></div>
+    </div>
+    <div class="g4" style="margin-bottom:18px">
+      <div class="stat-card"><div class="stat-label">IVA a debito</div><div class="stat-value">${fmtEur(ivaDebito)}</div><div class="stat-sub">sulle vendite</div></div>
+      <div class="stat-card"><div class="stat-label">IVA a credito</div><div class="stat-value">${fmtEur(ivaCredito)}</div><div class="stat-sub">sugli acquisti</div></div>
+      <div class="stat-card"><div class="stat-label">IVA da versare</div><div class="stat-value" style="color:${ivaSaldo>=0?'var(--navy)':'var(--success)'}">${fmtEur(ivaSaldo)}</div><div class="stat-sub">debito − credito</div></div>
+      <div class="stat-card"><div class="stat-label">Da pagare</div><div class="stat-value" style="color:var(--danger)">${fmtEur(daPagare)}</div><div class="stat-sub">debiti aperti</div></div>
+    </div>
+
+    <!-- GROUP BY BOAT + CATEGORY -->
+    <div class="g2" style="margin-bottom:18px">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);background:var(--bg2)"><strong style="font-size:13px">Ricavi per imbarcazione</strong></div>
+        <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead><tr style="text-align:left;color:var(--muted)"><th style="padding:7px 12px">Voce</th><th style="padding:7px 12px;text-align:center">N°</th><th style="padding:7px 12px;text-align:right">Imponibile</th><th style="padding:7px 12px;text-align:right">IVA</th><th style="padding:7px 12px;text-align:right">Lordo</th><th style="padding:7px 12px;text-align:right">Incassato</th></tr></thead>
+          <tbody>
+            ${Object.keys(perBarca).length===0?`<tr><td colspan="6" style="padding:16px;text-align:center;color:var(--muted)">Nessun ricavo</td></tr>`:Object.entries(perBarca).sort((a,b)=>b[1].lordo-a[1].lordo).map(([k,v])=>`
+              <tr style="border-top:0.5px solid var(--border)"><td style="padding:7px 12px;font-weight:600">${k}</td><td style="padding:7px 12px;text-align:center">${v.n}</td><td style="padding:7px 12px;text-align:right">${fmtEur(v.imp)}</td><td style="padding:7px 12px;text-align:right">${fmtEur(v.iva)}</td><td style="padding:7px 12px;text-align:right;font-weight:600">${fmtEur(v.lordo)}</td><td style="padding:7px 12px;text-align:right;color:var(--success)">${fmtEur(v.inc)}</td></tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);background:var(--bg2)"><strong style="font-size:13px">Spese per categoria</strong></div>
+        <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead><tr style="text-align:left;color:var(--muted)"><th style="padding:7px 12px">Categoria</th><th style="padding:7px 12px;text-align:center">N°</th><th style="padding:7px 12px;text-align:right">Imponibile</th><th style="padding:7px 12px;text-align:right">IVA</th><th style="padding:7px 12px;text-align:right">Totale</th></tr></thead>
+          <tbody>
+            ${Object.keys(perCat).length===0?`<tr><td colspan="5" style="padding:16px;text-align:center;color:var(--muted)">Nessuna spesa</td></tr>`:Object.entries(perCat).sort((a,b)=>b[1].lordo-a[1].lordo).map(([k,v])=>`
+              <tr style="border-top:0.5px solid var(--border)"><td style="padding:7px 12px;font-weight:600">${k}</td><td style="padding:7px 12px;text-align:center">${v.n}</td><td style="padding:7px 12px;text-align:right">${fmtEur(v.imp)}</td><td style="padding:7px 12px;text-align:right">${fmtEur(v.iva)}</td><td style="padding:7px 12px;text-align:right;font-weight:600">${fmtEur(v.lordo)}</td></tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- DETAIL REGISTER -->
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
+      <div style="padding:12px 14px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <strong style="font-size:14px">Registro movimenti — ${periodLabel}</strong>
+        <span style="font-size:12px;color:var(--muted)">${rows.length} movimenti</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead><tr style="background:var(--bg2);text-align:left">
+            <th style="padding:8px 10px">Data</th><th style="padding:8px 10px">Tipo</th><th style="padding:8px 10px">Descrizione</th><th style="padding:8px 10px">Categoria/Barca</th>
+            <th style="padding:8px 10px;text-align:right">Imponibile</th><th style="padding:8px 10px;text-align:center">IVA%</th><th style="padding:8px 10px;text-align:right">IVA</th><th style="padding:8px 10px;text-align:right">Totale</th><th style="padding:8px 10px">Stato</th><th style="padding:8px 10px"></th>
+          </tr></thead>
+          <tbody>
+            ${rows.length===0?`<tr><td colspan="10" style="padding:24px;text-align:center;color:var(--muted)">Nessun movimento nel periodo</td></tr>`:rows.map(r=>`
+              <tr style="border-top:0.5px solid var(--border)">
+                <td style="padding:8px 10px;white-space:nowrap">${r.data}</td>
+                <td style="padding:8px 10px"><span class="badge badge-${r.tipo==='ricavo'?'confirmed':'rejected'}">${r.tipo==='ricavo'?'Ricavo':'Spesa'}</span></td>
+                <td style="padding:8px 10px">${r.descrizione}${r.fonte==='noleggio'?' <span style="color:var(--muted);font-size:10px">(auto)</span>':''}</td>
+                <td style="padding:8px 10px">${r.tipo==='ricavo'?(r.barca||r.categoria):r.categoria}</td>
+                <td style="padding:8px 10px;text-align:right">${fmtEur(r.imponibile)}</td>
+                <td style="padding:8px 10px;text-align:center">${r.aliquota}%</td>
+                <td style="padding:8px 10px;text-align:right">${fmtEur(r.iva)}</td>
+                <td style="padding:8px 10px;text-align:right;font-weight:600">${fmtEur(r.totale)}</td>
+                <td style="padding:8px 10px"><span style="font-size:11px;color:${(r.statoPag==='Incassato'||r.statoPag==='Pagato')?'var(--success)':'#B8860B'}">${r.statoPag}</span></td>
+                <td style="padding:8px 10px;text-align:right;white-space:nowrap">${r.fonte==='manuale'?`<button class="btn btn-xs" onclick="openMovimentoForm(${r.id})">✎</button> <button class="btn btn-xs btn-danger" onclick="deleteMovimento(${r.id})">🗑</button>`:''}</td>
+              </tr>`).join('')}
+          </tbody>
+          <tfoot>
+            <tr style="border-top:2px solid var(--border2);background:var(--bg2);font-weight:700"><td colspan="4" style="padding:10px">TOTALE RICAVI</td><td style="padding:10px;text-align:right">${fmtEur(impRic)}</td><td></td><td style="padding:10px;text-align:right">${fmtEur(ivaRic)}</td><td style="padding:10px;text-align:right">${fmtEur(fatturato)}</td><td colspan="2"></td></tr>
+            <tr style="background:var(--bg2);font-weight:700"><td colspan="4" style="padding:10px">TOTALE SPESE</td><td style="padding:10px;text-align:right">${fmtEur(impSpe)}</td><td></td><td style="padding:10px;text-align:right">${fmtEur(ivaSpe)}</td><td style="padding:10px;text-align:right">${fmtEur(totSpese)}</td><td colspan="2"></td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <p style="font-size:11px;color:var(--muted);text-align:center">I ricavi dei noleggi confermati sono calcolati in automatico (IVA 22% scorporata dal prezzo lordo). La liquidazione IVA ufficiale va sempre verificata dal commercialista.</p>
+  `;
+}
+
+function openMovimentoForm(id){
+  const m = id ? movimenti.find(x=>x.id===id) : {tipo:'spesa',data:today(),descrizione:'',categoria:'Carburante',imponibile:0,aliquota:22,scadenza:'',statoPag:'Da pagare',note:''};
+  if(!m) return;
+  const isNew=!id;
+  const catOptions = (tipo)=> (tipo==='ricavo'?ACC_CAT_RICAVI:ACC_CAT_SPESE).map(c=>`<option ${m.categoria===c?'selected':''}>${c}</option>`).join('');
+  modal(`
+    <div class="modal-title">${isNew?'Nuovo movimento':'Modifica movimento'}<button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="form-grid">
+      <div class="field"><label>Tipo</label>
+        <select id="mv-tipo" onchange="document.getElementById('mv-cat').innerHTML=mvCatOptions(this.value);document.getElementById('mv-statopag').innerHTML=mvStatoOptions(this.value)">
+          <option value="spesa" ${m.tipo==='spesa'?'selected':''}>Spesa</option>
+          <option value="ricavo" ${m.tipo==='ricavo'?'selected':''}>Ricavo</option>
+        </select>
+      </div>
+      <div class="field"><label>Data</label><input type="date" id="mv-data" value="${m.data}"></div>
+      <div class="field" style="grid-column:1/-1"><label>Descrizione</label><input id="mv-desc" value="${(m.descrizione||'').replace(/"/g,'&quot;')}" placeholder="Es. Rifornimento gasolio, fattura Marina..."></div>
+      <div class="field"><label>Categoria</label><select id="mv-cat">${catOptions(m.tipo)}</select></div>
+      <div class="field"><label>Imponibile €</label><input type="number" step="0.01" id="mv-imp" value="${m.imponibile}" oninput="mvRecalc()"></div>
+      <div class="field"><label>Aliquota IVA</label><select id="mv-iva" onchange="mvRecalc()">${ACC_IVA.map(a=>`<option value="${a}" ${m.aliquota===a?'selected':''}>${a}%</option>`).join('')}</select></div>
+      <div class="field"><label>IVA €</label><input type="number" step="0.01" id="mv-ivaval" value="${m.iva||0}" readonly style="background:var(--bg2)"></div>
+      <div class="field"><label>Totale €</label><input type="number" step="0.01" id="mv-tot" value="${m.totale||m.imponibile}" readonly style="background:var(--bg2);font-weight:700"></div>
+      <div class="field"><label>Scadenza (opz.)</label><input type="date" id="mv-scad" value="${m.scadenza||''}"></div>
+      <div class="field"><label>Stato pagamento</label><select id="mv-statopag">${mvStatoOptions(m.tipo, m.statoPag)}</select></div>
+      <div class="field" style="grid-column:1/-1"><label>Note</label><input id="mv-note" value="${(m.note||'').replace(/"/g,'&quot;')}"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn" style="flex:1" onclick="closeModal()">Annulla</button>
+      <button class="btn btn-navy" style="flex:1" onclick="saveMovimento(${id||'null'})">Salva</button>
+    </div>
+  `);
+  mvRecalc();
+}
+
+function mvCatOptions(tipo){
+  return (tipo==='ricavo'?ACC_CAT_RICAVI:ACC_CAT_SPESE).map(c=>`<option>${c}</option>`).join('');
+}
+function mvStatoOptions(tipo, current){
+  const opts = tipo==='ricavo' ? ['Da incassare','Incassato'] : ['Da pagare','Pagato'];
+  return opts.map(o=>`<option ${current===o?'selected':''}>${o}</option>`).join('');
+}
+function mvRecalc(){
+  const imp=Number(document.getElementById('mv-imp')?.value||0);
+  const al=Number(document.getElementById('mv-iva')?.value||0);
+  const iva=Math.round(imp*al)/100;
+  const tot=Math.round((imp+iva)*100)/100;
+  const ivaEl=document.getElementById('mv-ivaval'); if(ivaEl)ivaEl.value=iva.toFixed(2);
+  const totEl=document.getElementById('mv-tot'); if(totEl)totEl.value=tot.toFixed(2);
+}
+
+function saveMovimento(id){
+  const g=x=>document.getElementById(x);
+  const tipo=g('mv-tipo').value;
+  const imp=Number(g('mv-imp').value||0);
+  const al=Number(g('mv-iva').value||0);
+  const iva=Math.round(imp*al)/100;
+  const d={
+    tipo, data:g('mv-data').value||today(),
+    descrizione:g('mv-desc').value.trim(),
+    categoria:g('mv-cat').value,
+    imponibile:imp, aliquota:al, iva, totale:Math.round((imp+iva)*100)/100,
+    scadenza:g('mv-scad').value||'',
+    statoPag:g('mv-statopag').value,
+    note:g('mv-note').value.trim(),
+    fonte:'manuale'
+  };
+  if(!d.descrizione){alert('Inserisci una descrizione.');return;}
+  if(id){
+    const m=movimenti.find(x=>x.id===id);
+    if(m){Object.assign(m,d);}
+  }else{
+    const nm={id:nextMovId++,...d,creatoIl:today()};
+    movimenti.push(nm); id=nm.id;
+  }
+  saveData(); persistMovimento(id); closeModal(); renderAccounting();
+}
+
+function deleteMovimento(id){
+  if(!confirm('Eliminare questo movimento?'))return;
+  movimenti=movimenti.filter(m=>m.id!==id);
+  saveData();
+  rtdbWrite('movimenti/'+id, null);
+  renderAccounting();
+}
+
+function exportContabilitaCSV(){
+  const rows=getAccountingRows();
+  const head=['Data','Tipo','Descrizione','Categoria','Imponibile','Aliquota%','IVA','Totale','Stato pagamento','Scadenza','Fonte','Note'];
+  const lines=[head.join(';')];
+  rows.forEach(r=>{
+    lines.push([
+      r.data, r.tipo==='ricavo'?'Ricavo':'Spesa',
+      '"'+(r.descrizione||'').replace(/"/g,'""')+'"',
+      r.categoria,
+      String(r.imponibile).replace('.',','),
+      r.aliquota,
+      String(r.iva).replace('.',','),
+      String(r.totale).replace('.',','),
+      r.statoPag, r.scadenza||'', r.fonte,
+      '"'+(r.note||'').replace(/"/g,'""')+'"'
+    ].join(';'));
+  });
+  const period=document.getElementById('acc-period')?.value||'year';
+  const csv='\ufeff'+lines.join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`contabilita_${accYear}_${period}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+window.renderAccounting=renderAccounting;
+window.openMovimentoForm=openMovimentoForm;
+window.saveMovimento=saveMovimento;
+window.deleteMovimento=deleteMovimento;
+window.exportContabilitaCSV=exportContabilitaCSV;
+window.mvRecalc=mvRecalc;
+window.mvCatOptions=mvCatOptions;
+window.mvStatoOptions=mvStatoOptions;
+
+
+
 function normalizeLead(l){
   l=l||{};
   l.id=Number(l.id)||0;
@@ -817,14 +1165,18 @@ function normalizeAllData(){
   if(activeBoat<0||activeBoat>=boats.length) activeBoat=0;
 }
 
-let leads=[], clients=[], bookings=[], boats=[], tasks=[];
-let nextLeadId=1, nextClientId=1, nextBookingId=1, nextBoatId=4, nextTaskId=1;
+let leads=[], clients=[], bookings=[], boats=[], tasks=[], movimenti=[];
+let nextLeadId=1, nextClientId=1, nextBookingId=1, nextBoatId=4, nextTaskId=1, nextMovId=1;
+let accYear=new Date().getFullYear();
 let activeBoat=0, calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
 let crmFilter='Tutti', taskFilter='Tutti';
 
 const TASK_CAT=['Commerciale','Manutenzione','Burocrazia','Marketing','Operativo','Altro'];
 const TASK_PRI=['Alta','Media','Bassa'];
 const TASK_STATI=['Aperto','In corso','Completato'];
+const ACC_CAT_RICAVI=['Noleggio','Transfer','Esperienza/Tour','Vendita','Altro ricavo'];
+const ACC_CAT_SPESE=['Carburante','Ormeggio','Manutenzione','Assicurazione','Stipendi/Compensi','Commissioni','Attrezzatura','Marketing','Utenze','Tasse/Imposte','Altro costo'];
+const ACC_IVA=[22,10,4,0];
 const BOAT_COLORS=['#1E3A6E','#C9B88A','#2E6B4F','#8B3A3A','#4A6B8A','#7A5C2E'];
 
 // ==================== UTILS ====================
@@ -856,19 +1208,20 @@ function sortClientsAZ(){
 }
 
 // ==================== PERSIST HELPERS ====================
-function saveData(){try{localStorage.setItem('chartme_v2',JSON.stringify({leads,clients,bookings,boats,tasks}));}catch(e){}}
+function saveData(){try{localStorage.setItem('chartme_v2',JSON.stringify({leads,clients,bookings,boats,tasks,movimenti}));}catch(e){}}
 function loadData(){
   try{
     const d=localStorage.getItem('chartme_v2');
     if(d){
       const p=JSON.parse(d);
-      leads=p.leads||[];clients=p.clients||[];bookings=p.bookings||[];boats=p.boats||[];tasks=p.tasks||[];
+      leads=p.leads||[];clients=p.clients||[];bookings=p.bookings||[];boats=p.boats||[];tasks=p.tasks||[];movimenti=p.movimenti||[];
       normalizeAllData();sortClientsAZ();
       nextLeadId=Math.max(...leads.map(x=>x.id||0).concat([0]))+1;
       nextClientId=Math.max(...clients.map(x=>x.id||0).concat([0]))+1;
       nextBookingId=Math.max(...bookings.map(x=>Number(x.id)||0).concat([0]))+1;
       nextBoatId=Math.max(...boats.map(x=>x.id||0).concat([0]))+1;
       nextTaskId=Math.max(...tasks.map(x=>x.id||0).concat([0]))+1;
+      nextMovId=Math.max(...movimenti.map(x=>x.id||0).concat([0]))+1;
     }
   }catch(e){}
 }
@@ -880,6 +1233,7 @@ function persistBoat(id){const b=boats.find(x=>x&&idEq(x.id,id));if(b)rtdbWrite(
 function persistBoatByName(name){const b=boats.find(x=>x&&x.name===name);if(b)rtdbWrite('boats/'+b.id,b);}
 function persistClient(id){const c=clients.find(x=>x&&x.id===id);if(c)rtdbWrite('clients/'+id,c);}
 function persistTask(id){const t=tasks.find(x=>x&&x.id===id);if(t)rtdbWrite('tasks/'+id,t);}
+function persistMovimento(id){const m=movimenti.find(x=>x&&x.id===id);if(m)rtdbWrite('movimenti/'+id,m);}
 function persistLead(id){const l=leads.find(x=>x&&x.id===id);if(l)rtdbWrite('leads/'+id,l);}
 
 // ==================== MODAL ====================
@@ -890,7 +1244,7 @@ function modal(content){
 
 // ==================== PAGE NAVIGATION ====================
 function showPage(p){
-  const adminPages=['fleet','photos','stats'];
+  const adminPages=['fleet','photos','stats','accounting'];
   if(!window._isAdmin && adminPages.includes(p)){ p='crm'; }
   const pageId='page-'+p;
   const pageEl=document.getElementById(pageId);
@@ -2185,7 +2539,7 @@ function restoreBackup(e){
   r.onload=ev=>{
     try{
       const p=JSON.parse(ev.target.result);
-      leads=p.leads||[];clients=p.clients||[];bookings=p.bookings||[];boats=p.boats||[];tasks=p.tasks||[];
+      leads=p.leads||[];clients=p.clients||[];bookings=p.bookings||[];boats=p.boats||[];tasks=p.tasks||[];movimenti=p.movimenti||[];
       normalizeAllData();sortClientsAZ();
       saveData();alert('Backup ripristinato. Ricarica la pagina.');
     }catch(err){alert('Backup non valido: '+err.message);}
