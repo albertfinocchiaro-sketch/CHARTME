@@ -1958,7 +1958,38 @@ function openBookingDetail(id){
     </div>`);
 }
 
+
+function calcTariffPrice(barcaName,dataStr,giorni){
+  var boat=boats.find(function(b){return b.name===barcaName;});
+  if(!boat||!dataStr)return 0;
+  var m=new Date(dataStr).getMonth();
+  var bands=boat.priceBands||boat.bands||[];
+  for(var i=0;i<bands.length;i++){
+    var months=bands[i].months||[];
+    if(months.indexOf(m)>=0) return bands[i].price*(parseInt(giorni)||1);
+  }
+  return 0;
+}
+function recalcBkPrice(){
+  if(window._bkPriceManual) return;
+  var barcaEl=document.getElementById('bk-barca');
+  var dataEl=document.getElementById('bk-data');
+  var giorniEl=document.getElementById('bk-giorni');
+  if(!barcaEl||!dataEl) return;
+  var price=calcTariffPrice(barcaEl.value,dataEl.value,giorniEl?parseInt(giorniEl.value)||1:1);
+  var impEl=document.getElementById('bk-imp');
+  var srcEl=document.getElementById('bk-price-src');
+  if(impEl&&price>0) impEl.value=price;
+  if(srcEl){
+    var boat=boats.find(function(b){return b.name===barcaEl.value;});
+    var bands=boat?boat.priceBands||boat.bands||[]:[];
+    var m=new Date(dataEl.value).getMonth();
+    var band=bands.find(function(b){return (b.months||[]).indexOf(m)>=0;});
+    srcEl.textContent=band&&price>0?'('+band.label+' · €'+band.price+'/g)':'';
+  }
+}
 function openBookingForm(id){
+  window._bkPriceManual=!!(id);
   const b=id?bookings.find(x=>x&&idEq(x.id,id)):{id:null,clienteNome:'',barca:boats[0]?.name||'',data:today(),giorni:1,passeggeri:2,importo:0,acconto:0,statoPagamento:'Non pagato',statoFattura:'Non fatturato',note:'',status:'manual',email:'',telefono:''};
   if(!b)return;
   modal(`
@@ -1968,12 +1999,16 @@ function openBookingForm(id){
       <div class="field"><label>Email</label><input id="bk-email" type="email" value="${b.email||''}"></div>
       <div class="field"><label>Telefono</label><input id="bk-tel" value="${b.telefono||''}"></div>
       <div class="field"><label>Barca</label><select id="bk-barca">${boats.map(bt=>`<option${bt.name===b.barca?' selected':''}>${bt.name}</option>`).join('')}</select></div>
-      <div class="field"><label>Data</label><input id="bk-data" type="date" value="${b.data||today()}"></div>
-      <div class="field"><label>N. giorni</label><input id="bk-giorni" type="number" min="1" value="${b.giorni||1}"></div>
+      <div class="field"><label>Data</label><input id="bk-data" type="date" value="${b.data||today()}" onchange="recalcBkPrice()"></div>
+      <div class="field"><label>N. giorni</label><input id="bk-giorni" type="number" min="1" value="${b.giorni||1}" onchange="recalcBkPrice()"></div>
       <div class="field"><label>Passeggeri</label><input id="bk-pass" type="number" min="1" value="${b.passeggeri||2}"></div>
-      <div class="field admin-only"><label>Importo €</label><input id="bk-imp" type="number" value="${b.importo||0}"></div>
+      <div class="field"><label>Check-in (orario)</label><input id="bk-checkin" type="time" value="${b.checkin||''}"></div>
+      <div class="field"><label>Check-out (orario)</label><input id="bk-checkout" type="time" value="${b.checkout||''}"></div>
+      <div class="field"><label>Prezzo € <span id="bk-price-src" style="font-size:10px;color:var(--gold-dark);font-weight:600"></span></label><input id="bk-imp" type="number" value="${b.importo||calcTariffPrice(b.barca,b.data,b.giorni||1)}" oninput="window._bkPriceManual=true"></div>
+      <div class="field"><label>Pagato / Non pagato</label><select id="bk-pay">${['Non pagato','Parziale','Saldato'].map(s=>`<option${s===b.statoPagamento?' selected':''}>${s}</option>`).join('')}</select></div>
       <div class="field admin-only"><label>Acconto €</label><input id="bk-acc" type="number" value="${b.acconto||0}"></div>
-      <div class="field admin-only"><label>Pagamento</label><select id="bk-pay">${['Non pagato','Parziale','Saldato'].map(s=>`<option${s===b.statoPagamento?' selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="field admin-only"><label>Stato fattura</label><select id="bk-inv">${['Non fatturato','Fatturato'].map(s=>`<option${s===b.statoFattura?' selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="field admin-only"><label>Incasso fatturato</label><select id="bk-inc-fatt">${['Non fatturato','Fatturato'].map(s=>`<option${s===(b.incassoFatturato||'Non fatturato')?' selected':''}>${s}</option>`).join('')}</select></div>
     </div>
     <div class="field"><label>Note</label><textarea id="bk-note">${b.note||''}</textarea></div>
     <div style="background:var(--info-bg);border-radius:var(--r);padding:10px 12px;margin:10px 0 12px;font-size:12px;line-height:1.45;color:var(--text2)">
@@ -2384,6 +2419,8 @@ function renderStats(){
   const reqYear=bookings.filter(b=>b.source==='website'&&b.data&&b.data.startsWith(selYear));
   const totFatt=bkYear.reduce((s,b)=>s+Number(b.importo||0),0);
   const totInc=bkYear.reduce((s,b)=>s+(b.statoPagamento==='Saldato'?Number(b.importo||0):Number(b.acconto||0)),0);
+  const totIncFatt=bkYear.reduce((s,b)=>{const inc=b.statoPagamento==='Saldato'?Number(b.importo||0):Number(b.acconto||0);return s+((b.incassoFatturato==='Fatturato')?inc:0);},0);
+  const totIncNonFatt=totInc-totIncFatt;
   const avgTicket=bkYear.length?Math.round(totFatt/bkYear.length):0;
   const monthlyFatt=Array(12).fill(0), monthlyCount=Array(12).fill(0), monthlyLeads=Array(12).fill(0);
   bkYear.forEach(b=>{const m=parseInt((b.data||'').slice(5,7))-1;if(m>=0&&m<12){monthlyFatt[m]+=Number(b.importo||0);monthlyCount[m]++;}});
@@ -2402,7 +2439,7 @@ function renderStats(){
   document.getElementById('stats-content').innerHTML=`
   <div class="g4" style="margin-bottom:16px">
     <div class="stat-card"><div class="stat-label">Fatturato ${selYear}</div><div class="stat-value">${fmtEur(totFatt)}</div></div>
-    <div class="stat-card"><div class="stat-label">Incassato</div><div class="stat-value" style="color:var(--success)">${fmtEur(totInc)}</div></div>
+    <div class="stat-card"><div class="stat-label">Incassato</div><div class="stat-value" style="color:var(--success)">${fmtEur(totInc)}</div><div class="stat-card"><div class="stat-label">Incasso fatturato</div><div class="stat-value" style="color:var(--success)">${fmtEur(totIncFatt)}</div></div><div class="stat-card"><div class="stat-label">Incasso non fatturato</div><div class="stat-value" style="color:var(--danger)">${fmtEur(totIncNonFatt)}</div></div></div>
     <div class="stat-card"><div class="stat-label">Da incassare</div><div class="stat-value" style="color:var(--danger)">${fmtEur(totFatt-totInc)}</div></div>
     <div class="stat-card"><div class="stat-label">Ticket medio</div><div class="stat-value">${fmtEur(avgTicket)}</div></div>
     <div class="stat-card"><div class="stat-label">Prenotazioni</div><div class="stat-value">${bkYear.length}</div></div>
