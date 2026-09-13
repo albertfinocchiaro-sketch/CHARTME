@@ -143,6 +143,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .cal-day.booked{background:var(--danger-bg);border-color:rgba(192,57,43,.3)}
 .cal-day.pending-day{background:var(--warn-bg);border-color:rgba(138,92,0,.3)}
 .cal-day.override{background:#E8F5E8;border-color:rgba(27,122,62,.3)}
+.cal-day.blocked{background:#EAEAEA;border-color:rgba(0,0,0,.25)}
 .cal-dow{font-size:10px;color:var(--text3);text-align:center;padding:4px 0;text-transform:uppercase;font-weight:600;letter-spacing:.06em}
 /* SECTION HEADER */
 .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
@@ -2119,9 +2120,11 @@ function renderFleet(){
     const{price,over}=getDayInfo(boat,key);
     const booked=boat.bookings[key];
     const isPending=booked&&booked.status==='pending';
-    const cls='cal-day'+(booked?(isPending?' pending-day':' booked'):(over?' override':''));
-    const pc=booked?(isPending?'var(--warn)':'var(--danger)'):over?'var(--success)':'var(--navy)';
-    cells+=`<div class="${cls}" onclick="openFleetDay('${key}')"><div style="font-size:11px;color:var(--text3)">${d}</div><div style="font-size:11px;font-weight:600;color:${pc}">${booked?(isPending?'⏳':'Pren.'):displayPriceForBoat(boat,price)}</div></div>`;
+    const isBlocked=booked&&booked.status==='blocked';
+    const cls='cal-day'+(booked?(isPending?' pending-day':(isBlocked?' blocked':' booked')):(over?' override':''));
+    const pc=booked?(isPending?'var(--warn)':(isBlocked?'var(--text3)':'var(--danger)')):over?'var(--success)':'var(--navy)';
+    const label=booked?(isPending?'⏳':(isBlocked?'🚫 Bloccato':'Pren.')):displayPriceForBoat(boat,price);
+    cells+=`<div class="${cls}" onclick="openFleetDay('${key}')"><div style="font-size:11px;color:var(--text3)">${d}</div><div style="font-size:11px;font-weight:600;color:${pc}">${label}</div></div>`;
   }
   cardEl.innerHTML=`
   <div class="card">
@@ -2200,20 +2203,39 @@ function openFleetDay(key){
   const band=getBandPrice(boat,monthIndex);
   const over=boat.overrides?boat.overrides[key]:undefined;
   const booked=boat.bookings?boat.bookings[key]:false;
+  const isBlocked=booked&&booked.status==='blocked';
+  const isRealBooking=booked&&!isBlocked;
   modal(`
     <div class="modal-title">${d} ${MONTHS[monthIndex]} ${y} — ${boat.name}<button class="modal-close" onclick="closeModal()">×</button></div>
+    ${isRealBooking?`<div style="background:var(--danger-bg);color:var(--danger);border-radius:var(--r);padding:9px 12px;font-size:12px;margin-bottom:10px"><strong>Giornata occupata</strong> da una prenotazione (${booked.clienteNome||'—'}). Gestiscila dalla tab Prenotazioni.</div>`:''}
+    ${isBlocked?`<div style="background:var(--bg2);color:var(--text2);border-radius:var(--r);padding:9px 12px;font-size:12px;margin-bottom:10px"><strong>🚫 Giornata bloccata manualmente.</strong> Non è prenotabile dal sito finché non la sblocchi.</div>`:''}
     ${boat.rentalType==='weekly'?`<div style="background:var(--info-bg);color:var(--info);border-radius:var(--r);padding:9px 12px;font-size:12px;margin-bottom:10px"><strong>Regola noleggio:</strong> settimanale, da sabato a sabato.</div>`:''}
-    ${boat.pricePublic===false?`
+    ${!isRealBooking&&!isBlocked&&boat.pricePublic===false?`
       <div style="background:var(--warn-bg);color:var(--warn);border-radius:var(--r);padding:9px 12px;font-size:12px;margin-bottom:10px"><strong>Prezzo non pubblico:</strong> sul sito verrà mostrato “su richiesta”.</div>
-    `:`
+    `:''}
+    ${!isRealBooking&&!isBlocked&&boat.pricePublic!==false?`
       <div class="field"><label>Prezzo fascia/listino</label><input value="€${info.price||band}" readonly style="background:var(--bg2);color:var(--text3)"></div>
       <div class="field"><label>Prezzo personalizzato (solo questo giorno)</label><input type="number" id="day-ov" value="${over!==undefined?over:''}" placeholder="Lascia vuoto per usare il listino"></div>
-    `}
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      ${over!==undefined&&boat.pricePublic!==false?`<button class="btn btn-sm btn-danger" onclick="removeOverride('${key}')">Rimuovi custom</button>`:''}
+    `:''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+      ${!isRealBooking&&over!==undefined&&boat.pricePublic!==false?`<button class="btn btn-sm btn-danger" onclick="removeOverride('${key}')">Rimuovi custom</button>`:''}
+      ${isBlocked?`<button class="btn btn-sm btn-success" onclick="unblockFleetDay('${key}')">Sblocca giornata</button>`:''}
+      ${!isRealBooking&&!isBlocked?`<button class="btn btn-sm btn-danger" onclick="blockFleetDay('${key}')">Blocca giornata</button>`:''}
       <button type="button" class="btn btn-sm" onclick="closeModal()">Annulla</button>
-      ${boat.pricePublic===false?`<button class="btn btn-sm btn-navy" onclick="closeModal()">OK</button>`:`<button class="btn btn-sm btn-navy" onclick="saveFleetDay('${key}')">Salva</button>`}
+      ${!isRealBooking&&!isBlocked&&boat.pricePublic!==false?`<button class="btn btn-sm btn-navy" onclick="saveFleetDay('${key}')">Salva prezzo</button>`:''}
     </div>`);
+}
+
+function blockFleetDay(key){
+  const boat=normalizeBoat(boats[activeBoat]);boats[activeBoat]=boat;
+  boat.bookings[key]={status:'blocked',clienteNome:'Bloccato manualmente'};
+  saveData();persistBoat(boat.id);closeModal();renderFleet();
+}
+
+function unblockFleetDay(key){
+  const boat=normalizeBoat(boats[activeBoat]);boats[activeBoat]=boat;
+  delete boat.bookings[key];
+  saveData();persistBoat(boat.id);closeModal();renderFleet();
 }
 
 function saveFleetDay(key){
