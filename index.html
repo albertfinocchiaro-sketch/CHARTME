@@ -173,6 +173,47 @@ body.employee-mode .employee-only{display:block!important}
 .progress-fill{height:100%;background:var(--navy);border-radius:20px}
 @media(max-width:900px){.home-grid{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,1fr)}.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr}.g2{grid-template-columns:1fr}}
 
+/* ===== TELEFONO: navigazione in basso stile app ===== */
+@media(max-width:700px){
+  /* La barra in alto tiene solo logo e account: tutto il resto sparisce
+     per stare nei 375px senza scorrimento orizzontale */
+  .topbar{position:sticky;top:0;z-index:900}
+  .logo-area{min-width:0;padding:8px 12px;border-right:none}
+  .logo-sub{display:none}
+  .logo-main{font-size:18px}
+  .topbar>div:last-child>button.admin-only,
+  .topbar>div:last-child>label.admin-only{display:none}
+  .user-chip #user-email-short{display:none}
+
+  /* Le sezioni diventano una barra fissa in fondo, con icona sopra
+     l'etichetta; scorre in orizzontale per arrivare a tutte e dieci */
+  .nav-tabs{
+    position:fixed;left:0;right:0;bottom:0;
+    background:var(--navy-dark);
+    border-top:1px solid rgba(201,184,138,.35);
+    z-index:1000;
+    padding-bottom:env(safe-area-inset-bottom,0);
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .nav-tabs::-webkit-scrollbar{display:none}
+  .nav-tab{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    padding:9px 8px 8px;min-width:68px;font-size:10px;line-height:1.1;
+    border-bottom:none;border-top:2px solid transparent;
+  }
+  .nav-tab.active{
+    border-bottom-color:transparent;border-top-color:var(--gold);
+    background:rgba(201,184,138,.08);
+  }
+  .nav-icon{width:19px;height:19px;margin-right:0;opacity:.85}
+  .nav-badge{top:3px;right:12px}
+
+  /* Spazio in fondo per non finire sotto la barra */
+  body{padding-bottom:76px}
+  .page{padding:14px 12px}
+}
+
 /* PHOTO MANAGER */
 .photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 .photo-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
@@ -1264,7 +1305,14 @@ function showPage(p){
   document.querySelectorAll('.nav-tab').forEach(function(tab){
     tab.classList.remove('active');
     const oc=tab.getAttribute('onclick')||'';
-    if(oc.indexOf("showPage('"+p+"')")>=0) tab.classList.add('active');
+    if(oc.indexOf("showPage('"+p+"')")>=0){
+      tab.classList.add('active');
+      // Da telefono la barra sezioni sta in fondo e scorre: porta in
+      // vista la voce attiva, altrimenti resta fuori schermo.
+      if(window.innerWidth<=700 && tab.scrollIntoView){
+        try{ tab.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}); }catch(e){}
+      }
+    }
   });
 
   closeModal();
